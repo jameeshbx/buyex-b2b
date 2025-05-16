@@ -223,7 +223,7 @@ export default function SignupSection() {
               {/* Login Link */}
               <div className="text-center text-gray-500 font-plus-jakarta">
                 Already have an account?{" "}
-                <Link href="/login" className="text-dark-blue hover:underline">
+                <Link href="/signin" className="text-dark-blue hover:underline">
                   Login
                 </Link>
               </div>
