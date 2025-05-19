@@ -96,3 +96,11 @@ model Organisation {
 
   @@map("organisations")
 }
+
+model VerificationToken {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  token     String   @unique
+  expires   DateTime
+  createdAt DateTime @default(now())
+}

@@ -1,13 +1,13 @@
 // schemas/signupSchema.ts
-import { z } from "zod"
+import { z } from "zod";
 
 export const formSchema = z.object({
-  businessName: z
+  organisationName: z
     .string()
-    .min(2, { message: "Business name must be at least 2 characters" })
-    .max(100, { message: "Business name cannot exceed 100 characters" })
+    .min(2, { message: "Organisation name must be at least 2 characters" })
+    .max(100, { message: "Organisation name cannot exceed 100 characters" })
     .regex(/^[a-zA-Z0-9\s\-&',.]+$/, {
-      message: "Business name contains invalid characters",
+      message: "Organisation name contains invalid characters",
     }),
 
   email: z
@@ -15,6 +15,18 @@ export const formSchema = z.object({
     .email({ message: "Please enter a valid email address" })
     .max(100, { message: "Email cannot exceed 100 characters" })
     .transform((val) => val.toLowerCase().trim()),
+
+  password: z
+    .string()
+    .min(8, { message: "Password must be at least 8 characters" })
+    .max(100, { message: "Password cannot exceed 100 characters" })
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+      {
+        message:
+          "Password must contain at least one uppercase letter, one lowercase letter, one number and one special character",
+      }
+    ),
 
   phoneNumber: z
     .string()
@@ -25,15 +37,7 @@ export const formSchema = z.object({
     })
     .transform((val) => val.replace(/\D/g, "")),
 
-  logo: z
-    .instanceof(File, { message: "Please upload a valid file" })
-    .refine((file) => file.size <= 5 * 1024 * 1024, {
-      message: "File size must be less than 5MB",
-    })
-    .refine((file) => ["image/jpeg", "image/png", "image/gif", "image/webp"].includes(file.type), {
-      message: "Only JPEG, PNG, GIF, or WEBP images are allowed",
-    })
-    .optional(),
+  logo: z.any().optional(),
 
   verified: z.boolean().refine((val) => val === true, {
     message: "Please complete the verification",
@@ -42,6 +46,6 @@ export const formSchema = z.object({
   acceptTerms: z.boolean().refine((val) => val === true, {
     message: "You must accept the terms and conditions",
   }),
-})
+});
 
-export type FormValues = z.infer<typeof formSchema>
+export type FormValues = z.infer<typeof formSchema>;
