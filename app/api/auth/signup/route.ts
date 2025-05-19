@@ -28,27 +28,22 @@ export async function POST(req: Request) {
       where: { name: validatedData.organisationName },
     });
 
-    if (existingOrg) {
-      return NextResponse.json(
-        { error: "Organisation with this name already exists" },
-        { status: 400 }
-      );
-    }
-
     // Hash password
     const hashedPassword = await hash(validatedData.password, 12);
 
     // Create organisation and user in a transaction
     const result = await db.$transaction(async (tx) => {
-      // Create organisation
-      const organisation = await tx.organisation.create({
-        data: {
-          name: validatedData.organisationName,
-          slug: slugify(validatedData.organisationName),
-          email: validatedData.email,
-          phoneNumber: validatedData.phoneNumber,
-        },
-      });
+      // Use existing organisation or create new one
+      const organisation =
+        existingOrg ||
+        (await tx.organisation.create({
+          data: {
+            name: validatedData.organisationName,
+            slug: slugify(validatedData.organisationName),
+            email: validatedData.email,
+            phoneNumber: validatedData.phoneNumber,
+          },
+        }));
 
       // Create user
       const user = await tx.user.create({
