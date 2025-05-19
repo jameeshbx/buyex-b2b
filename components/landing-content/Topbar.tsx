@@ -71,13 +71,13 @@ export default function Topbar() {
               {/* Desktop Auth Buttons */}
               <div className="hidden md:flex space-x-4 ml-8">
                 <Link
-                  href="/register"
+                  href="/signup"
                   className="bg-dark-blue text-white px-6 py-2 rounded-full text-sm font-medium hover:bg-[#083d5a] transition-colors"
                 >
                   Register
                 </Link>
                 <Link
-                  href="/login"
+                  href="/signin"
                   className="bg-white text-gray-800 px-6 py-2 rounded-full text-sm font-medium border border-gray-200 hover:bg-gray-50 transition-colors"
                 >
                   Sign in
@@ -140,7 +140,7 @@ export default function Topbar() {
           <div className="flex items-center justify-between bg-light-blue ">
             {/* Logo in scrolled state */}
             <div className="flex items-center w-40">
-         <Image src="/header-logo.png" alt=""  width={200} height={150}/>
+              <Image src="/header-logo.png" alt="" width={200} height={150} />
             </div>
 
             {/* Desktop Navigation in scrolled state */}
