@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import { db } from "@/lib/db";
+import { randomBytes } from "crypto";
 
 export async function generatePasswordResetToken(email: string) {
   const token = crypto.randomBytes(32).toString("hex");
@@ -45,4 +46,29 @@ export async function verifyPasswordResetToken(token: string) {
   }
 
   return existingToken;
+}
+
+export async function generateVerificationToken(email: string) {
+  const token = randomBytes(32).toString("hex");
+  const expires = new Date(new Date().getTime() + 24 * 60 * 60 * 1000); // 24 hours
+
+  const existingToken = await db.verificationToken.findUnique({
+    where: { email },
+  });
+
+  if (existingToken) {
+    await db.verificationToken.delete({
+      where: { email },
+    });
+  }
+
+  const verificationToken = await db.verificationToken.create({
+    data: {
+      email,
+      token,
+      expires,
+    },
+  });
+
+  return verificationToken.token;
 }

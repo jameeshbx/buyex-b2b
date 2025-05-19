@@ -18,23 +18,79 @@ import VerificationButton from "./verification-button"
 import Link from "next/link"
 import Image from "next/image"
 import { formSchema, type FormValues } from "@/schema/signupSchema"
+import { useToast } from "@/components/ui/use-toast"
+import { useRouter } from "next/navigation"
 
 export default function SignupSection() {
   const [isVerified, setIsVerified] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const { toast } = useToast()
+  const router = useRouter()
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      businessName: "",
+      organisationName: "",
       email: "",
+      password: "",
       phoneNumber: "",
       verified: false,
       acceptTerms: false,
     },
   })
 
-  const onSubmit: SubmitHandler<FormValues> = (data) => {
-    console.log("Form submitted:", data)
+  const onSubmit: SubmitHandler<FormValues> = async (data) => {
+    try {
+      setIsLoading(true)
+
+      // Remove logo from the initial submission
+      const { logo, ...signupData } = data;
+
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(signupData),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || "Something went wrong")
+      }
+
+      // If logo was provided, upload it after successful signup
+      if (logo instanceof File) {
+        const formData = new FormData();
+        formData.append('logo', logo);
+        formData.append('organisationId', result.organisationId);
+
+        const uploadResponse = await fetch('/api/upload/logo', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!uploadResponse.ok) {
+          console.warn('Logo upload failed, but account was created successfully');
+        }
+      }
+
+      toast({
+        title: "Success!",
+        description: "Account created successfully. Please check your email to verify your account.",
+      })
+
+      router.push("/signin")
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Something went wrong",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleVerificationComplete = (success: boolean) => {
@@ -77,14 +133,14 @@ export default function SignupSection() {
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 lg:px-16">
-              {/* Business Name */}
+              {/* Organisation Name */}
               <FormField
                 control={form.control}
-                name="businessName"
+                name="organisationName"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-sm text-gray-500 font-plus-jakarta">
-                      Business Name
+                      Organisation Name
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -108,6 +164,25 @@ export default function SignupSection() {
                       <Input
                         {...field}
                         type="email"
+                        className="border-0 border-b border-gray-300 rounded-none px-0 h-8 text-sm focus-visible:ring-0 focus-visible:border-dark-blue"
+                      />
+                    </FormControl>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
+              />
+
+              {/* Password */}
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm text-gray-500 font-plus-jakarta">Password</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="password"
                         className="border-0 border-b border-gray-300 rounded-none px-0 h-8 text-sm focus-visible:ring-0 focus-visible:border-dark-blue"
                       />
                     </FormControl>
@@ -216,8 +291,9 @@ export default function SignupSection() {
               <Button
                 type="submit"
                 className="w-full bg-dark-blue hover:bg-medium-blue text-white h-10 text-sm font-plus-jakarta"
+                disabled={isLoading}
               >
-                Create Account
+                {isLoading ? "Creating Account..." : "Create Account"}
               </Button>
 
               {/* Login Link */}
