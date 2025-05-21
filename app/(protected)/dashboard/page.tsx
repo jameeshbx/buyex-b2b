@@ -8,7 +8,7 @@ export default function DashboardPage() {
             <div className="flex justify-between items-center mb-4">
                 <h1 className="text-2xl font-bold">Dashboard</h1>
                 <button
-                    onClick={() => signOut({ callbackUrl: "/signin" })}
+                    onClick={() => signOut({ callbackUrl: "/dashboard" })}
                     className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md transition-colors"
                 >
                     Logout
