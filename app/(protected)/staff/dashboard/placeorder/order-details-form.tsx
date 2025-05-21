@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { Download, ArrowRight, RotateCcw, Play } from "lucide-react"
@@ -12,47 +11,24 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
-
-const formSchema = z.object({
-  purpose: z.string().min(1, { message: "Purpose is required" }),
-  foreignBankCharges: z.enum(["OUR", "BEN"]),
-  payer: z.string().min(1, { message: "Payer is required" }),
-  forexPartner: z.string().min(1, { message: "Forex partner is required" }),
-  margin: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-    message: "Margin must be a positive number",
-  }),
-  receiverBankCountry: z.string().min(1, { message: "Receiver's bank country is required" }),
-  studentName: z.string().min(1, { message: "Student name is required" }),
-  consultancy: z.string().min(1, { message: "Consultancy is required" }),
-  ibrRate: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-    message: "IBR Rate must be a positive number",
-  }),
-  amount: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-    message: "Amount must be a positive number",
-  }),
-  currency: z.string().min(1, { message: "Currency is required" }),
-  totalAmount: z.string().optional(),
-  customerRate: z.string().optional(),
-})
-
-type FormValues = z.infer<typeof formSchema>
+import { orderDetailsFormSchema, OrderDetailsFormValues } from "@/schema/orderdetails"
 
 export default function OrderDetailsForm() {
-  const [showCalculation, setShowCalculation] = useState(false)
-  const [calculatedValues, setCalculatedValues] = useState({
+  const [showCalculation, setShowCalculation] = useState(false);
+  const [calculatedValues] = useState({
     inrAmount: "8,33,420.06",
     bankFee: "16,428.80",
     gst: "0",
     tcsApplicable: "1,69,953.15",
     totalPayable: "10,11,399.30",
     customerRate: "113.18",
-  })
+  });
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<OrderDetailsFormValues>({
+    resolver: zodResolver(orderDetailsFormSchema),
     defaultValues: {
       purpose: "",
-      foreignBankCharges: "OUR", // OUR is set as default here
+      foreignBankCharges: "OUR",
       payer: "",
       forexPartner: "",
       margin: "",
@@ -65,22 +41,23 @@ export default function OrderDetailsForm() {
       totalAmount: "",
       customerRate: "",
     },
-  })
+  });
 
-  function onSubmit(data: FormValues) {
-    console.log(data)
+  function onSubmit(data: OrderDetailsFormValues) {
+    console.log(data);
   }
 
   function resetForm() {
-    form.reset()
-    setShowCalculation(false)
+    form.reset();
+    setShowCalculation(false);
   }
 
   function handleShowCalculation() {
-    setShowCalculation(true)
-    form.setValue("totalAmount", "10,11,399.30")
-    form.setValue("customerRate", "113.18")
+    setShowCalculation(true);
+    form.setValue("totalAmount", "10,11,399.30");
+    form.setValue("customerRate", "113.18");
   }
+
 
   return (
     <Form {...form}>

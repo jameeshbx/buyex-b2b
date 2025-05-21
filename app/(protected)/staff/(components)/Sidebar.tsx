@@ -4,7 +4,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import Image from "next/image"
 import { cn } from "@/lib/utils"
 import { useMobile } from "@/hooks/use-mobile"
@@ -66,35 +66,54 @@ export function Sidebar() {
       )}
       <div
         className={cn(
-          "h-screen bg-white shadow-sm flex flex-col justify-between transition-all duration-300 border-r fixed z-10 md:relative",
+          "h-screen bg-white shadow-sm flex flex-col justify-between transition-all duration-300 border-r fixed z-10",
           collapsed ? "w-[70px]" : "w-[240px]",
         )}
       >
         {/* Header with logo and toggle */}
-        <div className="p-4 flex items-center justify-between">
+        <div className="p-4 flex items-center justify-between border-b">
           <div className="flex items-center">
-            {/* Desktop view */}
-            <div className="hidden md:block relative ml-8 h-[60px] w-[116px]">
-              <Image
-                src="/header-logo.png"
-                alt="Buy exchange logo"
-                width={116}
-                height={60}
-                className="h-full w-full object-contain"
-              />
-            </div>
-
-            {/* Mobile/tablet view */}
-            <div className="md:hidden relative ml-2 h-10 w-10">
-              <Image
-                src="/Top.png"
-                alt="Buy exchange logo"
-                width={40}
-                height={40}
-                className="h-full w-auto object-contain"
-              />
-            </div>
+            {/* Expanded view with logo and text */}
+            {!collapsed && (
+              <div className="hidden md:flex items-center">
+                <div className="relative h-[60px] w-[116px]">
+                  <Image
+                    src="/header-logo.png"
+                    alt="Buy exchange logo"
+                    width={116}
+                    height={60}
+                    className="h-full w-full object-contain"
+                  />
+                </div>
+              </div>
+            )}
+            
+            {/* Collapsed view - Just icon */}
+            {collapsed && (
+              <div className="relative h-10 w-10">
+                <Image
+                  src="/Top.png"
+                  alt="Buy exchange logo"
+                  width={40}
+                  height={40}
+                  className="h-full w-auto object-contain"
+                />
+              </div>
+            )}
           </div>
+          
+          {/* Toggle button - Only visible on desktop */}
+          <button 
+            onClick={toggleSidebar}
+            className="hidden md:flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 transition-colors"
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {collapsed ? (
+              <ChevronRight className="w-5 h-5 text-gray-500" />
+            ) : (
+              <ChevronLeft className="w-5 h-5 text-gray-500" />
+            )}
+          </button>
         </div>
 
         {/* Main navigation */}
