@@ -104,3 +104,36 @@ model VerificationToken {
   expires   DateTime
   createdAt DateTime @default(now())
 }
+
+model Sender {
+  id                   String   @id @default(cuid())
+  studentName          String
+  studentEmailOriginal String
+  studentEmailFake     String
+  phoneNumber          String
+  addressLine1         String
+  addressLine2         String?
+  state                String
+  postalCode           String
+  nationality          String   @default("indian")
+  relationship         String   @default("self")
+  senderName           String?
+  bankCharges          String?
+  mothersName          String?
+  dob                  String?
+  senderNationality    String?  @default("indian")
+  senderEmail          String?
+  sourceOfFunds        String?
+  occupationStatus     String?
+  payerAccountNumber   String?
+  payerBankName        String?
+  senderAddressLine1   String?
+  senderAddressLine2   String?
+  senderState          String?
+  senderPostalCode     String?
+  status               String   @default("pending")
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@map("senders")
+}
