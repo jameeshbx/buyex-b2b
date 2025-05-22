@@ -7,8 +7,8 @@ interface TopbarProps {
 
 export function Topbar({ pageData }: TopbarProps) {
   return (
-    <div className="w-full bg-off-white">
-      <div className="container mx-auto px-4 py-4">
+    <div className="w-full bg-off-white ">
+      <div className="container mx-auto px-4 py-4 ">
         <nav className="flex" aria-label="Breadcrumb">
           <ol className="flex items-center space-x-2 text-base font-jakarta text-gray-400">
             {pageData.breadcrumbs.map((item, index) => (
