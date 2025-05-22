@@ -44,7 +44,7 @@ function Senderdetails() {
       mothersName: "",
       dob: "",
       senderNationality: "indian",
-      senderEmail: "",
+      senderEmail: "test@test.com",
       sourceOfFunds: undefined,
       occupationStatus: undefined,
       payerAccountNumber: "",
@@ -63,8 +63,30 @@ function Senderdetails() {
   const [selectedStatus] = useState("pending")
 
   const onSubmit = (data: FormValues) => {
-    console.log(data)
+    console.log('onSubmit function called') // Debug log
+    // Log form data
+    console.log('Form Data:', data)
+
+    // Check for form errors
+    const errors = form.formState.errors
+    if (Object.keys(errors).length > 0) {
+      console.log('Form Errors:', errors)
+      // You can also show a toast notification here if you have a toast system
+      alert('Please fix the form errors before submitting')
+      return
+    }
+
+    // If no errors, proceed with form submission
+    console.log('Form submitted successfully')
   }
+
+  // Add form state logging
+  console.log('Form State:', {
+    isSubmitting: form.formState.isSubmitting,
+    isDirty: form.formState.isDirty,
+    isValid: form.formState.isValid,
+    errors: form.formState.errors
+  })
 
   const handleReset = () => {
     form.reset()
@@ -128,7 +150,13 @@ function Senderdetails() {
             <Card className="shadow-none bg-transparent sm:bg-white sm:shadow-sm sm:border rounded-none">
               <CardContent className="p-0 sm:p-0">
                 <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 sm:space-y-8">
+                  <form
+                    onSubmit={(e) => {
+                      console.log('Form submit event triggered') // Debug log
+                      form.handleSubmit(onSubmit)(e)
+                    }}
+                    className="space-y-6 sm:space-y-8"
+                  >
                     {/* Student Details Section */}
                     <div className="p-6 sm:p-6 mb-5">
                       <h2 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6 font-jakarta">Student Details</h2>
@@ -222,7 +250,7 @@ function Senderdetails() {
                           name="addressLine1"
                           render={({ field }) => (
                             <FormItem className="space-y-1 sm:space-y-2">
-                              <FormLabel className="font-jakarta text-sm sm:text-base text-gray-500 text-gray-500">Address 
+                              <FormLabel className="font-jakarta text-sm sm:text-base text-gray-500 text-gray-500">Address
                               </FormLabel>
                               <FormControl>
                                 <Input
@@ -242,7 +270,7 @@ function Senderdetails() {
                           name="addressLine2"
                           render={({ field }) => (
                             <FormItem className="space-y-1 sm:space-y-2 mt-10">
-                              
+
                               <FormControl>
                                 <Input
                                   placeholder="Street / Locality"
@@ -568,7 +596,7 @@ function Senderdetails() {
                             name="senderPostalCode"
                             render={({ field }) => (
                               <FormItem className="space-y-1 sm:space-y-2">
-                               
+
                                 <FormControl>
                                   <Input
                                     placeholder="Postal code"
@@ -752,7 +780,7 @@ function Senderdetails() {
                         className="bg-white hover:bg-white text-dark-gray border-gray-300 h-12 sm:h-15 w-full sm:w-55 rounded-none"
                         onClick={handleReset}
                       >
-                        <Image src="/reset.svg" alt=""  width={15} height={15} className="mr-2" /> RESET
+                        <Image src="/reset.svg" alt="" width={15} height={15} className="mr-2" /> RESET
                       </Button>
                     </div>
                   </form>
