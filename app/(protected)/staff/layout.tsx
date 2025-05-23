@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { Sidebar } from '@/app/(protected)/staff/(components)/Sidebar';
 
-
 export default function ClientLayout({
   children,
 }: {
