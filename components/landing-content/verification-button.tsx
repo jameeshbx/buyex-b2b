@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { RefreshCcw, Check, Clock, AlertCircle } from "lucide-react"
 
 type VerificationState = "idle" | "verifying" | "incomplete" | "succeeded" | "timeout"
@@ -18,7 +18,53 @@ export default function VerificationButton({ onVerificationComplete, isVerified 
   const movementThreshold = 50 // Minimum mouse movement required for verification
   const verificationTime = 2000 // Time allowed for verification
 
-  const startVerification = () => {
+  const completeVerification = useCallback((success: boolean) => {
+    if (verificationTimeoutRef.current !== undefined) {
+      clearTimeout(verificationTimeoutRef.current)
+    }
+    const result = success ? "succeeded" : "incomplete"
+    setVerificationState(result)
+    onVerificationComplete(success)
+  }, [onVerificationComplete])
+
+  const resetVerification = useCallback(() => {
+    setVerificationState("idle")
+    setMousePath([])
+  }, [])
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (verificationState !== "verifying") return
+    
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect()
+      const x = e.clientX - rect.left
+      const y = e.clientY - rect.top
+      
+      setMousePath(prev => {
+        const newPath = [...prev, {x, y}]
+        
+        // Check if enough movement has been detected
+        if (newPath.length > 1) {
+          const totalMovement = newPath.reduce((acc, point, index) => {
+            if (index === 0) return acc
+            const prevPoint = newPath[index - 1]
+            return acc + Math.sqrt(
+              Math.pow(point.x - prevPoint.x, 2) + 
+              Math.pow(point.y - prevPoint.y, 2)
+            )
+          }, 0)
+          
+          if (totalMovement > movementThreshold) {
+            completeVerification(true)
+          }
+        }
+        
+        return newPath
+      })
+    }
+  }, [verificationState, completeVerification])
+
+  const startVerification = useCallback(() => {
     if (verificationState !== "idle" && verificationState !== "timeout") return
 
     setVerificationState("verifying")
@@ -31,50 +77,7 @@ export default function VerificationButton({ onVerificationComplete, isVerified 
         onVerificationComplete(false)
       }
     }, verificationTime)
-  }
-
-  const handleMouseMove = (e: MouseEvent) => {
-    if (verificationState !== "verifying") return
-    
-    // Record mouse position relative to the button
-    if (buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect()
-      const x = e.clientX - rect.left
-      const y = e.clientY - rect.top
-      
-      setMousePath(prev => [...prev, {x, y}])
-      
-      // Check if enough movement has been detected
-      if (mousePath.length > 0) {
-        const totalMovement = mousePath.reduce((acc, point, index) => {
-          if (index === 0) return acc
-          const prevPoint = mousePath[index - 1]
-          return acc + Math.sqrt(
-            Math.pow(point.x - prevPoint.x, 2) + 
-            Math.pow(point.y - prevPoint.y, 2)
-          )
-        }, 0)
-        
-        if (totalMovement > movementThreshold) {
-          completeVerification(true)
-        }
-      }
-    }
-  }
-
-  const completeVerification = (success: boolean) => {
-    if (verificationTimeoutRef.current !== null) {
-      clearTimeout(verificationTimeoutRef.current)
-    }
-    const result = success ? "succeeded" : "incomplete"
-    setVerificationState(result)
-    onVerificationComplete(success)
-  }
-
-  const resetVerification = () => {
-    setVerificationState("idle")
-    setMousePath([])
-  }
+  }, [verificationState, mousePath.length, onVerificationComplete])
 
   useEffect(() => {
     if (verificationState === "verifying") {
@@ -85,16 +88,18 @@ export default function VerificationButton({ onVerificationComplete, isVerified 
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove)
-      clearTimeout(verificationTimeoutRef.current)
+      if (verificationTimeoutRef.current !== undefined) {
+        clearTimeout(verificationTimeoutRef.current)
+      }
     }
-  }, [verificationState, mousePath])
+  }, [verificationState, handleMouseMove])
 
   // Reset to idle state if isVerified is set to false externally
   useEffect(() => {
     if (!isVerified && verificationState === "succeeded") {
       resetVerification()
     }
-  }, [isVerified, verificationState])
+  }, [isVerified, verificationState, resetVerification])
 
   return (
     <button
