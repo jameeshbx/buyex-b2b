@@ -142,45 +142,46 @@ function Senderdetails() {
     <div>
       {/* Status Popup Dialog */}
       <Dialog open={showStatusPopup} onOpenChange={setShowStatusPopup}>
-  <DialogContent className="sm:max-w-[425px]">
-    <DialogHeader>
-      <DialogTitle>Block Rate status</DialogTitle>
-      <DialogDescription className="mt-10">
+  <DialogContent className="w-[90vw] max-w-[425px] md:w-full">
+    <DialogHeader className="px-4 sm:px-6">
+      <DialogTitle className="text-lg sm:text-xl">Block Rate status</DialogTitle>
+      <DialogDescription className="mt-2 sm:mt-3 text-sm sm:text-base">
         Rate block status
       </DialogDescription>
     </DialogHeader>
-    <div className="grid gap-4 py-4">
+    <div className="px-4 sm:px-6 py-2 sm:py-4">
       <Select 
         value={selectedStatus}
         onValueChange={(value) => setSelectedStatus(value)}
       >
-        <SelectTrigger className="w-full">
+        <SelectTrigger className="w-full h-10 sm:h-12 text-sm sm:text-base">
           <SelectValue placeholder="Select status" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="text-sm sm:text-base">
           <SelectItem value="pending">Pending</SelectItem>
           <SelectItem value="blocked">Blocked</SelectItem>
         </SelectContent>
       </Select>
     </div>
-    <DialogFooter>
-      <Button
-        variant="outline"
-        onClick={handleStatusCancel}
-        className="border-gray-300"
-      >
-        Cancel
-      </Button>
-      <Button
-        onClick={handleStatusConfirm}
-        className="bg-dark-blue hover:bg-dark-blue"
-      >
-        Submit
-      </Button>
+    <DialogFooter className="px-4 sm:px-6 pb-4 sm:pb-6">
+      <div className="flex flex-col sm:flex-row w-full gap-2 sm:gap-3">
+        <Button
+          variant="outline"
+          onClick={handleStatusCancel}
+          className="w-full h-10 sm:h-12 text-sm sm:text-base border-gray-300"
+        >
+          Cancel
+        </Button>
+        <Button
+          onClick={handleStatusConfirm}
+          className="w-full h-10 sm:h-12 text-sm sm:text-base bg-dark-blue hover:bg-dark-blue"
+        >
+          Submit
+        </Button>
+      </div>
     </DialogFooter>
   </DialogContent>
 </Dialog>
-
       <div className="max-w-7xl mx-auto -mt-10 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         <Tabs defaultValue="sender" className="w-full">
           <TabsContent value="sender">
