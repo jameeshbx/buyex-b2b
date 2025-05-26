@@ -1,19 +1,32 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { ChevronLeft, ChevronRight } from "lucide-react"
-import Image from "next/image"
-import { cn } from "@/lib/utils"
-import { useMobile } from "@/hooks/use-mobile"
+import type React from "react"
 
-interface NavItemProps {
+import { useState, useEffect } from "react"
+import { useMediaQuery } from "@/hooks/use-mobile"
+import { usePathname } from "next/navigation"
+import Image from "next/image"
+import Link from "next/link"
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { cn } from "@/lib/utils"
+
+export function useMobile() {
+  const isMobileQuery = useMediaQuery("(max-width: 768px)")
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    setIsMobile(isMobileQuery)
+  }, [isMobileQuery])
+
+  return isMobile
+}
+
+type NavItemProps = {
   href: string
   icon: React.ReactNode
   label: string
   collapsed: boolean
-  active?: boolean
+  active: boolean
 }
 
 function NavItem({ href, icon, label, collapsed, active }: NavItemProps) {
@@ -21,12 +34,17 @@ function NavItem({ href, icon, label, collapsed, active }: NavItemProps) {
     <Link
       href={href}
       className={cn(
-        "flex items-center px-4 py-2.5 rounded-lg mx-2 text-gray-600 hover:bg-gray-100 transition-colors",
+        "flex items-center px-3 py-2.5 rounded-lg mx-2 text-gray-600 hover:bg-gray-100 transition-colors",
         active && "bg-blue-50 text-blue-600 font-medium",
-        collapsed ? "justify-center" : "justify-start"
+        collapsed ? "justify-center" : "justify-start",
       )}
     >
-      <span className={cn("flex-shrink-0", active ? "text-blue-600" : "text-gray-500")}>
+      <span
+        className={cn(
+          "flex-shrink-0 flex items-center justify-center w-6 h-6",
+          active ? "text-blue-600" : "text-gray-500",
+        )}
+      >
         {icon}
       </span>
       {!collapsed && <span className="ml-3 truncate">{label}</span>}
@@ -34,12 +52,12 @@ function NavItem({ href, icon, label, collapsed, active }: NavItemProps) {
   )
 }
 
-export function Sidebar({ 
-  collapsed, 
-  toggleSidebar 
-}: { 
-  collapsed: boolean 
-  toggleSidebar: () => void 
+export function Sidebar({
+  collapsed,
+  toggleSidebar,
+}: {
+  collapsed: boolean
+  toggleSidebar: () => void
 }) {
   const isMobile = useMobile()
   const pathname = usePathname()
@@ -49,26 +67,26 @@ export function Sidebar({
       href: "/dashboard",
       icon: <Image src="/dash.svg" alt="Dashboard" width={24} height={24} className="w-6 h-6" />,
       label: "Dashboard",
-      active: pathname === "/dashboard"
+      active: pathname === "/dashboard",
     },
     {
       href: "/orders",
       icon: <Image src="/orders.svg" alt="Orders" width={24} height={24} className="w-6 h-6" />,
       label: "View All Orders",
-      active: pathname === "/orders"
+      active: pathname === "/orders",
     },
     {
       href: "/place-order",
       icon: <Image src="/placeee.svg" alt="Place Order" width={24} height={24} className="w-6 h-6" />,
       label: "Place an order",
-      active: pathname === "/place-order"
+      active: pathname === "/place-order",
     },
     {
       href: "/receivers",
       icon: <Image src="/Placean.svg" alt="Receivers" width={24} height={24} className="w-6 h-6" />,
       label: "Manage receivers",
-      active: pathname === "/receivers"
-    }
+      active: pathname === "/receivers",
+    },
   ]
 
   const secondaryItems = [
@@ -76,57 +94,46 @@ export function Sidebar({
       href: "/settings",
       icon: <Image src="/Icon-1.svg" alt="Settings" width={24} height={24} className="w-6 h-6" />,
       label: "Settings",
-      active: pathname === "/settings"
+      active: pathname === "/settings",
     },
     {
       href: "/support",
       icon: <Image src="/Icon-2.svg" alt="Support" width={24} height={24} className="w-6 h-6" />,
       label: "Support",
-      active: pathname === "/support"
+      active: pathname === "/support",
     },
     {
       href: "/",
       icon: <Image src="/icon-park-outline_reject.svg" alt="Logout" width={20} height={24} className="w-5 h-6" />,
       label: "Logout",
-      active: pathname === "/logout"
-    }
+      active: pathname === "/logout",
+    },
   ]
 
   return (
     <>
       {/* Mobile overlay */}
       {isMobile && !collapsed && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-[5] lg:hidden" 
-          onClick={toggleSidebar} 
-          aria-hidden="true" 
-        />
+        <div className="fixed inset-0 bg-black/50 z-[49] lg:hidden" onClick={toggleSidebar} aria-hidden="true" />
       )}
 
       {/* Sidebar container */}
       <div
         className={cn(
           "h-screen bg-white shadow-sm flex flex-col justify-between transition-all duration-300 border-r fixed z-50",
-          collapsed ? "w-20" : "w-64",
-          isMobile && !collapsed ? "translate-x-0" : "lg:translate-x-0",
-          isMobile && collapsed ? "-translate-x-full lg:translate-x-0" : ""
+          collapsed ? "w-16 sm:w-20" : "w-64",
+          isMobile && collapsed ? "translate-x-0" : isMobile && !collapsed ? "translate-x-0" : "translate-x-0",
         )}
       >
         {/* Header section */}
-        <div className="p-4 flex items-center justify-between border-b">
+        <div className="p-4 flex items-center justify-between">
           <Link href="/" className="flex items-center">
             {collapsed ? (
               <div className="relative h-10 w-10">
-                <Image
-                  src="/Top.png"
-                  alt="Logo"
-                  width={40}
-                  height={40}
-                  className="h-full w-auto object-contain"
-                />
+                <Image src="/Top.png" alt="Logo" width={40} height={40} className="h-full w-auto object-contain" />
               </div>
             ) : (
-              <div className="relative h-[60px] w-[116px]">
+              <div className="relative h-[60px] w-[116px] ml-8">
                 <Image
                   src="/header-logo.png"
                   alt="Logo"
@@ -138,10 +145,10 @@ export function Sidebar({
             )}
           </Link>
 
-          {/* Desktop toggle button */}
-          <button 
+          {/* Toggle button - visible on all screen sizes */}
+          <button
             onClick={toggleSidebar}
-            className="hidden lg:flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 transition-colors"
+            className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 transition-colors"
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             {collapsed ? (
@@ -184,19 +191,10 @@ export function Sidebar({
         </div>
 
         {/* User profile section */}
-        <div className={cn(
-          "border-t p-4 flex items-center",
-          collapsed ? "justify-center" : "justify-between"
-        )}>
+        <div className={cn("border-t p-4 flex items-center", collapsed ? "justify-center" : "justify-between")}>
           <div className="flex items-center min-w-0">
             <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
-              <Image
-                src="/boy.jpg"
-                alt="User avatar"
-                width={40}
-                height={40}
-                className="h-full w-full object-cover"
-              />
+              <Image src="/boy.jpg" alt="User avatar" width={40} height={40} className="h-full w-full object-cover" />
             </div>
             {!collapsed && (
               <div className="ml-3 min-w-0 flex-1 overflow-hidden">
@@ -205,9 +203,7 @@ export function Sidebar({
               </div>
             )}
           </div>
-          {!collapsed && (
-            <ChevronRight size={16} className="text-gray-400 flex-shrink-0" />
-          )}
+          {!collapsed && <ChevronRight size={16} className="text-gray-400 flex-shrink-0" />}
         </div>
       </div>
     </>
@@ -218,28 +214,25 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false)
   const isMobile = useMobile()
 
-  // Initialize state from localStorage or default based on screen size
+  // Automatically collapse on mobile and expand on desktop
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    if (isMobile) {
+      setCollapsed(true)
+    } else {
+      // Check localStorage for preference when not on mobile
       const storedState = localStorage.getItem("sidebarCollapsed")
       if (storedState !== null) {
         setCollapsed(storedState === "true")
       } else {
-        // Default to collapsed on mobile
-        setCollapsed(isMobile)
+        setCollapsed(false)
       }
     }
   }, [isMobile])
 
-  // Persist state to localStorage and handle mobile behavior
+  // Persist state to localStorage (only for desktop)
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      if (!isMobile) {
-        localStorage.setItem("sidebarCollapsed", String(collapsed))
-      } else {
-        // Always collapse on mobile
-        if (!collapsed) setCollapsed(true)
-      }
+    if (!isMobile && typeof window !== "undefined") {
+      localStorage.setItem("sidebarCollapsed", String(collapsed))
     }
   }, [collapsed, isMobile])
 
@@ -250,13 +243,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar collapsed={collapsed} toggleSidebar={toggleSidebar} />
-      
+
       {/* Main content area */}
-      <main className={cn(
-        "flex-1 overflow-auto transition-[margin] duration-300",
-        collapsed ? "ml-20" : "ml-64",
-        "p-6 max-w-7xl w-full mx-auto"
-      )}>
+      <main
+        className={cn(
+          "flex-1 overflow-auto transition-[margin] duration-300",
+          collapsed ? "ml-16 sm:ml-20" : "ml-0 md:ml-64",
+          "p-4 sm:p-6 max-w-7xl w-full mx-auto",
+        )}
+      >
         {children}
       </main>
     </div>
