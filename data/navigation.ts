@@ -25,11 +25,11 @@ export const pagesData: Record<string, PageData> = {
       { label: "Place an order", href: "/staff/dashboard/sender-details", current: true },
     ],
   },
-  products: {
-    title: "Products",
+  placeOrder: {
+    title: "Place an order",
     breadcrumbs: [
       { label: "Dashboards", href: "/dashboards" },
-      { label: "Products", href: "/dashboards/products", current: true },
+      { label: "Place an order", href: "/staff/dashboard/placeorder", current: true },
     ],
   },
 }
