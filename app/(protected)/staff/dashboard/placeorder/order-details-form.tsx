@@ -4,7 +4,7 @@ import { useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { Download, ArrowRight, RotateCcw, Play } from "lucide-react"
-
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
@@ -15,6 +15,7 @@ import { orderDetailsFormSchema, OrderDetailsFormValues } from "@/schema/orderde
 
 export default function OrderDetailsForm() {
   const [showCalculation, setShowCalculation] = useState(false);
+  const router = useRouter()
   const [calculatedValues] = useState({
     inrAmount: "8,33,420.06",
     bankFee: "16,428.80",
@@ -43,9 +44,11 @@ export default function OrderDetailsForm() {
     },
   });
 
-  function onSubmit(data: OrderDetailsFormValues) {
-    console.log(data);
-  }
+ function onSubmit(data: OrderDetailsFormValues) {
+  console.log(data);
+  localStorage.setItem('selectedPayer', data.payer);
+  router.push("/staff/dashboard/sender-details");
+}
 
   function resetForm() {
     form.reset();
@@ -60,6 +63,7 @@ export default function OrderDetailsForm() {
 
 
   return (
+    <div className="max-w-7xl mx-auto mt-10 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -487,5 +491,6 @@ export default function OrderDetailsForm() {
         </div>
       </form>
     </Form>
+    </div>
   )
 }

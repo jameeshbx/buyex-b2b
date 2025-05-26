@@ -1,3 +1,4 @@
+"use client"
 import React from 'react'
 import Sender from '@/app/(protected)/staff/dashboard/sender-details/Senderdetails'
 import { Topbar } from '@/app/(protected)/staff/(components)/Topbar'
