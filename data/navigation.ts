@@ -25,7 +25,15 @@ export const pagesData: Record<string, PageData> = {
       { label: "Place an order", href: "/staff/dashboard/sender-details", current: true },
     ],
   },
-  orderPreview: {
+  placeOrder: {
+    title: "Place an order",
+    breadcrumbs: [
+      { label: "Dashboards", href: "/dashboards" },
+      { label: "Place an order", href: "/staff/dashboard/placeorder", current: true },
+    ]
+
+      },
+    orderPreview: {
     title: "Order Preview",
     breadcrumbs: [
       { label: "Dashboards", href: "/dashboards" },
