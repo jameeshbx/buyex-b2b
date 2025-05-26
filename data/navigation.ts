@@ -13,16 +13,15 @@ export const pagesData: Record<string, PageData> = {
   viewOrders: {
     title: "View orders",
     breadcrumbs: [
-      { label: "Dashboards", href: "/dashboards" },
+      { label: "Dashboards", href: "/staff/dashboard" },
       { label: "View orders", href: "/dashboards/view-orders", current: true },
     ],
   },
-  // Add more pages as needed
-  customers: {
-    title: "Customers",
+  newBeneficiary: {
+    title: "Place an order",
     breadcrumbs: [
-      { label: "Dashboards", href: "/dashboards" },
-      { label: "Customers", href: "/dashboards/customers", current: true },
+      { label: "Dashboards", href: "/staff/dashboards" },
+      { label: "Place an order", href: "/staff/dashboard/beneficiary-details", current: true },
     ],
   },
   products: {
