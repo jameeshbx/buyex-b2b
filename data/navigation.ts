@@ -17,7 +17,13 @@ export const pagesData: Record<string, PageData> = {
       { label: "Place an order", href: "/staff/dashboard/placeorder", current: true },
     ],
   },
-  // Add more pages as needed
+  newBeneficiary: {
+    title: "Place an order",
+    breadcrumbs: [
+      { label: "Dashboards", href: "/staff/dashboards" },
+      { label: "Place an order", href: "/staff/dashboard/beneficiary-details", current: true },
+    ],
+  },
   senderDetails: {
     title: "Place an order",
     breadcrumbs: [

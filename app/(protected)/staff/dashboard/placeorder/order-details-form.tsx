@@ -4,7 +4,7 @@ import { useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { Download, ArrowRight, RotateCcw, Play } from "lucide-react"
-
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
@@ -15,6 +15,7 @@ import { orderDetailsFormSchema, OrderDetailsFormValues } from "@/schema/orderde
 
 export default function OrderDetailsForm() {
   const [showCalculation, setShowCalculation] = useState(false);
+  const router = useRouter()
   const [calculatedValues] = useState({
     inrAmount: "8,33,420.06",
     bankFee: "16,428.80",
@@ -62,9 +63,12 @@ export default function OrderDetailsForm() {
   "Uzbekistan": "USD"
 };
 
-  function onSubmit(data: OrderDetailsFormValues) {
-    console.log(data);
-  }
+ 
+ function onSubmit(data: OrderDetailsFormValues) {
+  console.log(data);
+  localStorage.setItem('selectedPayer', data.payer);
+  router.push("/staff/dashboard/sender-details");
+}
 
   function resetForm() {
     form.reset();
@@ -79,6 +83,7 @@ export default function OrderDetailsForm() {
 
 
   return (
+    
     <Form {...form}>
   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -109,7 +114,7 @@ export default function OrderDetailsForm() {
                 defaultValue={field.value}
               >
                 <FormControl>
-                  <SelectTrigger className="bg-blue-50/50 border-blue-100 h-12">
+                  <SelectTrigger className="bg-blue-50/50 border-blue-100 h-12 w-full">
                     <SelectValue placeholder="Select purpose" />
                   </SelectTrigger>
                 </FormControl>
@@ -164,7 +169,7 @@ export default function OrderDetailsForm() {
               <FormLabel className="text-gray-700 font-normal">Payer</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <SelectTrigger className="bg-blue-50/50 border-blue-100 h-12">
+                  <SelectTrigger className="bg-blue-50/50 border-blue-100 h-12 w-full">
                     <SelectValue placeholder="Select payer" />
                   </SelectTrigger>
                 </FormControl>
@@ -187,7 +192,7 @@ export default function OrderDetailsForm() {
               <FormLabel className="text-gray-700 font-normal">Choose forex partner</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <SelectTrigger className="bg-blue-50/50 border-blue-100 h-12">
+                  <SelectTrigger className="bg-blue-50/50 border-blue-100 h-12 w-full">
                     <SelectValue placeholder="Select forex partner" />
                   </SelectTrigger>
                 </FormControl>
@@ -237,7 +242,7 @@ export default function OrderDetailsForm() {
                 }
               >
                 <FormControl>
-                  <SelectTrigger className="bg-blue-50/50 border-blue-100 h-12">
+                  <SelectTrigger className="bg-blue-50/50 border-blue-100 h-12 w-full">
                     <SelectValue placeholder="Select country" />
                   </SelectTrigger>
                 </FormControl>
@@ -286,10 +291,10 @@ export default function OrderDetailsForm() {
           name="consultancy"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-gray-700 font-normal">Choose consultancy</FormLabel>
+              <FormLabel className="text-gray-700 font-normal ">Choose consultancy</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <SelectTrigger className="bg-blue-50/50 border-blue-100 h-12">
+                  <SelectTrigger className="bg-blue-50/50 border-blue-100 h-12 w-full">
                     <SelectValue placeholder="Select consultancy" />
                   </SelectTrigger>
                 </FormControl>
