@@ -204,6 +204,9 @@
     .font-jakarta {
       font-family: var(--font-plus-jakarta);
     }
+    .font-Inter{
+      font-family: 'Inter', sans-serif;
+    }
 }
 
 /* Add Tailwind utilities for the new deep-blue color */
@@ -218,3 +221,4 @@
     border-color: var(--deep-blue);
   }
 }
+
