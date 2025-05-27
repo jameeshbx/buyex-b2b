@@ -37,3 +37,4 @@ export const getActiveMenuItem = (currentPath: string): MenuItem[] => {
     active: currentPath.includes(item.url),
   }))
 }
+
