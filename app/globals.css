@@ -7,6 +7,7 @@
 
 @theme inline {
   --color-dark-blue:var(--dark-blue); 
+   --color-sky-blue:var(--sky-blue);
   --color-dark-gray:var(--dark-gray);
   --color-medium-blue:var(--medium-blue);
   --color-deep-blue:var(--deep-blue);
@@ -72,6 +73,7 @@
 :root {
   
   --dark-blue: #094B72; 
+   --sky-blue:#E0E4EC;
   --medium-blue:#083d5e;
   --deep-blue: #193E6C;
   --dark-rose:#F73770;
@@ -215,4 +217,5 @@
   .border-deep-blue {
     border-color: var(--deep-blue);
   }
+ 
 }

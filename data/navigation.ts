@@ -10,11 +10,11 @@ export type PageData = {
 }
 
 export const pagesData: Record<string, PageData> = {
-  viewOrders: {
-    title: "View orders",
+  orderDetails: {
+    title: "Place an order",
     breadcrumbs: [
       { label: "Dashboard", href: "/dashboard" },
-      { label: "View orders", href: "/dashboard/view-orders", current: true },
+      { label: "Place an order", href: "/staff/dashboard/placeorder", current: true },
     ],
   },
   // Add more pages as needed
@@ -25,11 +25,11 @@ export const pagesData: Record<string, PageData> = {
       { label: "Place an order", href: "/staff/dashboard/sender-details", current: true },
     ],
   },
-  products: {
-    title: "Products",
+  documentUpload: {
+    title: "Place an order",
     breadcrumbs: [
       { label: "Dashboards", href: "/dashboards" },
-      { label: "Products", href: "/dashboards/products", current: true },
+      { label: "Place an order", href: "/staff/dashboard/document-upload", current: true },
     ],
   },
 }
