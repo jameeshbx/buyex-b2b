@@ -26,7 +26,7 @@ export const menuItems: MenuItem[] = [
   {
     id: "documents",
     label: "Documents",
-    url: "/documents",
+    url: "/staff/dashboard/document-upload",
   },
 ]
 
@@ -37,4 +37,3 @@ export const getActiveMenuItem = (currentPath: string): MenuItem[] => {
     active: currentPath.includes(item.url),
   }))
 }
-
