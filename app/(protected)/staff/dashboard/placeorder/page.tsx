@@ -8,16 +8,12 @@ import BreadcrumbMenubar from '../../(components)/Menubar'
 
 function page() {
   return (
-     <div>
-      <div className="sticky top-0 z-10 bg-gray-50">
-      <Topbar pageData={pagesData.placeOrder}/>    
-      </div>    
-       <div className="sticky top-25 z-10 bg-gray-50">
-       <BreadcrumbMenubar />
-     </div>
-     <div>
-    <OrderDetailsForm/>
-    </div>
+    <div>
+      <Topbar pageData={pagesData.orderDetails}/>  
+      <BreadcrumbMenubar/>
+      <div className='py-4'>
+        <OrderDetailsForm/>
+      </div>
     </div>
   )
 }
