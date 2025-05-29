@@ -7,7 +7,7 @@ import { useMediaQuery } from "@/hooks/use-mobile"
 import { usePathname } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ChevronDown, List, UserPlus } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export function useMobile() {
@@ -61,6 +61,7 @@ export function Sidebar({
 }) {
   const isMobile = useMobile()
   const pathname = usePathname()
+  const [receiversDropdownOpen, setReceiversDropdownOpen] = useState(false)
 
   const navItems = [
     {
@@ -85,7 +86,8 @@ export function Sidebar({
       href: "/receivers",
       icon: <Image src="/Placean.svg" alt="Receivers" width={24} height={24} className="w-6 h-6" />,
       label: "Manage receivers",
-      active: pathname === "/receivers",
+      active: pathname === "/receivers" || pathname === "/receivers/list" || pathname === "/receivers/add",
+      isDropdown: true,
     },
   ]
 
@@ -162,16 +164,114 @@ export function Sidebar({
         {/* Navigation sections */}
         <div className="flex-1 overflow-y-auto py-4">
           <div className="space-y-1 px-2">
-            {navItems.map((item) => (
-              <NavItem
-                key={item.href}
-                href={item.href}
-                icon={item.icon}
-                label={item.label}
-                collapsed={collapsed}
-                active={item.active}
-              />
-            ))}
+            {navItems.map((item) => {
+              if (item.isDropdown) {
+                return (
+                  <div key={item.href}>
+                    <button
+                      onClick={() => setReceiversDropdownOpen(!receiversDropdownOpen)}
+                      className={cn(
+                        "flex items-center w-full px-3 py-2.5 rounded-lg mx-2 text-gray-600 hover:bg-gray-100 transition-colors",
+                        item.active && "bg-blue-50 text-blue-600 font-medium",
+                        collapsed ? "justify-center" : "justify-start",
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "flex-shrink-0 flex items-center justify-center w-6 h-6 mr-3",
+                          item.active ? "text-blue-600" : "text-gray-500",
+                        )}
+                      >
+                        {item.icon}
+                      </span>
+                      {!collapsed && (
+                        <>
+                          <span className="ml-2 truncate flex-1 text-left">{item.label}</span>
+                          <ChevronDown
+                            className={cn("w-4 h-4 transition-transform", receiversDropdownOpen && "rotate-180")}
+                          />
+                        </>
+                      )}
+                    </button>
+
+                    {/* Dropdown items for expanded sidebar */}
+                    {receiversDropdownOpen && !collapsed && (
+                      <div className="ml-6 mt-1 space-y-1">
+                        <Link
+                          href="/receivers/list"
+                          className={cn(
+                            "flex items-center px-3 py-2 rounded-lg mx-2 text-gray-600 hover:bg-gray-100 transition-colors text-sm",
+                            pathname === "/receivers/list" && "bg-blue-50 text-blue-600 font-medium",
+                          )}
+                        >
+                          <List className="w-4 h-4 mr-2" />
+                          List receivers
+                        </Link>
+                        <Link
+                          href="/staff/dashboard/manage-receivers/add-receivers"
+                          className={cn(
+                            "flex items-center px-3 py-2 rounded-lg mx-2 text-gray-600 hover:bg-gray-100 transition-colors text-sm",
+                            pathname === "/receivers/add" && "bg-blue-50 text-blue-600 font-medium",
+                          )}
+                        >
+                          <UserPlus className="w-4 h-4 mr-2" />
+                          Add receivers
+                        </Link>
+                      </div>
+                    )}
+
+                    {/* Icon-only items for collapsed sidebar */}
+                    {collapsed && (
+                      <div className="space-y-1">
+                        <Link
+                          href="/receivers/list"
+                          className={cn(
+                            "flex items-center justify-center px-3 py-2.5 rounded-lg mx-2 text-gray-600 hover:bg-gray-100 transition-colors",
+                            pathname === "/receivers/list" && "bg-blue-50 text-blue-600 font-medium",
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "flex-shrink-0 flex items-center justify-center w-6 h-6",
+                              pathname === "/receivers/list" ? "text-blue-600" : "text-gray-500",
+                            )}
+                          >
+                            <List className="w-5 h-5" />
+                          </span>
+                        </Link>
+                        <Link
+                          href="/receivers/add"
+                          className={cn(
+                            "flex items-center justify-center px-3 py-2.5 rounded-lg mx-2 text-gray-600 hover:bg-gray-100 transition-colors",
+                            pathname === "/receivers/add" && "bg-blue-50 text-blue-600 font-medium",
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "flex-shrink-0 flex items-center justify-center w-6 h-6",
+                              pathname === "/receivers/add" ? "text-blue-600" : "text-gray-500",
+                            )}
+                          >
+                            <UserPlus className="w-5 h-5" />
+                          </span>
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                )
+              }
+
+              return (
+                <NavItem
+                  key={item.href}
+                  href={item.href}
+                  icon={item.icon}
+                  label={item.label}
+                  collapsed={collapsed}
+                  active={item.active}
+                />
+              )
+            })}
           </div>
 
           <div className="border-t border-gray-200 mt-4 pt-4 px-2">
@@ -257,4 +357,3 @@ export function Layout({ children }: { children: React.ReactNode }) {
     </div>
   )
 }
-
