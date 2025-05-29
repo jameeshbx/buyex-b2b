@@ -76,10 +76,10 @@ export function Sidebar({
       active: pathname === "/orders",
     },
     {
-      href: "/place-order",
+      href: "/staff/dashboard/placeorder",
       icon: <Image src="/placeee.svg" alt="Place Order" width={24} height={24} className="w-6 h-6" />,
       label: "Place an order",
-      active: pathname === "/place-order",
+      active: pathname === "/placeorder",
     },
     {
       href: "/receivers",
@@ -91,7 +91,7 @@ export function Sidebar({
 
   const secondaryItems = [
     {
-      href: "/settings",
+      href: "/staff/pages/settings",
       icon: <Image src="/Icon-1.svg" alt="Settings" width={24} height={24} className="w-6 h-6" />,
       label: "Settings",
       active: pathname === "/settings",
