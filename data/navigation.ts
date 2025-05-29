@@ -10,11 +10,11 @@ export type PageData = {
 }
 
 export const pagesData: Record<string, PageData> = {
-  viewOrders: {
-    title: "View orders",
+  orderDetails: {
+    title: "Place an order",
     breadcrumbs: [
-      { label: "Dashboards", href: "/staff/dashboard" },
-      { label: "View orders", href: "/dashboards/view-orders", current: true },
+      { label: "Dashboard", href: "/dashboard" },
+      { label: "Place an order", href: "/staff/dashboard/placeorder", current: true },
     ],
   },
   newBeneficiary: {
@@ -31,14 +31,13 @@ export const pagesData: Record<string, PageData> = {
       { label: "Place an order", href: "/staff/dashboard/sender-details", current: true },
     ],
   },
-  placeOrder: {
+  documentUpload: {
     title: "Place an order",
     breadcrumbs: [
-      { label: "Dashboards", href: "/staff/dashboard" },
-      { label: "Place an order", href: "/staff/dashboard/placeorder", current: true },
-    ]
-
-      },
+       { label: "Dashboards", href: "/dashboards" },
+      { label: "Place an order", href: "/staff/dashboard/document-upload", current: true },
+    ],
+  },
     orderPreview: {
     title: "Order Preview",
     breadcrumbs: [
