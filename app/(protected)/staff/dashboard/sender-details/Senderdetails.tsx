@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { Card, CardContent } from "@/components/ui/card"
@@ -20,12 +20,25 @@ import {
   DialogFooter
 } from "@/components/ui/dailog"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { useRouter } from "next/navigation"
 
 type FormValues = OriginalFormValues & {
   status?: string // Add status field to form values
 }
 
 function Senderdetails() {
+  const router = useRouter()
+  const [payer, setPayer] = useState<string>("self") // Default to "self"
+  const [showStatusPopup, setShowStatusPopup] = useState(false)
+  const [selectedStatus, setSelectedStatus] = useState("pending")
+
+   useEffect(() => {
+    const storedPayer = localStorage.getItem('selectedPayer')
+    if (storedPayer) {
+      setPayer(storedPayer.toLowerCase()) // Convert to lowercase to match values
+    }
+  }, [])
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -38,7 +51,7 @@ function Senderdetails() {
       state: "",
       postalCode: "",
       nationality: "indian",
-      relationship: "self",
+      relationship: payer as "self" | "parent" | "brother" | "sister" | "spouse" | "other" | undefined,
       senderName: "",
       bankCharges: undefined,
       mothersName: "",
@@ -57,10 +70,11 @@ function Senderdetails() {
     }
   })
 
-  const payer = form.watch("relationship")
-  const [sameAddress, setSameAddress] = useState(false)
-  const [showStatusPopup, setShowStatusPopup] = useState(false)
-  const [selectedStatus] = useState("pending")
+  const [sameAddress,setSameAddress]=useState(false)
+ useEffect(() => {
+    // Update relationship field when payer changes
+    form.setValue("relationship", payer as "self" | "parent" | "brother" | "sister" | "spouse" | "other" | undefined)
+  }, [payer, form])
 
   const onSubmit = (data: FormValues) => {
     console.log('onSubmit function called') // Debug log
@@ -78,6 +92,7 @@ function Senderdetails() {
 
     // If no errors, proceed with form submission
     console.log('Form submitted successfully')
+    router.push("/staff/dashboard/beneficiary-details") 
   }
 
   // Add form state logging
@@ -113,37 +128,60 @@ function Senderdetails() {
   const handleStatusCancel = () => {
     form.setValue("status", "pending") // Revert to pending if cancelled
     setShowStatusPopup(false)
+        if (selectedStatus === "blocked") {
+      // Additional logic for blocked status
+    }
   }
+
+  // Show status popup when component mounts if coming from place order
+  useEffect(() => {
+    setShowStatusPopup(true)
+  }, [])
 
   return (
     <div>
       {/* Status Popup Dialog */}
       <Dialog open={showStatusPopup} onOpenChange={setShowStatusPopup}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Confirm Status Change</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to change the status to BLOCKED? This action will restrict all transactions.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={handleStatusCancel}
-              className="border-gray-300"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleStatusConfirm}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              Confirm Block
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
+  <DialogContent className="w-[90vw] max-w-[425px] md:w-full">
+    <DialogHeader className="px-4 sm:px-6">
+      <DialogTitle className="text-lg sm:text-xl">Block Rate status</DialogTitle>
+      <DialogDescription className="mt-2 sm:mt-3 text-sm sm:text-base">
+        Rate block status
+      </DialogDescription>
+    </DialogHeader>
+    <div className="px-4 sm:px-6 py-2 sm:py-4">
+      <Select 
+        value={selectedStatus}
+        onValueChange={(value) => setSelectedStatus(value)}
+      >
+        <SelectTrigger className="w-full h-10 sm:h-12 text-sm sm:text-base">
+          <SelectValue placeholder="Select status" />
+        </SelectTrigger>
+        <SelectContent className="text-sm sm:text-base">
+          <SelectItem value="pending">Pending</SelectItem>
+          <SelectItem value="blocked">Blocked</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+    <DialogFooter className="px-4 sm:px-6 pb-4 sm:pb-6">
+      <div className="flex flex-col sm:flex-row w-full gap-2 sm:gap-3">
+        <Button
+          variant="outline"
+          onClick={handleStatusCancel}
+          className="w-full h-10 sm:h-12 text-sm sm:text-base border-gray-300"
+        >
+          Cancel
+        </Button>
+        <Button
+          onClick={handleStatusConfirm}
+          className="w-full h-10 sm:h-12 text-sm sm:text-base bg-dark-blue hover:bg-dark-blue"
+        >
+          Submit
+        </Button>
+      </div>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
       <div className="max-w-7xl mx-auto -mt-10 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         <Tabs defaultValue="sender" className="w-full">
           <TabsContent value="sender">
@@ -425,7 +463,7 @@ function Senderdetails() {
                                       onChange={() => field.onChange("resident")}
                                     />
                                   </FormControl>
-                                  <Label htmlFor="resident" className="text-sm sm:text-base text-gray-500">Resident</Label>
+                                  <Label htmlFor="resident" className="text-sm sm:text-base ">Resident</Label>
                                 </FormItem>
                               )}
                             />
@@ -542,7 +580,6 @@ function Senderdetails() {
                                     placeholder="Enter Building name / House name / Flat number"
                                     className="bg-blue-50 h-12 sm:h-14 rounded-none"
                                     {...field}
-                                    disabled={sameAddress}
                                   />
                                 </FormControl>
                                 <FormMessage className="text-xs sm:text-sm" />
@@ -556,13 +593,11 @@ function Senderdetails() {
                             name="senderAddressLine2"
                             render={({ field }) => (
                               <FormItem className="space-y-1 sm:space-y-2 mt-10">
-                                <FormLabel className="sr-only text-gray-500 mt-2">Street / Locality</FormLabel>
                                 <FormControl>
                                   <Input
                                     placeholder="Street / Locality"
-                                    className="bg-blue-50 h-12 sm:h-14 mt-6 sm:mt-8 rounded-none"
+                                    className="bg-blue-50 h-12 sm:h-14 rounded-none"
                                     {...field}
-                                    disabled={sameAddress}
                                   />
                                 </FormControl>
                                 <FormMessage className="text-xs sm:text-sm" />
@@ -582,7 +617,6 @@ function Senderdetails() {
                                     placeholder="State"
                                     className="bg-blue-50 h-12 sm:h-14 rounded-none"
                                     {...field}
-                                    disabled={sameAddress}
                                   />
                                 </FormControl>
                                 <FormMessage className="text-xs sm:text-sm" />
@@ -596,71 +630,20 @@ function Senderdetails() {
                             name="senderPostalCode"
                             render={({ field }) => (
                               <FormItem className="space-y-1 sm:space-y-2">
-
+                                <FormLabel className="font-jakarta text-sm sm:text-base text-gray-500">Postal code</FormLabel>
                                 <FormControl>
                                   <Input
                                     placeholder="Postal code"
                                     className="bg-blue-50 h-12 sm:h-14 rounded-none"
                                     {...field}
-                                    disabled={sameAddress}
                                   />
                                 </FormControl>
-                                <FormMessage className="text-xs sm:text-sm" />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-
-                        {/* Nationality and Email */}
-                        <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 mt-4 sm:mt-6">
-                          {/* Sender Nationality */}
-                          <FormField
-                            control={form.control}
-                            name="senderNationality"
-                            render={({ field }) => (
-                              <FormItem className="space-y-1 sm:space-y-2">
-                                <FormLabel className="font-jakarta text-sm sm:text-base text-gray-500">Nationality</FormLabel>
-                                <Select
-                                  onValueChange={field.onChange}
-                                  defaultValue={field.value}
-                                >
-                                  <FormControl>
-                                    <SelectTrigger className="bg-blue-50 h-12 sm:h-14 rounded-none text-gray-500">
-                                      <SelectValue placeholder="Select nationality" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent className="rounded-none text-gray-500">
-                                    <SelectItem value="indian" className="rounded-none text-gray-500">Indian</SelectItem>
-                                    <SelectItem value="american" className="rounded-none text-gray-500">American</SelectItem>
-                                    <SelectItem value="british" className="rounded-none text-gray-500">British</SelectItem>
-                                    <SelectItem value="canadian" className="rounded-none text-gray-500">Canadian</SelectItem>
-                                    <SelectItem value="australian" className="rounded-none text-gray-500">Australian</SelectItem>
-                                  </SelectContent>
-                                </Select>
                                 <FormMessage className="text-xs sm:text-sm" />
                               </FormItem>
                             )}
                           />
 
-                          {/* Sender Email */}
-                          <FormField
-                            control={form.control}
-                            name="senderEmail"
-                            render={({ field }) => (
-                              <FormItem className="space-y-1 sm:space-y-2">
-                                <FormLabel className="font-jakarta text-sm sm:text-base">Email ID</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    placeholder="ex: abc@gmail.com"
-                                    type="email"
-                                    className="bg-blue-50 h-12 sm:h-14 rounded-none"
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage className="text-xs sm:text-sm" />
-                              </FormItem>
-                            )}
-                          />
+                        {/* Nationality and Email */}
                         </div>
 
                         {/* Source of funds and Occupation */}
