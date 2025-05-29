@@ -11,7 +11,7 @@ export const menuItems: MenuItem[] = [
   {
     id: "order-details",
     label: "Order Details",
-    url: "/staff/dashboard/order-details",
+    url: "/staff/dashboard/placeorder",
   },
   {
     id: "sender-details",

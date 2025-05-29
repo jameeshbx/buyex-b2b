@@ -1,3 +1,5 @@
+import Settings from "@/app/(protected)/staff/pages/settings/settings"
+
 export type BreadcrumbItem = {
   label: string
   href: string
@@ -30,6 +32,13 @@ export const pagesData: Record<string, PageData> = {
     breadcrumbs: [
       { label: "Dashboards", href: "/dashboards" },
       { label: "Place an order", href: "/staff/dashboard/order-preview", current: true },
+    ],
+  },
+   Settings: {
+    title: "Order Preview",
+    breadcrumbs: [
+      { label: "Dashboards", href: "/dashboards" },
+      { label: "Settings", href: "/staff/pages/settings", current: true },
     ],
   },
 }
