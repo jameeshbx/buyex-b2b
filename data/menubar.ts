@@ -26,7 +26,7 @@ export const menuItems: MenuItem[] = [
   {
     id: "documents",
     label: "Documents",
-    url: "/documents",
+    url: "/staff/dashboard/document-upload",
   },
 ]
 

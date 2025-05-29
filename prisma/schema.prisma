@@ -137,3 +137,32 @@ model Sender {
 
   @@map("senders")
 }
+
+model Beneficiary {
+  id                        String   @id @default(cuid())
+  receiverFullName          String
+  receiverCountry           String
+  address                   String
+  receiverBank              String
+  receiverBankAddress       String
+  receiverBankCountry       String
+  receiverAccount           String
+  receiverBankSwiftCode     String
+  iban                      String?
+  sortCode                  String?
+  transitNumber             String?
+  bsbCode                   String?
+  routingNumber             String?
+  anyIntermediaryBank       String   @default("NO")
+  intermediaryBankName      String?
+  intermediaryBankAccountNo String?
+  intermediaryBankIBAN      String?
+  intermediaryBankSwiftCode String?
+  totalRemittance           String
+  field70                   String?
+  status                    Boolean  @default(true)
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  @@map("beneficiaries")
+}
