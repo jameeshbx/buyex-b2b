@@ -166,3 +166,24 @@ model Beneficiary {
 
   @@map("beneficiaries")
 }
+
+model Order {
+  id                  String   @id @default(cuid())
+  purpose             String
+  foreignBankCharges  Float
+  payer               String
+  forexPartner        String
+  margin              Float
+  receiverBankCountry String
+  studentName         String
+  consultancy         String
+  ibrRate             Float
+  amount              Float
+  currency            String
+  totalAmount         Float
+  customerRate        Float
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@map("orders")
+}
