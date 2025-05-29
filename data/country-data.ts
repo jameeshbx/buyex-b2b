@@ -2,24 +2,31 @@ import { z } from "zod"
 
 // Country specific bank fields
 export const countryBankFields = {
-  UK: ["sortCode"],
-  USA: ["routingNumber"],
+  UK: ["sortCode", "iban"],
+  "USA, Georgia, Latvia, Uzbekistan": ["routingNumber"],
   Canada: ["transitNumber"],
   Australia: ["bsbCode"],
-  "UK, Europe, Bahrain, Germany, France, Saudi Arabia, UAE": ["iban"],
+  "Ireland, Lithuania, Bulgaria, Germany, France, UAE": ["iban"],
 }
 
 // Countries data
 export const countries = [
+  { value: "Australia", label: "Australia" },
+  { value: "Bulgaria", label: "Bulgaria" },
+  { value: "Canada", label: "Canada" },
+  { value: "France", label: "France" },
+  { value: "Georgia", label: "Georgia" },
+  { value: "Germany", label: "Germany" },
+  { value: "Ireland", label: "Ireland" },
+  { value: "Latvia", label: "Latvia" },
+  { value: "Lithuania", label: "Lithuania" },
+  { value: "New Zealand", label: "New Zealand" },
+  { value: "Sweden", label: "Sweden" },
+  { value: "Switzerland", label: "Switzerland" },
+  { value: "UAE", label: "UAE" },
   { value: "UK", label: "UK" },
   { value: "USA", label: "USA" },
-  { value: "Canada", label: "Canada" },
-  { value: "Australia", label: "Australia" },
-  { value: "Germany", label: "Germany" },
-  { value: "France", label: "France" },
-  { value: "Bahrain", label: "Bahrain" },
-  { value: "Saudi Arabia", label: "Saudi Arabia" },
-  { value: "UAE", label: "UAE" },
+  { value: "Uzbekistan", label: "Uzbekistan" },
 ]
 
 // Sample existing receivers data
@@ -97,6 +104,7 @@ export const beneficiaryFormSchema = z.object({
   ),
   iban: z
     .string()
+    .min(1, "Iban is required")
     .optional()
     .refine(
       (val) => !val || /^[A-Z]{2}[0-9A-Z]{13,32}$/.test(val),
@@ -105,6 +113,7 @@ export const beneficiaryFormSchema = z.object({
 
   sortCode: z
     .string()
+    .min(1, "Sort code is required")
     .optional()
     .refine((val) => !val || /^\d{6}$/.test(val), {
       message: "Sort Code must be exactly 6 digits",
@@ -112,6 +121,7 @@ export const beneficiaryFormSchema = z.object({
 
   transitNumber: z
     .string()
+    .min(1, "transitNumber is required")
     .optional()
     .refine((val) => !val || /^\d{5}$/.test(val), {
       message: "Transit Number must be exactly 5 digits",
@@ -119,6 +129,7 @@ export const beneficiaryFormSchema = z.object({
 
   bsbCode: z
     .string()
+    .min(1, "BSB Code is required")
     .optional()
     .refine((val) => !val || /^\d{6}$/.test(val), {
       message: "BSB Code must be exactly 6 digits",
@@ -126,6 +137,7 @@ export const beneficiaryFormSchema = z.object({
 
   routingNumber: z
     .string()
+    .min(1, "Routing Number is required")
     .optional()
     .refine((val) => !val || /^\d{9}$/.test(val), {
       message: "Routing Number must be exactly 9 digits",
@@ -136,7 +148,7 @@ export const beneficiaryFormSchema = z.object({
   intermediaryBankIBAN: z.string().optional(),
   intermediaryBankSwiftCode: z.string().optional(),
   totalRemittance: z.string().min(1, "Total remittance is required"),
-  field70: z.string().optional(),
+  field70: z.string().min(1, "Field70 is required"),
   selectedReceiverId: z.string().optional(),
 })
 

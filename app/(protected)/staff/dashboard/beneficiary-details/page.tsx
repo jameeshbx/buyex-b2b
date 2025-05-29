@@ -530,7 +530,16 @@ export default function BeneficiaryDetailsPage() {
                           <td className="px-3 lg:px-6 py-4 whitespace-nowrap">
                             <button
                               type="button"
-                              onClick={() => toggleStatus(receiver.id)}
+                              onClick={() => {
+                              // Show confirmation popup for both ON and OFF
+                              const isCurrentlyActive = receiverStatuses[receiver.id]
+                              const message = isCurrentlyActive
+                                ? "Are you sure you want to deactivate this receiver?"
+                                : "Are you sure you want to activate this receiver?"
+                              if (window.confirm(message)) {
+                                toggleStatus(receiver.id)
+                              }
+                              }}
                               className={`h-6 w-12 rounded-full flex items-center transition-colors ${
                                 receiverStatuses[receiver.id] ? "bg-blue-100 justify-end" : "bg-gray-200 justify-start"
                               }`}
@@ -726,11 +735,11 @@ export default function BeneficiaryDetailsPage() {
                 {/* Receiver's bank swift code */}
                 <div>
                   <label className="block text-gray-600 mb-2 font-jakarta text-sm sm:text-base">
-                    {"Receiver's bank swift code"}
+                    {"Receiver's bank Swift/BIC code"}
                   </label>
                   <input
                     type="text"
-                    placeholder="Beneficiary's bank swift code"
+                    placeholder="Beneficiary's bank Swift/BIC code"
                     {...register("receiverBankSwiftCode")}
                     className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${errors.receiverBankSwiftCode ? "border border-red-500" : ""}`}
                   />
@@ -996,7 +1005,7 @@ export default function BeneficiaryDetailsPage() {
           </form>
         </div>
       </div>
-      <div className="text-xs text-gray-500 mt-8 pb-4 text-center">
+      <div className="text-xs text-gray-500 mt-8 pb-4">
         © 2025, Made by <span className="text-dark-blue font-bold">BuyExchange</span>.
       </div>
     </div>
