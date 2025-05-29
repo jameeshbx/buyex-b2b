@@ -20,21 +20,21 @@ export const pagesData: Record<string, PageData> = {
   newBeneficiary: {
     title: "Place an order",
     breadcrumbs: [
-      { label: "Dashboards", href: "/staff/dashboards" },
+      { label: "Dashboards", href: "/staff/dashboard" },
       { label: "Place an order", href: "/staff/dashboard/beneficiary-details", current: true },
     ],
   },
   senderDetails: {
     title: "Place an order",
     breadcrumbs: [
-      { label: "Dashboards", href: "/dashboards" },
+      { label: "Dashboards", href: "/staff/dashboard" },
       { label: "Place an order", href: "/staff/dashboard/sender-details", current: true },
     ],
   },
   placeOrder: {
     title: "Place an order",
     breadcrumbs: [
-      { label: "Dashboards", href: "/dashboards" },
+      { label: "Dashboards", href: "/staff/dashboard" },
       { label: "Place an order", href: "/staff/dashboard/placeorder", current: true },
     ]
 
@@ -42,8 +42,16 @@ export const pagesData: Record<string, PageData> = {
     orderPreview: {
     title: "Order Preview",
     breadcrumbs: [
-      { label: "Dashboards", href: "/dashboards" },
+      { label: "Dashboards", href: "/staff/dashboard" },
       { label: "Place an order", href: "/staff/dashboard/order-preview", current: true },
+    ],
+  },
+  addReceivers: {
+    title: "Add receivers",
+    breadcrumbs: [
+      { label: "Dashboards", href: "/staff/dashboard" },
+      { label: "Manage receivers", href: "/staff/dashboard/manage-receivers" },
+      { label: "Add receivers", href: "/staff/dashboard/manage-receivers/add-receivers", current: true },
     ],
   },
 }
