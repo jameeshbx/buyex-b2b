@@ -1,3 +1,4 @@
+// app/dashboard/page.tsx
 "use client"
 
 import { useState } from "react"
@@ -8,107 +9,12 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
 import React from "react"
-
-// Define the order data structure
-interface Order {
-  id: string
-  date: string
-  purpose: string
-  name: string
-  currency: string
-  fcyAmt: string
-  inrAmt: string
-  customerRate: string
-  status: string
-  receiverAccount?: string
-  receiverCountry?: string
-  forexPartner?: string
-}
-
-// Sample order data
-const orders: Order[] = [
-  {
-    id: "ORD040",
-    date: "20 Apr 2025",
-    purpose: "Blocked Account",
-    name: "Aanya Patel",
-    currency: "USD",
-    fcyAmt: "12,000",
-    inrAmt: "10,12,348.12",
-    customerRate: "0.43",
-    status: "Received",
-    receiverAccount: "DE89 3704 0044 0532 0130 00",
-    receiverCountry: "Germany",
-    forexPartner: "FXPrime Global Pvt Ltd",
-  },
-  {
-    id: "ORD039",
-    date: "19 Apr 2025",
-    purpose: "Tuition Payment",
-    name: "Vikram Shah",
-    currency: "EUR",
-    fcyAmt: "8,500",
-    inrAmt: "8,13,271.50",
-    customerRate: "0.37",
-    status: "Quote downloaded",
-    receiverAccount: "FR14 2004 1010 0505 0001 3M02 606",
-    receiverCountry: "France",
-    forexPartner: "EuroFX Solutions Ltd",
-  },
-  {
-    id: "ORD038",
-    date: "18 Apr 2025",
-    purpose: "University Fee",
-    name: "Zoe Fernandes",
-    currency: "GBP",
-    fcyAmt: "9,000",
-    inrAmt: "10,11,399.30",
-    customerRate: "0.37",
-    status: "Received",
-    receiverAccount: "GB29 NWBK 6016 1331 9268 19",
-    receiverCountry: "United Kingdom",
-    forexPartner: "Sterling Exchange Ltd",
-  },
-  {
-    id: "ORD037",
-    date: "17 Apr 2025",
-    purpose: "Blocked Account",
-    name: "Rahul Menon",
-    currency: "USD",
-    fcyAmt: "15,000",
-    inrAmt: "12,65,693.25",
-    customerRate: "0.25",
-    status: "Authorize",
-    receiverAccount: "US64 SVBK US6S 3300 0000 0000 0000",
-    receiverCountry: "United States",
-    forexPartner: "AmericaFX Corp",
-  },
-  {
-    id: "ORD036",
-    date: "22 Mar 2025",
-    purpose: "Living Expenses",
-    name: "Sara Thomas",
-    currency: "AUD",
-    fcyAmt: "7,200",
-    inrAmt: "3,92,372.78",
-    customerRate: "0.28",
-    status: "Received",
-    receiverAccount: "AU21 0123 4567 8901 2345 67",
-    receiverCountry: "Australia",
-    forexPartner: "OzForex Trading Pty",
-  },
-]
-
-// Status options for dropdown
-const statusOptions = ["Received", "Verified", "Pending", "Rejected", "Completed"]
-
-// Non-changeable statuses
-const nonChangeableStatuses = ["Quote downloaded", "Authorize","Documents placed","Rate expired"]
+import { Order, orders, statusOptions, nonChangeableStatuses } from "@/data/staff-dashboard"
 
 export default function Dashboard() {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
   const [orderStatuses, setOrderStatuses] = useState<Record<string, string>>(
-    orders.reduce((acc, order) => ({ ...acc, [order.id]: order.status }), {}),
+    orders.reduce((acc, order) => ({ ...acc, [order.id]: order.status }), {})
   )
 
   const toggleRowExpansion = (orderId: string) => {
@@ -152,53 +58,53 @@ export default function Dashboard() {
     const numRate = Number.parseFloat(rate)
     if (numRate >= 0.4) return "bg-red-100 text-red-800"
     if (numRate >= 0.3) return "bg-green-100 text-green-800"
-    return "bg-gray-100 text-gray-800 "
+    return "bg-gray-100 text-gray-800"
   }
 
   const renderStatusElement = (order: Order) => {
-  const currentStatus = orderStatuses[order.id]
+    const currentStatus = orderStatuses[order.id]
 
-  if (nonChangeableStatuses.includes(currentStatus)) {
-    if (currentStatus === "Quote downloaded" || currentStatus === "Documents placed") {
-      return (
-        <Link href="/staff/dashboard/sender-details" className="text-dark-blue hover:text-blue-800 underline text-sm">
-          {currentStatus}
-        </Link>
-      )
+    if (nonChangeableStatuses.includes(currentStatus)) {
+      if (currentStatus === "Quote downloaded" || currentStatus === "Documents placed") {
+        return (
+          <Link href="/staff/dashboard/sender-details" className="text-dark-blue hover:text-blue-800 underline text-sm">
+            {currentStatus}
+          </Link>
+        )
+      } else {
+        return (
+          <Badge className={getStatusBadgeColor(currentStatus)}>
+            {currentStatus}
+          </Badge>
+        )
+      }
     } else {
       return (
-        <Badge className={getStatusBadgeColor(currentStatus)}>
-          {currentStatus}
-        </Badge>
+        <Select
+          value={currentStatus}
+          onValueChange={(value) => handleStatusChange(order.id, value)}
+        >
+          <SelectTrigger className="w-32 h-8 border-0 bg-transparent p-0">
+            <Badge className={`${getStatusBadgeColor(currentStatus)} flex items-center gap-1`}>
+              <SelectValue />
+              <ChevronDown className="h-3 w-3 opacity-50" />
+            </Badge>
+          </SelectTrigger>
+          <SelectContent>
+            {statusOptions.map((status) => (
+              <SelectItem key={status} value={status}>
+                {status}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       )
     }
-  } else {
-    return (
-      <Select
-        value={currentStatus}
-        onValueChange={(value) => handleStatusChange(order.id, value)}
-      >
-        <SelectTrigger className="w-32 h-8 border-0 bg-transparent p-0">
-          <Badge className={`${getStatusBadgeColor(currentStatus)} flex items-center gap-1`}>
-            <SelectValue />
-            <ChevronDown className="h-3 w-3 opacity-50" />
-          </Badge>
-        </SelectTrigger>
-        <SelectContent>
-          {statusOptions.map((status) => (
-            <SelectItem key={status} value={status}>
-              {status}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    )
   }
-}
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto ">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold font-jakarta text-gray-900 mb-2">Dashboard</h1>
@@ -327,7 +233,7 @@ export default function Dashboard() {
 
                   {/* Expanded Details */}
                   {expandedRows.has(order.id) && (
-                    <div className=" border-b">
+                    <div className="border-b">
                       <div className="py-6 px-4">
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-4xl">
                           <div>
@@ -335,12 +241,14 @@ export default function Dashboard() {
                             <p className="text-gray-600 font-jakarta bg-gray-50 p-2 rounded-sm">{order.purpose}</p>
                           </div>
                           <div>
-                            <h4 className="font-semibold font-jakarta text-gray-900 mb-2">Receiver&#39;s full name</h4>
+                            <h4 className="font-semibold font-jakarta text-gray-900 mb-2">Receiver's full name</h4>
                             <p className="text-gray-600 font-jakarta bg-gray-50 p-2 rounded-sm">{order.name}</p>
                           </div>
                           <div>
-                            <h4 className="font-semibold font-jakarta text-gray-900 mb-2">Receiver&#39;s account</h4>
-                            <p className="text-gray-600 font-jakarta text-sm break-all bg-gray-50 p-2 rounded-sm">{order.receiverAccount}</p>
+                            <h4 className="font-semibold font-jakarta text-gray-900 mb-2">Receiver's account</h4>
+                            <p className="text-gray-600 font-jakarta text-sm break-all bg-gray-50 p-2 rounded-sm">
+                              {order.receiverAccount}
+                            </p>
                           </div>
                           <div>
                             <h4 className="font-semibold font-jakarta text-gray-900 mb-2">Receiver Country</h4>
