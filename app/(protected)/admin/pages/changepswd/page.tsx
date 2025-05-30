@@ -1,13 +1,13 @@
+import ChangePassword from '@/app/(protected)/admin/pages/changepswd/changepswd'
 import React from 'react'
 
 
-import Settings from '@/app/(protected)/staff/pages/settings/settings'
 
 function page() {
   return (
     <div>
         
-       <Settings/>
+        <ChangePassword/>
     </div>
   )
 }
