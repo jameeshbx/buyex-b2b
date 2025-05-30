@@ -81,9 +81,14 @@ export default function Settings() {
                     />
                   ) : (
                     <div className="flex flex-col items-center space-y-2">
-                      <Image src="/gallery-add.png" alt="" />
-                      <span className="text-sm font-medium text-gray-700">Upload your photo</span>
-                    </div>
+  <Image 
+    src="/gallery-add.png" 
+    alt="Upload photo" 
+    width={40}  // Add appropriate width
+    height={50} // Add appropriate height
+  />
+  <span className="text-sm font-medium text-gray-700">Upload your photo</span>
+</div>
                   )}
                 </label>
                 <input
