@@ -1,7 +1,7 @@
 import React from 'react'
 
 
-import Settings from '@/app/(protected)/staff/pages/settings/settings'
+import Settings from '@/app/(protected)/admin/pages/settings/settings'
 
 function page() {
   return (
