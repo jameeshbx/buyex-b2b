@@ -5,8 +5,11 @@ export const orderDetailsFormSchema = z.object({
   foreignBankCharges: z.enum(["OUR", "BEN"]),
   payer: z.string().min(1, { message: "Payer is required" }),
   forexPartner: z.string().min(1, { message: "Forex partner is required" }),
-  margin: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-    message: "Margin must be a positive number",
+   margin: z.string().refine((val) => {
+    const num = Number(val);
+    return !isNaN(num) && num >= 0.2 && num <= 3;
+  }, {
+    message: "Margin must be a number between 0.20 and 3",
   }),
   receiverBankCountry: z.string().min(1, { message: "Receiver's bank country is required" }),
   studentName: z.string().min(1, { message: "Student name is required" }),
