@@ -1,5 +1,6 @@
 
 export interface Order {
+  fxRateUpdated: any
   id: string
   date: string
   purpose: string
@@ -28,6 +29,7 @@ export const orders: Order[] = [
     receiverAccount: "DE89 3704 0044 0532 0130 00",
     receiverCountry: "Germany",
     forexPartner: "FXPrime Global Pvt Ltd",
+    fxRateUpdated: undefined
   },
   {
     id: "ORD039",
@@ -42,6 +44,7 @@ export const orders: Order[] = [
     receiverAccount: "FR14 2004 1010 0505 0001 3M02 606",
     receiverCountry: "France",
     forexPartner: "EuroFX Solutions Ltd",
+    fxRateUpdated: undefined
   },
   {
     id: "ORD038",
@@ -56,6 +59,7 @@ export const orders: Order[] = [
     receiverAccount: "GB29 NWBK 6016 1331 9268 19",
     receiverCountry: "United Kingdom",
     forexPartner: "Sterling Exchange Ltd",
+    fxRateUpdated: undefined
   },
   {
     id: "ORD037",
@@ -70,6 +74,7 @@ export const orders: Order[] = [
     receiverAccount: "US64 SVBK US6S 3300 0000 0000 0000",
     receiverCountry: "United States",
     forexPartner: "AmericaFX Corp",
+    fxRateUpdated: undefined
   },
   {
     id: "ORD036",
@@ -84,6 +89,7 @@ export const orders: Order[] = [
     receiverAccount: "AU21 0123 4567 8901 2345 67",
     receiverCountry: "Australia",
     forexPartner: "OzForex Trading Pty",
+    fxRateUpdated: undefined
   },
 ]
 
