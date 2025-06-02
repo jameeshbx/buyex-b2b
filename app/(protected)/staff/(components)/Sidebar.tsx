@@ -65,13 +65,13 @@ export function Sidebar({
 
   const navItems = [
     {
-      href: "/dashboard",
+      href: "/staff/dashboard",
       icon: <Image src="/dash.svg" alt="Dashboard" width={24} height={24} className="w-6 h-6" />,
       label: "Dashboard",
       active: pathname === "/dashboard",
     },
     {
-      href: "/orders",
+      href: "/staff/dashboard/view-orders",
       icon: <Image src="/orders.svg" alt="Orders" width={24} height={24} className="w-6 h-6" />,
       label: "View All Orders",
       active: pathname === "/orders",
