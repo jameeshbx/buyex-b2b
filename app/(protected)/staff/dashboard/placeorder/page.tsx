@@ -11,7 +11,7 @@ function page() {
     <div>
       <Topbar pageData={pagesData.orderDetails}/>  
       <BreadcrumbMenubar/>
-      <div className='py-4'>
+      <div className='p-4 bg-white'>
         <OrderDetailsForm/>
       </div>
     </div>
