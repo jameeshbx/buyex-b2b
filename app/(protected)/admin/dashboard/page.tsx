@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
 import React from "react"
 import { type Order, initialOrders, statusOptions, nonChangeableStatuses } from "@/data/admin-dashboard"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dailog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import Image from "next/image"
 
 export default function Dashboard() {
