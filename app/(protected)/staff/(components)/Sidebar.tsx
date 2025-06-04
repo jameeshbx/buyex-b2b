@@ -198,7 +198,7 @@ export function Sidebar({
                     {receiversDropdownOpen && !collapsed && (
                       <div className="ml-6 mt-1 space-y-1">
                         <Link
-                          href="/receivers/list"
+                          href="/staff/dashboard/manage-receivers/list-receivers"
                           className={cn(
                             "flex items-center px-3 py-2 rounded-lg mx-2 text-gray-600 hover:bg-gray-100 transition-colors text-sm",
                             pathname === "/receivers/list" && "bg-blue-50 text-blue-600 font-medium",
