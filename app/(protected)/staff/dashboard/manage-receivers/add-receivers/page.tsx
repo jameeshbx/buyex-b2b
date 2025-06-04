@@ -408,34 +408,6 @@ export default function AddReceiversPage() {
                     </div>
                   </>
                 )}
-
-                {/* Total remittance made in INR */}
-                <div>
-                  <label className="block text-gray-600 mb-2 font-jakarta text-sm sm:text-base">
-                    Total remittance made in INR
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Current Financial year"
-                    {...register("totalRemittance")}
-                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${errors.totalRemittance ? "border border-red-500" : ""}`}
-                  />
-                  {errors.totalRemittance && (
-                    <p className="text-red-500 text-sm mt-1">{errors.totalRemittance.message}</p>
-                  )}
-                </div>
-
-                {/* Field 70 - special information to receiver */}
-                <div>
-                  <label className="block text-gray-600 mb-2 font-jakarta text-sm sm:text-base">
-                    Field 70 - special information to receiver
-                  </label>
-                  <textarea
-                    placeholder="Type here"
-                    {...register("field70")}
-                    className="w-full p-3 bg-blue-50 rounded-md h-24 text-sm sm:text-base"
-                  ></textarea>
-                </div>
             </div>
             {/* Submit button */}
             <div className="flex justify-center mt-8">

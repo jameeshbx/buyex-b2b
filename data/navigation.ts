@@ -55,4 +55,11 @@ export const pagesData: Record<string, PageData> = {
       { label: "Add receivers", href: "/staff/dashboard/manage-receivers/add-receivers", current: true },
     ],
   },
+  listReceivers: {
+    title: "Manage receivers",
+    breadcrumbs: [
+      { label: "Dashboards", href: "/staff/dashboard" },
+      { label: "Manage receivers", href: "/staff/dashboard/manage-receivers/list-receivers", current: true },
+    ],
+  },
 }
