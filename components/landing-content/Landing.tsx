@@ -103,7 +103,7 @@ export default function Home() {
             </h1>
             <div className="relative">
               <Image
-                src="/Group.png"
+                src="/whatdoesp.png"
                 alt="Financial Portal Dashboard"
                 width={500}
                 height={500}

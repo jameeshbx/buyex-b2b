@@ -23,19 +23,20 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useRouter } from "next/navigation"
 
 type FormValues = OriginalFormValues & {
-  status?: string // Add status field to form values
+  status?: string
 }
 
 function Senderdetails() {
   const router = useRouter()
-  const [payer, setPayer] = useState<string>("self") // Default to "self"
-  const [showStatusPopup, setShowStatusPopup] = useState(false)
-  const [selectedStatus, setSelectedStatus] = useState("pending")
+  const [payer, setPayer] = useState<string>("self")
+  const [showStatusPopup, setShowStatusPopup] = useState(true);
+  const [selectedStatus, setSelectedStatus] = useState("pending");
+  const [sameAddress, setSameAddress] = useState(false)
 
-   useEffect(() => {
+  useEffect(() => {
     const storedPayer = localStorage.getItem('selectedPayer')
     if (storedPayer) {
-      setPayer(storedPayer.toLowerCase()) // Convert to lowercase to match values
+      setPayer(storedPayer.toLowerCase())
     }
   }, [])
 
@@ -66,47 +67,29 @@ function Senderdetails() {
       senderAddressLine2: "",
       senderState: "",
       senderPostalCode: "",
-      status: "pending" // Default status
+      status: "pending"
     }
   })
 
-  const [sameAddress,setSameAddress]=useState(false)
- useEffect(() => {
-    // Update relationship field when payer changes
+  useEffect(() => {
     form.setValue("relationship", payer as "self" | "parent" | "brother" | "sister" | "spouse" | "other" | undefined)
   }, [payer, form])
 
   const onSubmit = (data: FormValues) => {
-    console.log('onSubmit function called') // Debug log
-    // Log form data
     console.log('Form Data:', data)
-
-    // Check for form errors
     const errors = form.formState.errors
     if (Object.keys(errors).length > 0) {
       console.log('Form Errors:', errors)
-      // You can also show a toast notification here if you have a toast system
       alert('Please fix the form errors before submitting')
       return
     }
-
-    // If no errors, proceed with form submission
-    console.log('Form submitted successfully')
-    router.push("/staff/dashboard/beneficiary-details") 
+    router.push("/staff/dashboard/beneficiary-details")
   }
-
-  // Add form state logging
-  console.log('Form State:', {
-    isSubmitting: form.formState.isSubmitting,
-    isDirty: form.formState.isDirty,
-    isValid: form.formState.isValid,
-    errors: form.formState.errors
-  })
 
   const handleReset = () => {
     form.reset()
     setSameAddress(false)
-    form.setValue("status", "pending") // Reset status to pending
+    form.setValue("status", "pending")
   }
 
   const handleSameAddressChange = (checked: boolean) => {
@@ -121,67 +104,49 @@ function Senderdetails() {
   }
 
   const handleStatusConfirm = () => {
-    form.setValue("status", selectedStatus)
-    setShowStatusPopup(false)
-  }
+    form.setValue("status", selectedStatus);
+    setShowStatusPopup(false);
+  };
 
-  const handleStatusCancel = () => {
-    form.setValue("status", "pending") // Revert to pending if cancelled
-    setShowStatusPopup(false)
-        if (selectedStatus === "blocked") {
-      // Additional logic for blocked status
-    }
-  }
-
-  // Show status popup when component mounts if coming from place order
-  useEffect(() => {
-    setShowStatusPopup(true)
-  }, [])
-
+  const handleOpenChange = (open: boolean) => {
+    if (!open) return; // Prevent closing when clicking outside
+    setShowStatusPopup(open);
+  };
   return (
     <div>
-      {/* Status Popup Dialog */}
-      <Dialog open={showStatusPopup} onOpenChange={setShowStatusPopup}>
-  <DialogContent className="w-[90vw] max-w-[425px] md:w-full">
-    <DialogHeader className="px-4 sm:px-6">
-      <DialogTitle className="text-lg sm:text-xl">Block Rate status</DialogTitle>
-      <DialogDescription className="mt-2 sm:mt-3 text-sm sm:text-base">
-        Rate block status
-      </DialogDescription>
-    </DialogHeader>
-    <div className="px-4 sm:px-6 py-2 sm:py-4">
-      <Select 
-        value={selectedStatus}
-        onValueChange={(value) => setSelectedStatus(value)}
-      >
-        <SelectTrigger className="w-full h-10 sm:h-12 text-sm sm:text-base">
-          <SelectValue placeholder="Select status" />
-        </SelectTrigger>
-        <SelectContent className="text-sm sm:text-base">
-          <SelectItem value="pending">Pending</SelectItem>
-          <SelectItem value="blocked">Blocked</SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
-    <DialogFooter className="px-4 sm:px-6 pb-4 sm:pb-6">
-      <div className="flex flex-col sm:flex-row w-full gap-2 sm:gap-3">
-        <Button
-          variant="outline"
-          onClick={handleStatusCancel}
-          className="w-full h-10 sm:h-12 text-sm sm:text-base border-gray-300"
-        >
-          Cancel
-        </Button>
-        <Button
-          onClick={handleStatusConfirm}
-          className="w-full h-10 sm:h-12 text-sm sm:text-base bg-dark-blue hover:bg-dark-blue"
-        >
-          Submit
-        </Button>
-      </div>
-    </DialogFooter>
-  </DialogContent>
-</Dialog>
+      {/* Simplified Status Popup Dialog - Only Submit Button */}
+      <Dialog open={showStatusPopup} onOpenChange={handleOpenChange}>
+        <DialogContent className="w-[90vw] max-w-[425px] md:w-full">
+          <DialogHeader className="px-4 sm:px-6">
+            <DialogTitle className="text-lg sm:text-xl">Block Rate status</DialogTitle>
+            <DialogDescription className="mt-2 sm:mt-3 text-sm sm:text-base">
+              Rate block status
+            </DialogDescription>
+          </DialogHeader>
+          <div className="px-4 sm:px-6 py-2 sm:py-4">
+            <Select
+              value={selectedStatus}
+              onValueChange={(value) => setSelectedStatus(value)}
+            >
+              <SelectTrigger className="w-full h-10 sm:h-12 text-sm sm:text-base">
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent className="text-sm sm:text-base z-50">
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="blocked">Blocked</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter className="px-4 sm:px-6 pb-4 sm:pb-6">
+            <Button
+              onClick={handleStatusConfirm}
+              className="w-full h-10 sm:h-12 text-sm sm:text-base bg-dark-blue hover:bg-dark-blue"
+            >
+              Submit
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <div className="max-w-7xl mx-auto -mt-10 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         <Tabs defaultValue="sender" className="w-full">
           <TabsContent value="sender">
@@ -189,13 +154,10 @@ function Senderdetails() {
               <CardContent className="p-0 sm:p-0">
                 <Form {...form}>
                   <form
-                    onSubmit={(e) => {
-                      console.log('Form submit event triggered') // Debug log
-                      form.handleSubmit(onSubmit)(e)
-                    }}
+                    onSubmit={form.handleSubmit(onSubmit)}
                     className="space-y-6 sm:space-y-8"
                   >
-                    {/* Student Details Section */}
+                    {/* Student Details Section - Always shown */}
                     <div className="p-6 sm:p-6 mb-5">
                       <h2 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6 font-jakarta">Student Details</h2>
                       <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2">
@@ -288,8 +250,7 @@ function Senderdetails() {
                           name="addressLine1"
                           render={({ field }) => (
                             <FormItem className="space-y-1 sm:space-y-2">
-                              <FormLabel className="font-jakarta text-sm sm:text-base text-gray-500 text-gray-500">Address
-                              </FormLabel>
+                              <FormLabel className="font-jakarta text-sm sm:text-base text-gray-500 text-gray-500">Address</FormLabel>
                               <FormControl>
                                 <Input
                                   placeholder="Enter Building name / House name / Flat number"
@@ -308,7 +269,6 @@ function Senderdetails() {
                           name="addressLine2"
                           render={({ field }) => (
                             <FormItem className="space-y-1 sm:space-y-2 mt-10">
-
                               <FormControl>
                                 <Input
                                   placeholder="Street / Locality"
@@ -390,7 +350,7 @@ function Senderdetails() {
                       </div>
                     </div>
 
-                    {/* Sender Details Section - Only shown when payer is not self */}
+                    {/* Conditionally render Sender Details Section based on payer */}
                     {payer !== "self" && (
                       <div className="p-4 sm:p-6 border-t border-gray-200">
                         <h2 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6 font-jakarta">Sender Details</h2>
@@ -642,8 +602,6 @@ function Senderdetails() {
                               </FormItem>
                             )}
                           />
-
-                        {/* Nationality and Email */}
                         </div>
 
                         {/* Source of funds and Occupation */}
