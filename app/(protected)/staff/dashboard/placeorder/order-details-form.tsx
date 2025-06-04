@@ -4,7 +4,7 @@ import { useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { Download, ArrowRight, RotateCcw, Play } from "lucide-react"
-import { useRouter } from "next/navigation"
+
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
@@ -12,6 +12,25 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { orderDetailsFormSchema, OrderDetailsFormValues } from "@/schema/orderdetails"
+import { useRouter } from "next/navigation"
+
+import jsPDF from "jspdf"
+import autoTable from "jspdf-autotable"
+
+interface CalculatedValues {
+  inrAmount: string;
+  bankFee: string;
+  gst: string;
+  tcsApplicable: string;
+  totalPayable: string;
+  customerRate: string;
+}
+
+interface JsPDFWithAutoTable extends jsPDF {
+  lastAutoTable: {
+    finalY: number;
+  };
+}
 
 export default function OrderDetailsForm() {
   const [showCalculation, setShowCalculation] = useState(false);
@@ -64,10 +83,30 @@ export default function OrderDetailsForm() {
 };
 
  
- function onSubmit(data: OrderDetailsFormValues) {
-  console.log(data);
-  localStorage.setItem('selectedPayer', data.payer);
-  router.push("/staff/dashboard/sender-details");
+async function onSubmit(data: OrderDetailsFormValues) {
+  try {
+    // Convert string values to numbers where needed
+    const formData = {
+      ...data,
+      foreignBankCharges: data.foreignBankCharges === "OUR" ? 0 : 1, // Convert to number
+      margin: parseFloat(data.margin),
+      ibrRate: parseFloat(data.ibrRate),
+      amount: parseFloat(data.amount),
+      totalAmount: data.totalAmount ? parseFloat(data.totalAmount.replace(/,/g, '')) : 0,
+      customerRate: data.customerRate ? parseFloat(data.customerRate) : 0,
+    };
+
+    console.log("Submitting form data:", formData);
+
+    // Save to localStorage
+    localStorage.setItem('selectedPayer', data.payer);
+    localStorage.setItem('fromPlaceOrder', 'true');
+
+    // Redirect to sender details page
+    router.push("/staff/dashboard/sender-details");
+  } catch (error) {
+    console.error("Form submission error:", error);
+  }
 }
 
   function resetForm() {
