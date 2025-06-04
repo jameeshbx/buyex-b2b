@@ -14,11 +14,28 @@ import { Label } from "@/components/ui/label"
 import { orderDetailsFormSchema, OrderDetailsFormValues } from "@/schema/orderdetails"
 import { useRouter } from "next/navigation"
 
+import jsPDF from "jspdf"
+import autoTable from "jspdf-autotable"
+
+interface CalculatedValues {
+  inrAmount: string;
+  bankFee: string;
+  gst: string;
+  tcsApplicable: string;
+  totalPayable: string;
+  customerRate: string;
+}
+
+interface JsPDFWithAutoTable extends jsPDF {
+  lastAutoTable: {
+    finalY: number;
+  };
+}
 
 export default function OrderDetailsForm() {
   const [showCalculation, setShowCalculation] = useState(false);
   const router = useRouter()
-  const [calculatedValues] = useState({
+  const [calculatedValues] = useState<CalculatedValues>({
     inrAmount: "8,33,420.06",
     bankFee: "16,428.80",
     gst: "0",
@@ -102,6 +119,105 @@ export default function OrderDetailsForm() {
     form.setValue("customerRate", "113.18");
   }
 
+  function generateQuotePDF(formData: OrderDetailsFormValues, calculatedValues: CalculatedValues) {
+    const doc = new jsPDF() as JsPDFWithAutoTable;
+    let lastY = 30; // Track the last Y position manually
+
+    // Add logo
+    const logo = "/header-logo.png";
+    doc.addImage(logo, "PNG", 14, 10, 50, 20); // Adjusted size for better visibility
+
+    // Title (moved slightly to the right to accommodate logo)
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text("Send Money Abroad Quote", 105, 20, { align: "center" });
+
+    // Quote Info Table
+    autoTable(doc, {
+      startY: lastY,
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [240, 240, 240] },
+      body: [
+        ["Date & Time", new Date().toLocaleString()],
+        ["Student Name", formData.studentName || ""],
+        ["Country Name", formData.receiverBankCountry || ""],
+        ["Purpose", formData.purpose || ""],
+        ["Foreign Currency", formData.currency || ""],
+        ["Foreign Currency Amount", formData.amount || ""],
+        ["Exchange Rate", formData.customerRate || ""],
+        ["Forex Conversion Tax", calculatedValues.gst],
+        ["TCS", calculatedValues.tcsApplicable],
+        ["Processing Charges", calculatedValues.bankFee],
+        ["Total Payable Amount in INR", calculatedValues.totalPayable],
+      ],
+    });
+
+    lastY = doc.lastAutoTable.finalY + 10;
+
+    // Bank Details Title
+    doc.setFontSize(12);
+    doc.setTextColor(0);
+    doc.setFont("helvetica", "bold");
+    doc.text("Forex Partner Bank Account Details ", 14, lastY);
+    doc.setTextColor(255, 0, 0);
+    doc.text("(Cash deposit not accepted)", 130, lastY);
+
+    // Bank Info Table
+    autoTable(doc, {
+      startY: lastY + 15,
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [240, 240, 240] },
+      body: [
+        ["Bank Name", "HDFC BANK"],
+        ["Account Name", "Wsfx Global Pay Ltd"],
+        ["Account Number", "WALLST17960000"],
+        ["IFSC Code", "HDFC0001372"],
+        ["Branch", "MUMBAI"],
+      ],
+    });
+
+    lastY = doc.lastAutoTable.finalY + 10;
+
+    // Upload Info
+    doc.setTextColor(0);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.text("Thank you for choosing BuyExchange for your forex needs.", 14, lastY);
+    doc.setFont("helvetica", "normal");
+    doc.text(
+      "To proceed with your transaction, please upload the required documents using the secure link below:",
+      14,
+      lastY + 6
+    );
+    doc.setTextColor(0, 0, 255);
+    doc.textWithLink("www.buyexchange.in/upload-documents", 14, lastY + 12, {
+      url: "https://www.buyexchange.in/upload-documents",
+    });
+
+    // Terms & Conditions
+    doc.setTextColor(0);
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("Terms & Conditions", 14, lastY + 25);
+
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    const terms = [
+      "• The above quote is generated for one time use only and must not be shared or used by any other remitter to make payments",
+      "• Supported payment modes are RTGS, NEFT and Bank Transfer. No cash deposit accepted",
+      "• The money should come from the Sender's Savings Bank Account in India. Third party funding is not accepted.",
+      "• The payment must be made in full for the amount reflected in this quote and any part payments / multiple payments may get rejected or returned",
+      "• The given exchange rate is subject to market fluctuations and valid between 10.00 AM to 2.45 PM on a bank working day.",
+      "• The given rate is valid for 30 minutes.",
+    ];
+    let y = lastY + 32;
+    terms.forEach(term => {
+      doc.text(term, 14, y);
+      y += 6;
+    });
+
+    doc.save("Send_Money_Abroad_Quote.pdf");
+  }
 
   return (
 
@@ -539,6 +655,7 @@ export default function OrderDetailsForm() {
             style={{
               background: 'linear-gradient(to right, #614385, #516395)',
             }}
+            onClick={() => generateQuotePDF(form.getValues(), calculatedValues)}
           >
             <Download className="h-5 w-5" />
             <span>Download Quote</span>
