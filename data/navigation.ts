@@ -55,4 +55,19 @@ export const pagesData: Record<string, PageData> = {
       { label: "Add receivers", href: "/staff/dashboard/manage-receivers/add-receivers", current: true },
     ],
   },
+  viewOrders: {
+    title: "View Orders",
+    breadcrumbs: [
+      { label: "Dashboards", href: "/staff/dashboard" },
+      { label: "View Orders", href: "/staff/dashboard/view-orders", current: true },
+    ],
+  },
+  fileUpload: {
+    title: "Files And Uploads",
+    breadcrumbs: [
+      { label: "Dashboards", href: "/staff/dashboard" },
+      { label: "View Orders", href: "/staff/dashboard/view-orders" },
+      { label: "Files And Uploads", href: "/staff/dashboard/upload-files", current: true },
+    ],
+  },
 }
