@@ -62,4 +62,11 @@ export const pagesData: Record<string, PageData> = {
       { label: "Manage receivers", href: "/staff/dashboard/manage-receivers/list-receivers", current: true },
     ],
   },
+  manageUsers: {
+    title: "Manage users",
+    breadcrumbs: [
+      { label: "Dashboards", href: "/staff/dashboard" },
+      { label: "Manage users", href: "/admin/dashboard/manage-users", current: true },
+    ],
+  },
 }
