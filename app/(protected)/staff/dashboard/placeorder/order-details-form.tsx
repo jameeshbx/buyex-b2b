@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { Download, ArrowRight, RotateCcw, Play } from "lucide-react"
@@ -13,6 +13,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { orderDetailsFormSchema, OrderDetailsFormValues } from "@/schema/orderdetails"
 import { useRouter } from "next/navigation"
+import { calculateGst, calculateTcs, calculateTotalPayable, getLiveRate } from "@/lib/financial"
 
 // import jsPDF from "jspdf"
 // import autoTable from "jspdf-autotable"
@@ -35,13 +36,13 @@ import { useRouter } from "next/navigation"
 export default function OrderDetailsForm() {
   const [showCalculation, setShowCalculation] = useState(false);
   const router = useRouter()
-  const [calculatedValues] = useState({
-    inrAmount: "8,33,420.06",
-    bankFee: "16,428.80",
+  const [calculatedValues, setCalculatedValues] = useState({
+    inrAmount: "0",
+    bankFee: "1500",
     gst: "0",
-    tcsApplicable: "1,69,953.15",
-    totalPayable: "10,11,399.30",
-    customerRate: "113.18",
+    tcsApplicable: "0",
+    totalPayable: "0",
+    customerRate: "0",
   });
 
   const form = useForm<OrderDetailsFormValues>({
@@ -51,7 +52,7 @@ export default function OrderDetailsForm() {
       foreignBankCharges: "OUR",
       payer: "",
       forexPartner: "",
-      margin: "",
+      margin: "1",
       receiverBankCountry: "",
       studentName: "",
       consultancy: "",
@@ -116,9 +117,64 @@ export default function OrderDetailsForm() {
 
   function handleShowCalculation() {
     setShowCalculation(true);
-    form.setValue("totalAmount", "10,11,399.30");
-    form.setValue("customerRate", "113.18");
   }
+
+
+
+  const amount = form.watch("amount");
+  const currency = form.watch("currency");
+  // const receiverBankCountry = form.watch("receiverBankCountry");
+  // const purpose = form.watch("purpose");
+  const foreignBankCharges = form.watch("foreignBankCharges");
+  // const payer = form.watch("payer");
+  const margin = form.watch("margin");
+  const ibrRate = form.watch("ibrRate");
+
+  useEffect(() => {
+    if (currency) {
+      getLiveRate(currency, "INR").then((rate: number) => {
+        form.setValue("ibrRate", rate.toString());
+      });
+    }
+  }, [currency]);
+
+  useEffect(() => {
+    if (foreignBankCharges === "OUR") {
+      setCalculatedValues(prev => ({
+        ...prev,
+        bankFee: "1500"
+      }));
+    } else {
+      setCalculatedValues(prev => ({
+        ...prev,
+        bankFee: "300"
+      }));
+    }
+  }, [foreignBankCharges]);
+
+
+  useEffect(() => {
+    form.setValue("customerRate", (parseFloat(ibrRate) + parseFloat(margin)).toFixed(2).toString());
+    if (amount && margin) {
+      const amount = parseFloat(form.watch("amount"));
+      const margin = parseFloat(form.watch("margin"));
+      const ibrRate = parseFloat(form.watch("ibrRate"));
+      const totalAmount = (ibrRate + margin) * amount;
+
+      // form.setValue("totalAmount", totalAmount.toString());
+      setCalculatedValues(prev => ({
+        ...prev,
+        inrAmount: totalAmount.toString(),
+        gst: calculateGst(totalAmount).toString(),
+        tcsApplicable: calculateTcs(totalAmount).toString(),
+        totalPayable: calculateTotalPayable(totalAmount, parseFloat(calculatedValues.bankFee)).toString(),
+      }));
+    }
+  }, [amount, margin, ibrRate, calculatedValues.bankFee]);
+
+  useEffect(() => {
+    form.setValue("totalAmount", calculatedValues.totalPayable.toString());
+  }, [calculatedValues.totalPayable]);
 
 
   return (
@@ -359,7 +415,7 @@ export default function OrderDetailsForm() {
                 <FormItem>
                   <FormLabel className="text-gray-700 font-normal">IBR Rate</FormLabel>
                   <FormControl>
-                    <Input {...field} className="bg-blue-50/50 border-blue-100 h-12" />
+                    <Input {...field} className="bg-blue-50/50 border-blue-100 h-12" readOnly />
                   </FormControl>
                 </FormItem>
               )}
