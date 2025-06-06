@@ -115,9 +115,8 @@ export default function Dashboard() {
         <Card className="shadow-sm p-6">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
             <CardTitle className="text-xl font-semibold font-jakarta text-gray-900">Order history</CardTitle>
-            <Button variant="ghost" className="text-dark-blue hover:text-blue-800">
-              See More
-            </Button>
+           
+            <Link  className="text-dark-blue text-sm hover:text-blue-800" href={"/staff/dashboard/view-orders"}>See More</Link>
           </CardHeader>
           <CardContent className="p-0">
             {/* Responsive Order List */}
@@ -137,7 +136,7 @@ export default function Dashboard() {
               </div>
 
               {/* Order Rows */}
-              {orders.map((order) => (
+              {orders.slice(-5).map((order: Order) => (
                 <React.Fragment key={order.id}>
                   {/* Main Row */}
                   <div
@@ -169,13 +168,15 @@ export default function Dashboard() {
                         {renderStatusElement(order)}
                       </div>
                       <div onClick={(e) => e.stopPropagation()}>
-                        <Button
-                          size="sm"
-                          className="bg-dark-blue hover:bg-blue-700 text-white px-2 py-2 text-xs h-7"
-                        >
-                          <Upload className="h-3 w-3" />
-                          Uploads
-                        </Button>
+                        <Link href={`/staff/dashboard/upload-files/${order.id}`}>
+                            <Button
+                              size="sm"
+                              className="bg-dark-blue hover:bg-blue-700 text-white px-2 py-2 text-xs h-7"
+                            >
+                              <Upload className="h-2 w-2" />
+                              Uploads
+                            </Button>
+                          </Link>
                       </div>
                     </div>
 
@@ -222,10 +223,12 @@ export default function Dashboard() {
                           </div>
                         </div>
                         <div onClick={(e) => e.stopPropagation()}>
-                          <Button size="sm" className="bg-dark-blue hover:bg-blue-700 text-white">
-                            <Upload className="h-4 w-4 mr-1" />
-                            Uploads
-                          </Button>
+                         <Link href={`/staff/dashboard/upload-files/${order.id}`}>
+                              <Button size="sm" className="bg-dark-blue hover:bg-blue-700 text-white">
+                                <Upload className="h-4 w-4 mr-1" />
+                                Uploads
+                              </Button>
+                            </Link>
                         </div>
                       </div>
                     </div>
