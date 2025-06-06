@@ -65,13 +65,13 @@ export function Sidebar({
 
   const navItems = [
     {
-      href: "/dashboard",
+      href: "/staff/dashboard",
       icon: <Image src="/dash.svg" alt="Dashboard" width={24} height={24} className="w-6 h-6" />,
       label: "Dashboard",
       active: pathname === "/dashboard",
     },
     {
-      href: "/orders",
+      href: "/staff/dashboard/view-orders",
       icon: <Image src="/orders.svg" alt="Orders" width={24} height={24} className="w-6 h-6" />,
       label: "View All Orders",
       active: pathname === "/orders",
@@ -198,7 +198,7 @@ export function Sidebar({
                     {receiversDropdownOpen && !collapsed && (
                       <div className="ml-6 mt-1 space-y-1">
                         <Link
-                          href="/receivers/list"
+                          href="/staff/dashboard/manage-receivers/list-receivers"
                           className={cn(
                             "flex items-center px-3 py-2 rounded-lg mx-2 text-gray-600 hover:bg-gray-100 transition-colors text-sm",
                             pathname === "/receivers/list" && "bg-blue-50 text-blue-600 font-medium",

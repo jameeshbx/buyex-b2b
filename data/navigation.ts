@@ -68,6 +68,20 @@ export const pagesData: Record<string, PageData> = {
       { label: "Dashboards", href: "/staff/dashboard" },
       { label: "View Orders", href: "/staff/dashboard/view-orders" },
       { label: "Files And Uploads", href: "/staff/dashboard/upload-files", current: true },
+      ],
+  },
+  listReceivers: {
+    title: "Manage receivers",
+    breadcrumbs: [
+      { label: "Dashboards", href: "/staff/dashboard" },
+      { label: "Manage receivers", href: "/staff/dashboard/manage-receivers/list-receivers", current: true },
+    ],
+  },
+  manageUsers: {
+    title: "Manage users",
+    breadcrumbs: [
+      { label: "Dashboards", href: "/staff/dashboard" },
+      { label: "Manage users", href: "/admin/dashboard/manage-users", current: true },
     ],
   },
 }
