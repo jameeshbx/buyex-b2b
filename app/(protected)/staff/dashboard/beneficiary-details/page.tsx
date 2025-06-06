@@ -48,10 +48,9 @@ export default function BeneficiaryDetailsPage() {
   const receiverBankCountry = watch("receiverBankCountry")
   const anyIntermediaryBank = watch("anyIntermediaryBank")
 
-  const onSubmit = (data: BeneficiaryFormValues) => {
-    console.log("Form submitted:", data)
-  }
-
+  const onSubmit = () => {
+  console.log("Form submitted")
+}
   const handleReset = () => {
     reset(defaultFormValues)
   }
@@ -573,6 +572,33 @@ export default function BeneficiaryDetailsPage() {
                                 {activeStaffInfo === receiver.id && (
                                   <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg z-20 staff-info-popup">
                                     <div className="p-3 flex flex-col space-y-2">
+                                      {/* Edit option */}
+                                      <button 
+                                        type="button"
+                                        onClick={() => console.log(`Edit receiver ${receiver.id}`)}
+                                        className="flex items-center space-x-3 w-full hover:bg-gray-50 p-2 rounded-md"
+                                      >
+                                        <div className="bg-blue-100 p-2 rounded-md">
+                                          <svg 
+                                            xmlns="http://www.w3.org/2000/svg" 
+                                            className="h-4 w-4 text-blue-600"
+                                            fill="none" 
+                                            viewBox="0 0 24 24" 
+                                            stroke="currentColor"
+                                          >
+                                            <path 
+                                              strokeLinecap="round" 
+                                              strokeLinejoin="round" 
+                                              strokeWidth={2} 
+                                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" 
+                                            />
+                                          </svg>
+                                        </div>
+                                        <div>
+                                          <div className="font-medium text-sm">Edit Beneficiary</div>
+                                        </div>
+                                      </button>
+                                      {/* Staff info (existing) */}
                                       <div className="flex items-start space-x-3">
                                         <div className="bg-gray-100 p-2 rounded-md">
                                           <Trash2 className="h-4 w-4" />
@@ -986,13 +1012,21 @@ export default function BeneficiaryDetailsPage() {
 
             {/* Form buttons */}
             <div className="flex flex-col sm:flex-row justify-center mt-8 space-y-4 sm:space-y-0 sm:space-x-4">
-              <button
+                <button
                 type="submit"
                 className="bg-dark-blue text-white font-jakarta px-6 sm:px-8 py-3 rounded-md flex items-center justify-center text-sm sm:text-base"
-              >
+                onClick={(e) => {
+                  // Prevent default form submission to handle navigation manually
+                  e.preventDefault()
+                  handleSubmit(() => {
+                  // You can do any validation or API call here if needed
+                  window.location.href = "/staff/dashboard/document"
+                  })()
+                }}
+                >
                 <Image src="/continue.png" alt="Continue" className="mr-2 h-3 w-3" width={20} height={20} />
                 CONTINUE
-              </button>
+                </button>
               <button
                 type="button"
                 onClick={handleReset}

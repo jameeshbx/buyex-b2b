@@ -1,4 +1,5 @@
 export interface Order {
+  fxRateUpdated: any
   id: string
   date: string
   purpose: string
@@ -43,6 +44,7 @@ export const orders: Order[] = [
     forexPartner: "FXPrime Global Pvt Ltd",
     addedBy: "StaffA",
     addedDate: "19 Apr 2025",
+    fxRateUpdated: undefined
   },
   {
     id: "ORD039",
@@ -59,6 +61,7 @@ export const orders: Order[] = [
     forexPartner: "EuroFX Solutions Ltd",
     addedBy: "StaffB",
     addedDate: "18 Apr 2025",
+    fxRateUpdated: undefined
   },
   {
     id: "ORD038",
@@ -75,6 +78,7 @@ export const orders: Order[] = [
     forexPartner: "Sterling Exchange Ltd",
     addedBy: "StaffC",
     addedDate: "17 Apr 2025",
+    fxRateUpdated: undefined
   },
   {
     id: "ORD037",
@@ -91,6 +95,7 @@ export const orders: Order[] = [
     forexPartner: "AmericaFX Corp",
     addedBy: "StaffA",
     addedDate: "16 Apr 2025",
+    fxRateUpdated: undefined
   },
   {
     id: "ORD036",
@@ -107,6 +112,7 @@ export const orders: Order[] = [
     forexPartner: "OzForex Trading Pty",
     addedBy: "StaffD",
     addedDate: "21 Mar 2025",
+    fxRateUpdated: undefined
   },
   {
     id: "ORD035",
@@ -123,6 +129,7 @@ export const orders: Order[] = [
     forexPartner: "ItalyFX Services SRL",
     addedBy: "StaffB",
     addedDate: "19 Mar 2025",
+    fxRateUpdated: undefined
   },
   {
     id: "ORD034",
@@ -139,6 +146,7 @@ export const orders: Order[] = [
     forexPartner: "CanadaFX Solutions Inc",
     addedBy: "StaffC",
     addedDate: "17 Mar 2025",
+    fxRateUpdated: undefined
   },
   {
     id: "ORD033",
@@ -155,6 +163,7 @@ export const orders: Order[] = [
     forexPartner: "AmericaFX Corp",
     addedBy: "StaffA",
     addedDate: "14 Mar 2025",
+    fxRateUpdated: undefined
   },
   {
     id: "ORD032",
@@ -171,6 +180,7 @@ export const orders: Order[] = [
     forexPartner: "Sterling Exchange Ltd",
     addedBy: "StaffD",
     addedDate: "11 Mar 2025",
+    fxRateUpdated: undefined
   },
   {
     id: "ORD031",
@@ -187,6 +197,7 @@ export const orders: Order[] = [
     forexPartner: "SingaporeFX Trading Pte",
     addedBy: "StaffB",
     addedDate: "09 Mar 2025",
+    fxRateUpdated: undefined
   },
   {
     id: "ORD030",
@@ -203,6 +214,7 @@ export const orders: Order[] = [
     forexPartner: "OzForex Trading Pty",
     addedBy: "StaffC",
     addedDate: "07 Mar 2025",
+    fxRateUpdated: undefined
   },
   {
     id: "ORD029",
@@ -219,6 +231,7 @@ export const orders: Order[] = [
     forexPartner: "CanadaFX Solutions Inc",
     addedBy: "StaffA",
     addedDate: "04 Mar 2025",
+    fxRateUpdated: undefined
   },
   {
     id: "ORD028",
@@ -235,6 +248,7 @@ export const orders: Order[] = [
     forexPartner: "FXPrime Global Pvt Ltd",
     addedBy: "StaffD",
     addedDate: "01 Mar 2025",
+    fxRateUpdated: undefined
   },
   {
     id: "ORD027",
@@ -251,6 +265,7 @@ export const orders: Order[] = [
     forexPartner: "FXPrime Global Pvt Ltd",
     addedBy: "StaffB",
     addedDate: "27 Feb 2025",
+    fxRateUpdated: undefined
   },
   {
     id: "ORD026",
@@ -267,6 +282,7 @@ export const orders: Order[] = [
     forexPartner: "Sterling Exchange Ltd",
     addedBy: "StaffC",
     addedDate: "24 Feb 2025",
+    fxRateUpdated: undefined
   },
 ]
 
