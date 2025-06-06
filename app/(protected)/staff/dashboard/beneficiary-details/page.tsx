@@ -16,8 +16,14 @@ import {
 import { Topbar } from "../../(components)/Topbar"
 import { pagesData } from "@/data/navigation"
 import BreadcrumbMenubar from "../../(components)/Menubar"
+import axios from "axios"
+import { useRouter } from "next/navigation"
+import { Beneficiary } from "@prisma/client"
+
+
 
 export default function BeneficiaryDetailsPage() {
+   const router = useRouter()
   const [searchTerm, setSearchTerm] = useState("")
   const [activeStaffInfo, setActiveStaffInfo] = useState<string | null>(null)
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" } | null>(null)
@@ -30,6 +36,7 @@ export default function BeneficiaryDetailsPage() {
   })
   const [showCountryDropdown, setShowCountryDropdown] = useState(false)
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null)
+  const [, setBeneficiaries] = useState<Beneficiary[]>([])
 
   const {
     register,
@@ -47,10 +54,41 @@ export default function BeneficiaryDetailsPage() {
   const receiverCountry = watch("receiverCountry")
   const receiverBankCountry = watch("receiverBankCountry")
   const anyIntermediaryBank = watch("anyIntermediaryBank")
+useEffect(() => {
+    const fetchBeneficiaries = async () => {
+      try {
+        const response = await axios.get('/api/beneficiaries');
+        setBeneficiaries(response.data);
+      } catch (error) {
+        console.error("Failed to fetch beneficiaries:", error);
+      }
+    };
+    
+    fetchBeneficiaries();
+  }, []);
 
-  const onSubmit = () => {
-  console.log("Form submitted")
-}
+  const onSubmit = async (data: BeneficiaryFormValues) => {
+    try {
+      if (existingReceiver === "YES" && watch("selectedReceiverId")) {
+        // Update existing beneficiary
+        const response = await axios.put(`/api/beneficiaries/${watch("selectedReceiverId")}`, data);
+        if (response.data) {
+          router.push("/staff/dashboard/document");
+        }
+      } else {
+        // Create new beneficiary
+        const response = await axios.post('/api/beneficiaries', data);
+        if (response.data) {
+          router.push("/staff/dashboard/document");
+        }
+      }
+    } catch (error) {
+      console.error("Failed to submit beneficiary:", error);
+    }
+  };
+
+
+
   const handleReset = () => {
     reset(defaultFormValues)
   }
@@ -59,11 +97,17 @@ export default function BeneficiaryDetailsPage() {
     setValue("selectedReceiverId", receiver.id)
   }
 
-  const toggleStatus = (receiverId: string) => {
-    setReceiverStatuses((prev) => ({
-      ...prev,
-      [receiverId]: !prev[receiverId],
-    }))
+    const toggleStatus = async (receiverId: string) => {
+    try {
+      const newStatus = !receiverStatuses[receiverId];
+      await axios.patch(`/api/beneficiaries/${receiverId}`, { status: newStatus });
+      setReceiverStatuses(prev => ({
+        ...prev,
+        [receiverId]: newStatus
+      }));
+    } catch (error) {
+      console.error("Failed to update beneficiary status:", error);
+    }
   }
 
   const requestSort = (key: string) => {
