@@ -67,7 +67,7 @@ const handleDrag = useCallback((e: React.DragEvent) => {
   }
 }, [])
 
-const handleFileSelection = async (fileList: FileList) => {
+const handleFileSelection = useCallback(async (fileList: FileList) => {
   const newFiles: SelectedFile[] = []
 
   for (let i = 0; i < fileList.length; i++) {
@@ -91,7 +91,7 @@ const handleFileSelection = async (fileList: FileList) => {
   }
 
   setSelectedFiles((prev) => [...prev, ...newFiles])
-}
+}, []) // Empty dependency array since we don't use any external values
 
 const handleDrop = useCallback((e: React.DragEvent) => {
   e.preventDefault()
@@ -101,13 +101,13 @@ const handleDrop = useCallback((e: React.DragEvent) => {
   if (e.dataTransfer.files && e.dataTransfer.files[0]) {
     handleFileSelection(e.dataTransfer.files)
   }
-}, [handleFileSelection]) // Add the dependency here
+}, [handleFileSelection]) // Now handleFileSelection is stable
 
-  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      handleFileSelection(e.target.files)
-    }
+const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  if (e.target.files) {
+    handleFileSelection(e.target.files)
   }
+}, [handleFileSelection]) // Also memoize this handler since it uses handleFileSelection
 
   const removeSelectedFile = (index: number) => {
     setSelectedFiles((prev) => {
