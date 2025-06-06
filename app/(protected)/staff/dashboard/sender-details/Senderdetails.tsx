@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dialog"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { useRouter } from "next/navigation"
+import axios from "axios"
 
 type FormValues = OriginalFormValues & {
   status?: string
@@ -75,17 +76,23 @@ function Senderdetails() {
     form.setValue("relationship", payer as "self" | "parent" | "brother" | "sister" | "spouse" | "other" | undefined)
   }, [payer, form])
 
-  const onSubmit = (data: FormValues) => {
-    console.log('Form Data:', data)
+ const onSubmit = async (data: FormValues) => {
     const errors = form.formState.errors
     if (Object.keys(errors).length > 0) {
-      console.log('Form Errors:', errors)
       alert('Please fix the form errors before submitting')
       return
     }
-    router.push("/staff/dashboard/beneficiary-details")
+    
+    try {
+      const response = await axios.post('/api/senders', data)
+      if (response.data) {
+        router.push("/staff/dashboard/beneficiary-details")
+      }
+} catch (error) {
+      console.error("Failed to create sender:", error)
+      alert("Failed to submit form. Please try again.")
+    }
   }
-
   const handleReset = () => {
     form.reset()
     setSameAddress(false)

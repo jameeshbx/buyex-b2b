@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { Download, ArrowRight, RotateCcw, Play } from "lucide-react"
-
+import axios from 'axios';
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
@@ -35,6 +35,7 @@ import { calculateGst, calculateTcs, calculateTotalPayable, getLiveRate } from "
 
 export default function OrderDetailsForm() {
   const [showCalculation, setShowCalculation] = useState(false);
+    const [, setIsSubmitting] = useState(false);
   const router = useRouter()
   const [calculatedValues, setCalculatedValues] = useState({
     inrAmount: "0",
@@ -61,6 +62,7 @@ export default function OrderDetailsForm() {
       currency: "INR",
       totalAmount: "",
       customerRate: "",
+      educationLoan: undefined, // Set to undefined to match type
     },
   });
 
@@ -84,32 +86,38 @@ export default function OrderDetailsForm() {
   };
 
 
-  async function onSubmit(data: OrderDetailsFormValues) {
-    try {
-      // Convert string values to numbers where needed
-      const formData = {
-        ...data,
-        foreignBankCharges: data.foreignBankCharges === "OUR" ? 0 : 1, // Convert to number
-        margin: parseFloat(data.margin),
-        ibrRate: parseFloat(data.ibrRate),
-        amount: parseFloat(data.amount),
-        totalAmount: data.totalAmount ? parseFloat(data.totalAmount.replace(/,/g, '')) : 0,
-        customerRate: data.customerRate ? parseFloat(data.customerRate) : 0,
-      };
+ async function onSubmit(data: OrderDetailsFormValues) {
+  try {
+    setIsSubmitting(true);
 
-      console.log("Submitting form data:", formData);
+    const formData = {
+      ...data,
+      foreignBankCharges: data.foreignBankCharges === "OUR" ? 0 : 1,
+      margin: parseFloat(data.margin),
+      ibrRate: parseFloat(data.ibrRate),
+      amount: parseFloat(data.amount),
+      totalAmount: data.totalAmount ? parseFloat(data.totalAmount.replace(/,/g, '')) : 0,
+      customerRate: data.customerRate ? parseFloat(data.customerRate) : 0,
+    };
 
+    const response = await axios.post('/api/orders', formData);
+    
+    if (response.status === 200) {
+       if (typeof window !== 'undefined') {
       // Save to localStorage
       localStorage.setItem('selectedPayer', data.payer);
+      localStorage.setItem('educationLoan', data.educationLoan || "no"); // Save education loan selection
       localStorage.setItem('fromPlaceOrder', 'true');
-
+       }
       // Redirect to sender details page
       router.push("/staff/dashboard/sender-details");
-    } catch (error) {
-      console.error("Form submission error:", error);
     }
+  } catch (error) {
+    console.error("Form submission error:", error);
+  } finally {
+    setIsSubmitting(false);
   }
-
+}
   function resetForm() {
     form.reset();
     setShowCalculation(false);
@@ -136,7 +144,7 @@ export default function OrderDetailsForm() {
         form.setValue("ibrRate", rate.toString());
       });
     }
-  }, [currency]);
+  }, [currency,form]);
 
   useEffect(() => {
     if (foreignBankCharges === "OUR") {
@@ -152,29 +160,44 @@ export default function OrderDetailsForm() {
     }
   }, [foreignBankCharges]);
 
-
-  useEffect(() => {
-    form.setValue("customerRate", (parseFloat(ibrRate) + parseFloat(margin)).toFixed(2).toString());
-    if (amount && margin) {
-      const amount = parseFloat(form.watch("amount"));
-      const margin = parseFloat(form.watch("margin"));
-      const ibrRate = parseFloat(form.watch("ibrRate"));
-      const totalAmount = (ibrRate + margin) * amount;
-
-      // form.setValue("totalAmount", totalAmount.toString());
-      setCalculatedValues(prev => ({
-        ...prev,
-        inrAmount: totalAmount.toString(),
-        gst: calculateGst(totalAmount).toString(),
-        tcsApplicable: calculateTcs(totalAmount).toString(),
-        totalPayable: calculateTotalPayable(totalAmount, parseFloat(calculatedValues.bankFee)).toString(),
-      }));
-    }
-  }, [amount, margin, ibrRate, calculatedValues.bankFee]);
+useEffect(() => {
+  const currentAmount = parseFloat(amount || '0');
+  const currentMargin = parseFloat(margin || '0');
+  const currentIbrRate = parseFloat(ibrRate || '0');
+  
+  if (currentAmount && currentMargin) {
+    const totalAmount = (currentIbrRate + currentMargin) * currentAmount;
+    form.setValue("customerRate", (currentIbrRate + currentMargin).toFixed(2).toString());
+    
+    setCalculatedValues(prev => ({
+      ...prev,
+      inrAmount: totalAmount.toString(),
+      gst: calculateGst(totalAmount).toString(),
+      tcsApplicable: form.watch("educationLoan") === "yes" 
+        ? "0" 
+        : calculateTcs(totalAmount).toString(),
+      totalPayable: calculateTotalPayable(totalAmount, parseFloat(prev.bankFee)).toString(),
+    }));
+  }
+}, [amount, margin, ibrRate, calculatedValues.bankFee, form]);
 
   useEffect(() => {
     form.setValue("totalAmount", calculatedValues.totalPayable.toString());
-  }, [calculatedValues.totalPayable]);
+  }, [calculatedValues.totalPayable,form]);
+
+  useEffect(() => {
+    async function fetchOrders() {
+      try {
+        const response = await axios.get('/api/orders');
+        // You can use the orders data if needed
+        console.log('Fetched orders:', response.data);
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+      }
+    }
+    
+    fetchOrders();
+  }, []);
 
 
   return (
@@ -229,32 +252,87 @@ export default function OrderDetailsForm() {
               )}
             />
 
-            <div>
-              <p className="text-gray-700 font-normal mb-2">Foreign bank charges</p>
-              <FormField
-                control={form.control}
-                name="foreignBankCharges"
-                render={({ field }) => (
-                  <RadioGroup onValueChange={field.onChange} value={field.value} className="flex items-center gap-6">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="OUR" id="our" className="border-blue-600 text-blue-600" />
-                      <Label htmlFor="our" className="font-normal">
-                        OUR
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="BEN" id="ben" />
-                      <Label htmlFor="ben" className="font-normal">
-                        BEN
-                      </Label>
-                    </div>
-                  </RadioGroup>
-                )}
-              />
+        <div className="flex flex-col md:flex-row gap-6">
+  {/* Education Loan Section */}
+  <div className="flex-1">
+    <p className="text-gray-700 font-normal mb-2">Education loan</p>
+    <FormField
+      control={form.control}
+      name="educationLoan"
+      render={({ field }) => (
+        <RadioGroup 
+          onValueChange={(value) => {
+            field.onChange(value);
+            // Update TCS applicability based on selection
+            if (value === "yes") {
+              setCalculatedValues(prev => ({
+                ...prev,
+                tcsApplicable: "0",
+              }));
+            } else {
+              setCalculatedValues(prev => ({
+                ...prev,
+                tcsApplicable: calculateTcs(parseFloat(prev.inrAmount)).toString(),
+              }));
+            }
+          }} 
+          value={field.value} 
+          className="flex items-center gap-6"
+        >
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="yes" id="yes" className="border-blue-600 text-blue-600" />
+            <Label htmlFor="yes" className="font-normal">
+              Yes
+            </Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="no" id="no" />
+            <Label htmlFor="no" className="font-normal">
+              No
+            </Label>
+          </div>
+        </RadioGroup>
+      )}
+    />
+    {form.watch("educationLoan") === "yes" ? (
+      <p className="text-xs text-green-600 mt-1">*No TCS applicable</p>
+    ) : (
+      <p className="text-xs text-green-600 mt-1">*5% TCS applicable</p>
+    )}
+  </div>
 
-              <p className="text-xs text-green-600 mt-1">*Zero foreign bank charges</p>
-            </div>
+  
 
+  {/* Foreign Bank Charges Section */}
+  <div className="flex-1">
+    <p className="text-gray-700 font-normal mb-2">Foreign bank charges</p>
+    <FormField
+      control={form.control}
+      name="foreignBankCharges"
+      render={({ field }) => (
+        <RadioGroup onValueChange={field.onChange} value={field.value} className="flex items-center gap-6">
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="OUR" id="our" className="border-blue-600 text-blue-600" />
+            <Label htmlFor="our" className="font-normal">
+              OUR
+            </Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="BEN" id="ben" />
+            <Label htmlFor="ben" className="font-normal">
+              BEN
+            </Label>
+          </div>
+        </RadioGroup>
+      )}
+    />
+    {form.watch("foreignBankCharges") === "OUR" ? (
+      <p className="text-xs text-green-600 mt-1">*Zero foreign bank charges </p>
+    ) : (
+      <p className="text-xs text-green-600 mt-1">*Receiver bank charges applicable</p>
+    )}
+  </div>
+  </div>
             {/* Rest of the left column fields remain the same */}
             <FormField
               control={form.control}

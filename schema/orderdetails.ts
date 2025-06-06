@@ -3,6 +3,7 @@ import { z } from "zod"
 export const orderDetailsFormSchema = z.object({
   purpose: z.string().min(1, { message: "Purpose is required" }),
   foreignBankCharges: z.enum(["OUR", "BEN"]),
+  educationLoan: z.enum(["yes", "no"]).optional(), // Add this line
   payer: z.string().min(1, { message: "Payer is required" }),
   forexPartner: z.string().min(1, { message: "Forex partner is required" }),
    margin: z.string().refine((val) => {
