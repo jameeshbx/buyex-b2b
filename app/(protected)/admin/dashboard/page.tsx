@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronDown, ChevronRight, Upload } from "lucide-react"
+import { ChevronDown, ChevronRight, Upload, Search, Filter } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
@@ -11,6 +11,8 @@ import React from "react"
 import { type Order, initialOrders, statusOptions, nonChangeableStatuses } from "@/data/admin-dashboard"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import Image from "next/image"
+import { Input } from "@/components/ui/input"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 export default function Dashboard() {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
@@ -19,10 +21,12 @@ export default function Dashboard() {
   const [showRateModal, setShowRateModal] = useState(false)
   const [expandedAuthorize, setExpandedAuthorize] = useState<Record<string, boolean>>({})
   const [statusSelections, setStatusSelections] = useState<Record<string, string>>({})
-  const [ibrRate, setIbrRate] = useState<string>('')
-  const [customerRate, setCustomerRate] = useState<string>('')
-  const [settlementRate, setSettlementRate] = useState<string>('')
+  const [ibrRate, setIbrRate] = useState<string>("")
+  const [customerRate, setCustomerRate] = useState<string>("")
+  const [settlementRate, setSettlementRate] = useState<string>("")
   const [visibleRows, setVisibleRows] = useState(5)
+  const [selectedPurpose, setSelectedPurpose] = useState<string>("all")
+  const [searchTerm, setSearchTerm] = useState<string>("")
 
   const toggleRowExpansion = (orderId: string) => {
     const newExpanded = new Set(expandedRows)
@@ -53,7 +57,7 @@ export default function Dashboard() {
   }
 
   const handleSeeMoreClick = () => {
-    setVisibleRows(prev => prev + 5) // Increase visible rows by 5
+    setVisibleRows((prev) => prev + 5) // Increase visible rows by 5
   }
 
   const handleSeeLessClick = () => {
@@ -117,6 +121,35 @@ export default function Dashboard() {
     }
   }
 
+  // Define the available purposes
+  const availablePurposes = [
+    "University fee transfer",
+    "Student Living expenses transfer",
+    "Student Visa fee payment",
+    "Convera registered payment",
+    "Flywire registered payment",
+    "Blocked account transfer",
+    "Application fee",
+    "Accomodation fee",
+    "GIC Canada fee deposite",
+  ]
+
+  // Remove this line:
+  // const uniquePurposes = Array.from(new Set(orders.map((order) => order.purpose)))
+
+  // Filter orders based on purpose and search term
+  const filteredOrders = orders.filter((order) => {
+    const matchesPurpose = selectedPurpose === "all" || order.purpose === selectedPurpose
+    const matchesSearch =
+      searchTerm === "" ||
+      order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.purpose.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.currency.toLowerCase().includes(searchTerm.toLowerCase())
+
+    return matchesPurpose && matchesSearch
+  })
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -128,27 +161,75 @@ export default function Dashboard() {
 
         {/* Order History Card */}
         <Card className="shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 px-4 sm:px-6 pt-6">
-            <CardTitle className="text-lg sm:text-xl font-semibold font-jakarta text-gray-900">Order history</CardTitle>
-            <div className="flex gap-2">
-              {visibleRows < orders.length && (
-                <Button 
-                  variant="ghost" 
-                  className="text-dark-blue hover:text-blue-800 text-sm sm:text-base"
-                  onClick={handleSeeMoreClick}
-                >
-                  See More
-                </Button>
-              )}
-              {visibleRows > 5 && (
-                <Button 
-                  variant="ghost" 
-                  className="text-dark-blue hover:text-blue-800 text-sm sm:text-base"
-                  onClick={handleSeeLessClick}
-                >
-                  See Less
-                </Button>
-              )}
+          <CardHeader className="flex flex-col space-y-4 pb-4 px-4 sm:px-6 pt-6">
+            <div className="flex flex-row items-center justify-between space-y-0">
+              <CardTitle className="text-lg sm:text-xl font-semibold font-jakarta text-gray-900">
+                Order history
+              </CardTitle>
+              <div className="flex gap-2">
+                {visibleRows < filteredOrders.length && (
+                  <Button
+                    variant="ghost"
+                    className="text-dark-blue hover:text-blue-800 text-sm sm:text-base"
+                    onClick={handleSeeMoreClick}
+                  >
+                    See More
+                  </Button>
+                )}
+                {visibleRows > 5 && (
+                  <Button
+                    variant="ghost"
+                    className="text-dark-blue hover:text-blue-800 text-sm sm:text-base"
+                    onClick={handleSeeLessClick}
+                  >
+                    See Less
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Filter and Search Section */}
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="bg-dark-blue text-white hover:dark-blue border-dark-blue flex items-center gap-2"
+                  >
+                    <Filter className="h-4 w-4" />
+                    Filter by purpose
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56">
+                  <DropdownMenuItem
+                    onClick={() => setSelectedPurpose("all")}
+                    className={selectedPurpose === "all" ? "bg-blue-50 text-blue-700" : ""}
+                  >
+                    All Purposes
+                  </DropdownMenuItem>
+                  {availablePurposes.map((purpose) => (
+                    <DropdownMenuItem
+                      key={purpose}
+                      onClick={() => setSelectedPurpose(purpose)}
+                      className={selectedPurpose === purpose ? "bg-blue-50 text-blue-700" : ""}
+                    >
+                      {purpose}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <div className="relative w-full sm:w-80">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  type="text"
+                  placeholder="Search"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
             </div>
           </CardHeader>
           <CardContent className="p-0">
@@ -168,7 +249,7 @@ export default function Dashboard() {
               </div>
 
               {/* Order Rows - Only show visibleRows */}
-              {orders.slice(0, visibleRows).map((order) => (
+              {filteredOrders.slice(0, visibleRows).map((order) => (
                 <React.Fragment key={order.id}>
                   {/* Main Row */}
                   <div
@@ -192,10 +273,11 @@ export default function Dashboard() {
                       <div className="font-semibold text-sm font-jakarta text-gray-900">{order.fcyAmt}</div>
                       <div>
                         <button
-                          className={`w-24 h-7 rounded-sm text-xs font-medium border ${order.fxRateUpdated
+                          className={`w-24 h-7 rounded-sm text-xs font-medium border ${
+                            order.fxRateUpdated
                               ? "bg-white border-black text-black font-bold "
                               : "bg-white text-red-600 border-red-600 font-bold hover:bg-red-50 cursor-pointer"
-                            }`}
+                          }`}
                           onClick={(e) => {
                             if (!order.fxRateUpdated) {
                               e.stopPropagation()
@@ -234,16 +316,16 @@ export default function Dashboard() {
                           <div className="font-medium font-jakarta text-gray-900">
                             {order.fcyAmt} {order.currency}
                           </div>
-                          <div className="text-xs sm:text-sm font-jakarta text-gray-600">
-                            {order.purpose}
-                          </div>
+                          <div className="text-xs sm:text-sm font-jakarta text-gray-600">{order.purpose}</div>
                         </div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-y-3 text-sm mb-3">
                         <div>
                           <span className="text-xs sm:text-sm text-gray-600 font-jakarta">Name:</span>
-                          <div className="font-medium font-jakarta text-gray-900 text-sm sm:text-base">{order.name}</div>
+                          <div className="font-medium font-jakarta text-gray-900 text-sm sm:text-base">
+                            {order.name}
+                          </div>
                         </div>
                         <div className="text-right">
                           <span className="text-xs sm:text-sm text-gray-600 font-jakarta">Status:</span>
@@ -255,10 +337,11 @@ export default function Dashboard() {
 
                       <div className="flex items-center justify-between">
                         <button
-                          className={`w-24 sm:w-28 h-7 rounded-sm text-xs font-medium border ${order.fxRateUpdated
-                            ? "bg-white border-black text-black font-bold"
-                            : "bg-white text-red-600 border-red-600 font-bold"
-                            }`}
+                          className={`w-24 sm:w-28 h-7 rounded-sm text-xs font-medium border ${
+                            order.fxRateUpdated
+                              ? "bg-white border-black text-black font-bold"
+                              : "bg-white text-red-600 border-red-600 font-bold"
+                          }`}
                           onClick={(e) => {
                             e.stopPropagation()
                             handleUpdateRateClick(order)
@@ -283,28 +366,44 @@ export default function Dashboard() {
                         {/* Initial Details Grid */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-4xl">
                           <div>
-                            <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">Purpose</h4>
-                            <p className="text-gray-600 text-sm sm:text-base font-jakarta bg-gray-50 p-2 sm:p-3 rounded-sm">{order.purpose}</p>
+                            <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
+                              Purpose
+                            </h4>
+                            <p className="text-gray-600 text-sm sm:text-base font-jakarta bg-gray-50 p-2 sm:p-3 rounded-sm">
+                              {order.purpose}
+                            </p>
                           </div>
                           <div>
-                            <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">Receiver&apos;s full name</h4>
-                            <p className="text-gray-600 text-sm sm:text-base font-jakarta bg-gray-50 p-2 sm:p-3 rounded-sm">{order.name}</p>
+                            <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
+                              Receiver&apos;s full name
+                            </h4>
+                            <p className="text-gray-600 text-sm sm:text-base font-jakarta bg-gray-50 p-2 sm:p-3 rounded-sm">
+                              {order.name}
+                            </p>
                           </div>
                           <div>
-                            <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">Receiver&apos;s account</h4>
+                            <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
+                              Receiver&apos;s account
+                            </h4>
                             <p className="text-gray-600 text-xs sm:text-sm font-jakarta break-all bg-gray-50 p-2 sm:p-3 rounded-sm">
                               {order.receiverAccount}
                             </p>
                           </div>
                           <div>
-                            <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">Receiver Country</h4>
+                            <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
+                              Receiver Country
+                            </h4>
                             <p className="text-gray-600 text-sm sm:text-base font-jakarta bg-gray-50 p-2 sm:p-3 rounded-sm">
                               {order.receiverCountry}
                             </p>
                           </div>
                           <div>
-                            <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">Forex Partner</h4>
-                            <p className="text-gray-600 text-sm sm:text-base font-jakarta bg-gray-50 p-2 sm:p-3 rounded-sm">{order.forexPartner}</p>
+                            <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
+                              Forex Partner
+                            </h4>
+                            <p className="text-gray-600 text-sm sm:text-base font-jakarta bg-gray-50 p-2 sm:p-3 rounded-sm">
+                              {order.forexPartner}
+                            </p>
                           </div>
                         </div>
 
@@ -322,7 +421,13 @@ export default function Dashboard() {
                                     background: "linear-gradient(to right, #614385, #516395)",
                                   }}
                                 >
-                                  <Image src="/Frames.png" alt="" width={47} height={35} className="w-8 h-8 sm:w-6 sm:h-6" />
+                                  <Image
+                                    src="/Frames.png"
+                                    alt=""
+                                    width={47}
+                                    height={35}
+                                    className="w-8 h-8 sm:w-6 sm:h-6"
+                                  />
                                   <span className="text-sm sm:text-base">Authorize</span>
                                   <div className="flex ml-1">
                                     <span className="text-white font-bold">&gt;&gt;&gt;</span>
@@ -335,7 +440,9 @@ export default function Dashboard() {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-4xl">
                                   {/* Foreign Currency */}
                                   <div>
-                                    <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">Foreign currency</h4>
+                                    <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
+                                      Foreign currency
+                                    </h4>
                                     <div className="bg-white p-2 sm:p-3 rounded-sm border border-gray-200">
                                       <input
                                         type="text"
@@ -348,7 +455,9 @@ export default function Dashboard() {
 
                                   {/* FC Volume */}
                                   <div>
-                                    <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">FC Volume</h4>
+                                    <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
+                                      FC Volume
+                                    </h4>
                                     <div className="bg-white p-2 sm:p-3 rounded-sm border border-gray-200">
                                       <input
                                         type="text"
@@ -361,7 +470,9 @@ export default function Dashboard() {
 
                                   {/* Purpose */}
                                   <div>
-                                    <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">Purpose</h4>
+                                    <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
+                                      Purpose
+                                    </h4>
                                     <div className="bg-white p-2 sm:p-3 rounded-sm border border-gray-200">
                                       <input
                                         type="text"
@@ -374,7 +485,9 @@ export default function Dashboard() {
 
                                   {/* Account Number */}
                                   <div>
-                                    <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">Account no.</h4>
+                                    <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
+                                      Account no.
+                                    </h4>
                                     <div className="bg-white p-2 sm:p-3 rounded-sm border border-gray-200">
                                       <input
                                         type="text"
@@ -436,7 +549,13 @@ export default function Dashboard() {
                                       background: "linear-gradient(to right, #61C454, #414143)",
                                     }}
                                   >
-                                    <Image src="/Frames.png" alt="" width={20} height={20} className="w-5 h-5 sm:w-6 sm:h-6" />
+                                    <Image
+                                      src="/Frames.png"
+                                      alt=""
+                                      width={20}
+                                      height={20}
+                                      className="w-5 h-5 sm:w-6 sm:h-6"
+                                    />
                                     <span className="text-sm sm:text-base">Authorize</span>
                                     <div className="flex ml-1">
                                       <span className="text-white font-bold animate-bounce-slower">&gt;&gt;&gt;</span>
@@ -480,7 +599,7 @@ export default function Dashboard() {
               <input
                 type="text"
                 className="bg-gray-50 rounded p-2 text-sm"
-                value={ibrRate || ''}
+                value={ibrRate || ""}
                 onChange={(e) => setIbrRate(e.target.value)}
               />
 
@@ -488,7 +607,7 @@ export default function Dashboard() {
               <input
                 type="text"
                 className="bg-gray-50 rounded p-2 text-sm"
-                value={customerRate || selectedOrder?.fxRate?.toFixed(2) || ''}
+                value={customerRate || selectedOrder?.fxRate?.toFixed(2) || ""}
                 onChange={(e) => setCustomerRate(e.target.value)}
               />
 
@@ -496,7 +615,7 @@ export default function Dashboard() {
               <input
                 type="text"
                 className="bg-gray-50 rounded p-2 text-sm"
-                value={settlementRate || ''}
+                value={settlementRate || ""}
                 onChange={(e) => setSettlementRate(e.target.value)}
               />
             </div>
@@ -506,19 +625,10 @@ export default function Dashboard() {
             <button
               className="bg-dark-blue hover:bg-dark-blue text-white px-14 py-2 rounded-sm text-sm flex items-center"
               onClick={() => {
-                handleRateUpdate(
-                  selectedOrder?.id || "",
-                  parseFloat(customerRate) || selectedOrder?.fxRate || 0
-                )
+                handleRateUpdate(selectedOrder?.id || "", Number.parseFloat(customerRate) || selectedOrder?.fxRate || 0)
               }}
             >
-              <Image
-                src="/bolt.png"
-                alt=""
-                width={20}
-                height={20}
-                className="mr-2"
-              />
+              <Image src="/bolt.png" alt="" width={20} height={20} className="mr-2" />
               Update rates
             </button>
           </div>
