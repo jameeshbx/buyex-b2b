@@ -65,8 +65,15 @@ export const pagesData: Record<string, PageData> = {
   manageUsers: {
     title: "Manage users",
     breadcrumbs: [
-      { label: "Dashboards", href: "/staff/dashboard" },
+      { label: "Dashboards", href: "/admin/dashboard" },
       { label: "Manage users", href: "/admin/dashboard/manage-users", current: true },
+    ],
+  },
+  nativeUsers: {
+    title: "Manage native users",
+    breadcrumbs: [
+      { label: "Dashboards", href: "/super-admin/dashboard" },
+      { label: "Native users", href: "/super-admin/dashboard/native-users", current: true },
     ],
   },
 }
