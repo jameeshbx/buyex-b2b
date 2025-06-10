@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { FileUploader } from "./file-uploader"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
@@ -45,6 +45,15 @@ export default function DocumentUploadForm() {
   })
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
+  const [payer, setPayer] = useState<string | null>(null);
+  const [educationLoan, setEducationLoan] = useState<string | null>(null);
+  // Get values from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setPayer(localStorage.getItem('selectedPayer'));
+      setEducationLoan(localStorage.getItem('educationLoan'));
+    }
+  }, []);
 
   const handleFileUpload = (section: keyof FormState, field: string, file: File | null) => {
     setFormState((prev) => ({
@@ -184,49 +193,52 @@ export default function DocumentUploadForm() {
       </div>
 
       {/* Student Details Section */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold font-jakarta mb-4">Student Details</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-jakarta mb-2">Payer&apos;s PAN*</label>
-            <FileUploader
-              onFileUpload={(file) => handleFileUpload("studentDetails", "payerPAN", file)}
-              currentFile={formState.studentDetails.payerPAN}
-              acceptedFileTypes={[".jpg", ".jpeg", ".png", ".pdf"]}
-              maxSizeMB={5}
-              required
-              fieldName="Payer PAN"
-            />
-            {formErrors["studentDetails.payerPAN"] && (
-              <p className="text-red-500 text-xs mt-1">{formErrors["studentDetails.payerPAN"]}</p>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm font-jakarta mb-2">Aadhaar (front and back)*</label>
-            <FileUploader
-              onFileUpload={(file) => handleFileUpload("studentDetails", "aadhaar", file)}
-              currentFile={formState.studentDetails.aadhaar}
-              acceptedFileTypes={[".jpg", ".jpeg", ".png", ".pdf"]}
-              maxSizeMB={5}
-              required
-              fieldName="Aadhaar"
-            />
-            {formErrors["studentDetails.aadhaar"] && (
-              <p className="text-red-500 text-xs mt-1">{formErrors["studentDetails.aadhaar"]}</p>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm font-jakarta mb-2">Passport (front and back)</label>
-            <FileUploader
-              onFileUpload={(file) => handleFileUpload("studentDetails", "passport", file)}
-              currentFile={formState.studentDetails.passport}
-              acceptedFileTypes={[".jpg", ".jpeg", ".png", ".pdf"]}
-              maxSizeMB={5}
-              fieldName="Passport"
-            />
+      {payer !== "Self" && (
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold font-jakarta mb-4">Student Details</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-jakarta mb-2">Student&apos;s PAN*</label>
+              <FileUploader
+                onFileUpload={(file) => handleFileUpload("studentDetails", "payerPAN", file)}
+                currentFile={formState.studentDetails.payerPAN}
+                acceptedFileTypes={[".jpg", ".jpeg", ".png", ".pdf"]}
+                maxSizeMB={5}
+                required
+                fieldName="Student PAN"
+              />
+              {formErrors["studentDetails.payerPAN"] && (
+                <p className="text-red-500 text-xs mt-1">{formErrors["studentDetails.payerPAN"]}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-jakarta mb-2">Aadhaar (front and back)*</label>
+              <FileUploader
+                onFileUpload={(file) => handleFileUpload("studentDetails", "aadhaar", file)}
+                currentFile={formState.studentDetails.aadhaar}
+                acceptedFileTypes={[".jpg", ".jpeg", ".png", ".pdf"]}
+                maxSizeMB={5}
+                required
+                fieldName="Aadhaar"
+              />
+              {formErrors["studentDetails.aadhaar"] && (
+                <p className="text-red-500 text-xs mt-1">{formErrors["studentDetails.aadhaar"]}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-jakarta mb-2">Passport (front and back)</label>
+              <FileUploader
+                onFileUpload={(file) => handleFileUpload("studentDetails", "passport", file)}
+                currentFile={formState.studentDetails.passport}
+                acceptedFileTypes={[".jpg", ".jpeg", ".png", ".pdf"]}
+                maxSizeMB={5}
+                fieldName="Passport"
+              />
+            </div>
           </div>
         </div>
-      </div>
+      )}
+
 
       {/* University related documents Section */}
       <div className="mb-8">
@@ -260,6 +272,24 @@ export default function DocumentUploadForm() {
               <p className="text-red-500 text-xs mt-1">{formErrors["universityDocuments.loanSanctionLetter"]}</p>
             )}
           </div>
+
+
+          {educationLoan === "yes" && (
+            <div>
+              <label className="block text-sm font-jakarta mb-2">Education loan sanction letter*</label>
+              <FileUploader
+                onFileUpload={(file) => handleFileUpload("universityDocuments", "loanSanctionLetter", file)}
+                currentFile={formState.universityDocuments.loanSanctionLetter}
+                acceptedFileTypes={[".pdf"]}
+                maxSizeMB={5}
+                required
+                fieldName="Loan sanction letter"
+              />
+              {formErrors["universityDocuments.loanSanctionLetter"] && (
+                <p className="text-red-500 text-xs mt-1">{formErrors["universityDocuments.loanSanctionLetter"]}</p>
+              )}
+            </div>
+          )}
           <div>
             <label className="block text-sm font-jakarta mb-2">University offer letter*</label>
             <FileUploader
@@ -276,6 +306,7 @@ export default function DocumentUploadForm() {
           </div>
         </div>
       </div>
+
 
       {/* Form Actions */}
       <div className="flex justify-center gap-4 mt-8">
