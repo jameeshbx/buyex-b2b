@@ -21,7 +21,7 @@ export const initialOrders: Order[] = [
   {
     id: "ORDER001",
     date: "2024-01-20",
-    purpose: "Education",
+    purpose: "University fee transfer",
     name: "John Doe",
     currency: "USD",
     fcyAmt: 1000,
@@ -31,17 +31,16 @@ export const initialOrders: Order[] = [
     receiverAccount: "1234567890",
     receiverCountry: "USA",
     forexPartner: "Partner A",
-    // Add these validation fields
-  currencyValidation: 'valid', // or 'invalid'
-  fcyAmtValidation: 'valid',
-  purposeValidation: 'valid',
-  receiverAccountValidation: 'valid'
-},
-  
+    currencyValidation: "valid",
+    fcyAmtValidation: "valid",
+    purposeValidation: "valid",
+    receiverAccountValidation: "valid",
+  },
+
   {
     id: "ORDER002",
     date: "2024-01-21",
-    purpose: "Medical",
+    purpose: "Student Living expenses transfer",
     name: "Jane Smith",
     currency: "EUR",
     fcyAmt: 500,
@@ -51,17 +50,15 @@ export const initialOrders: Order[] = [
     receiverAccount: "0987654321",
     receiverCountry: "Germany",
     forexPartner: "Partner B",
-    // Add these validation fields
-  currencyValidation: 'valid', // or 'invalid'
-  fcyAmtValidation: 'valid',
-  purposeValidation: 'valid',
-  receiverAccountValidation: 'valid'
-
+    currencyValidation: "valid",
+    fcyAmtValidation: "valid",
+    purposeValidation: "valid",
+    receiverAccountValidation: "valid",
   },
   {
     id: "ORDER003",
     date: "2024-01-22",
-    purpose: "Travel",
+    purpose: "Student Visa fee payment",
     name: "Alice Johnson",
     currency: "GBP",
     fcyAmt: 200,
@@ -71,16 +68,15 @@ export const initialOrders: Order[] = [
     receiverAccount: "6789012345",
     receiverCountry: "UK",
     forexPartner: "Partner C",
-    // Add these validation fields
-  currencyValidation: 'valid', // or 'invalid'
-  fcyAmtValidation: 'valid',
-  purposeValidation: 'valid',
-  receiverAccountValidation: 'valid'
+    currencyValidation: "valid",
+    fcyAmtValidation: "valid",
+    purposeValidation: "valid",
+    receiverAccountValidation: "valid",
   },
   {
     id: "ORDER004",
     date: "2024-01-23",
-    purpose: "Business",
+    purpose: "Convera registered payment",
     name: "Bob Williams",
     currency: "JPY",
     fcyAmt: 30000,
@@ -90,17 +86,15 @@ export const initialOrders: Order[] = [
     receiverAccount: "5432109876",
     receiverCountry: "Japan",
     forexPartner: "Partner A",
-    // Add these validation fields
-  currencyValidation: 'valid', // or 'invalid'
-  fcyAmtValidation: 'valid',
-  purposeValidation: 'valid',
-  receiverAccountValidation: 'valid'
-
+    currencyValidation: "valid",
+    fcyAmtValidation: "valid",
+    purposeValidation: "valid",
+    receiverAccountValidation: "valid",
   },
   {
     id: "ORDER005",
     date: "2024-01-24",
-    purpose: "Investment",
+    purpose: "Flywire registered payment",
     name: "Charlie Brown",
     currency: "CAD",
     fcyAmt: 750,
@@ -110,16 +104,15 @@ export const initialOrders: Order[] = [
     receiverAccount: "2345678901",
     receiverCountry: "Canada",
     forexPartner: "Partner B",
-    // Add these validation fields
-  currencyValidation: 'valid', // or 'invalid'
-  fcyAmtValidation: 'valid',
-  purposeValidation: 'valid',
-  receiverAccountValidation: 'valid'
+    currencyValidation: "valid",
+    fcyAmtValidation: "valid",
+    purposeValidation: "valid",
+    receiverAccountValidation: "valid",
   },
   {
     id: "ORDER006",
     date: "2024-01-25",
-    purpose: "Personal",
+    purpose: "Blocked account transfer",
     name: "Diana Davis",
     currency: "AUD",
     fcyAmt: 600,
@@ -129,17 +122,15 @@ export const initialOrders: Order[] = [
     receiverAccount: "3456789012",
     receiverCountry: "Australia",
     forexPartner: "Partner C",
-    // Add these validation fields
-  currencyValidation: 'valid', // or 'invalid'
-  fcyAmtValidation: 'valid',
-  purposeValidation: 'valid',
-  receiverAccountValidation: 'valid'
-
+    currencyValidation: "valid",
+    fcyAmtValidation: "valid",
+    purposeValidation: "valid",
+    receiverAccountValidation: "valid",
   },
   {
     id: "ORDER007",
     date: "2024-01-26",
-    purpose: "Other",
+    purpose: "Application fee",
     name: "Eve Miller",
     currency: "CHF",
     fcyAmt: 400,
@@ -149,16 +140,15 @@ export const initialOrders: Order[] = [
     receiverAccount: "4567890123",
     receiverCountry: "Switzerland",
     forexPartner: "Partner A",
-    // Add these validation fields
-  currencyValidation: 'valid', // or 'invalid'
-  fcyAmtValidation: 'valid',
-  purposeValidation: 'valid',
-  receiverAccountValidation: 'valid'
+    currencyValidation: "valid",
+    fcyAmtValidation: "valid",
+    purposeValidation: "valid",
+    receiverAccountValidation: "valid",
   },
   {
     id: "ORDER008",
     date: "2024-01-27",
-    purpose: "Gift",
+    purpose: "Accomodation fee",
     name: "Frank Wilson",
     currency: "SEK",
     fcyAmt: 800,
@@ -168,11 +158,28 @@ export const initialOrders: Order[] = [
     receiverAccount: "7890123456",
     receiverCountry: "Sweden",
     forexPartner: "Partner B",
-    // Add these validation fields
-  currencyValidation: 'valid', // or 'invalid'
-  fcyAmtValidation: 'valid',
-  purposeValidation: 'valid',
-  receiverAccountValidation: 'valid'
+    currencyValidation: "valid",
+    fcyAmtValidation: "valid",
+    purposeValidation: "valid",
+    receiverAccountValidation: "valid",
+  },
+  {
+    id: "ORDER009",
+    date: "2024-01-28",
+    purpose: "GIC Canada fee deposite",
+    name: "Grace Taylor",
+    currency: "CAD",
+    fcyAmt: 1200,
+    fxRate: 0.0,
+    fxRateUpdated: false,
+    status: "Received",
+    receiverAccount: "8901234567",
+    receiverCountry: "Canada",
+    forexPartner: "Partner C",
+    currencyValidation: "valid",
+    fcyAmtValidation: "valid",
+    purposeValidation: "valid",
+    receiverAccountValidation: "valid",
   },
 ]
 
