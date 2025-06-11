@@ -6,6 +6,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["fullTextSearch"]
 }
 
 datasource db {
@@ -20,6 +21,24 @@ enum UserRole {
   MANAGER
   ORGANISATION_ADMIN
   ORGANISATION_USER
+}
+
+enum DocumentType {
+  PAN
+  AADHAR_FRONT
+  AADHAR_BACK
+  PASSPORT_FRONT
+  PASSPORT_BACK
+  UNIVERSITY_FEE_RECEIPT
+  LOAN_SANCTION_LETTER
+  UNIVERSITY_OFFER_LETTER
+  OTHER
+}
+
+enum DocumentRole {
+  SENDER
+  BENEFICIARY
+  STUDENT
 }
 
 model User {
@@ -186,4 +205,17 @@ model Order {
   updatedAt           DateTime @updatedAt
 
   @@map("orders")
+}
+
+model Document {
+  id          String       @id @default(cuid())
+  role        DocumentRole
+  userId      String
+  type        DocumentType
+  imageUrl    String
+  isVerified  Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@map("documents")
 }
