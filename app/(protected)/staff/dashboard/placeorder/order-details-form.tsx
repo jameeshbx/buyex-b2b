@@ -15,29 +15,129 @@ import { orderDetailsFormSchema, OrderDetailsFormValues } from "@/schema/orderde
 import { useRouter } from "next/navigation"
 import { calculateGst, calculateTcs, calculateTotalPayable, getLiveRate } from "@/lib/financial"
 
-// import jsPDF from "jspdf"
-// import autoTable from "jspdf-autotable"
+import jsPDF from "jspdf"
+import autoTable from "jspdf-autotable"
 
-// interface CalculatedValues {
-//   inrAmount: string;
-//   bankFee: string;
-//   gst: string;
-//   tcsApplicable: string;
-//   totalPayable: string;
-//   customerRate: string;
-// }
+interface CalculatedValues {
+  inrAmount: string;
+  bankFee: string;
+  gst: string;
+  tcsApplicable: string;
+  totalPayable: string;
+  customerRate: string;
+}
 
-// interface JsPDFWithAutoTable extends jsPDF {
-//   lastAutoTable: {
-//     finalY: number;
-//   };
-// }
+interface JsPDFWithAutoTable extends jsPDF {
+  lastAutoTable: {
+    finalY: number;
+  };
+}
 
+ function generateQuotePDF(formData: OrderDetailsFormValues, calculatedValues: CalculatedValues) {
+    const doc = new jsPDF() as JsPDFWithAutoTable;
+    let lastY = 30; // Track the last Y position manually
+
+    // Add logo
+    const logo = "/header-logo.png";
+    doc.addImage(logo, "PNG", 14, 10, 50, 20); // Adjusted size for better visibility
+
+    // Title (moved slightly to the right to accommodate logo)
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text("Send Money Abroad Quote", 105, 20, { align: "center" });
+
+    // Quote Info Table
+    autoTable(doc, {
+      startY: lastY,
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [240, 240, 240] },
+      body: [
+        ["Date & Time", new Date().toLocaleString()],
+        ["Student Name", formData.studentName || ""],
+        ["Country Name", formData.receiverBankCountry || ""],
+        ["Purpose", formData.purpose || ""],
+        ["Foreign Currency", formData.currency || ""],
+        ["Foreign Currency Amount", formData.amount || ""],
+        ["Exchange Rate", formData.customerRate || ""],
+        ["Forex Conversion Tax", calculatedValues.gst],
+        ["TCS", calculatedValues.tcsApplicable],
+        ["Processing Charges", calculatedValues.bankFee],
+        ["Total Payable Amount in INR", calculatedValues.totalPayable],
+      ],
+    });
+
+    lastY = doc.lastAutoTable.finalY + 10;
+
+    // Bank Details Title
+    doc.setFontSize(12);
+    doc.setTextColor(0);
+    doc.setFont("helvetica", "bold");
+    doc.text("Forex Partner Bank Account Details ", 14, lastY);
+    doc.setTextColor(255, 0, 0);
+    doc.text("(Cash deposit not accepted)", 130, lastY);
+
+    // Bank Info Table
+    autoTable(doc, {
+      startY: lastY + 15,
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [240, 240, 240] },
+      body: [
+        ["Bank Name", "HDFC BANK"],
+        ["Account Name", "Wsfx Global Pay Ltd"],
+        ["Account Number", "WALLST17960000"],
+        ["IFSC Code", "HDFC0001372"],
+        ["Branch", "MUMBAI"],
+      ],
+    });
+
+    lastY = doc.lastAutoTable.finalY + 10;
+
+    // Upload Info
+    doc.setTextColor(0);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.text("Thank you for choosing BuyExchange for your forex needs.", 14, lastY);
+    doc.setFont("helvetica", "normal");
+    doc.text(
+      "To proceed with your transaction, please upload the required documents using the secure link below:",
+      14,
+      lastY + 6
+    );
+    doc.setTextColor(0, 0, 255);
+    doc.textWithLink("www.buyexchange.in/upload-documents", 14, lastY + 12, {
+      url: "https://www.buyexchange.in/upload-documents",
+    });
+
+    // Terms & Conditions
+    doc.setTextColor(0);
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("Terms & Conditions", 14, lastY + 25);
+
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    const terms = [
+      "• The above quote is generated for one time use only and must not be shared or used by any other remitter to make payments",
+      "• Supported payment modes are RTGS, NEFT and Bank Transfer. No cash deposit accepted",
+      "• The money should come from the Sender's Savings Bank Account in India. Third party funding is not accepted.",
+      "• The payment must be made in full for the amount reflected in this quote and any part payments / multiple payments may get rejected or returned",
+      "• The given exchange rate is subject to market fluctuations and valid between 10.00 AM to 2.45 PM on a bank working day.",
+      "• The given rate is valid for 30 minutes.",
+    ];
+    let y = lastY + 32;
+    terms.forEach(term => {
+      doc.text(term, 14, y);
+      y += 6;
+    });
+
+    doc.save("Send_Money_Abroad_Quote.pdf");
+  }
+  
 export default function OrderDetailsForm() {
   const [showCalculation, setShowCalculation] = useState(false);
-    const [, setIsSubmitting] = useState(false);
+  const [, setIsSubmitting] = useState(false);
   const router = useRouter()
-  const [calculatedValues, setCalculatedValues] = useState({
+  const [calculatedValues, setCalculatedValues] = useState<CalculatedValues>({
     inrAmount: "0",
     bankFee: "1500",
     gst: "0",
@@ -45,6 +145,7 @@ export default function OrderDetailsForm() {
     totalPayable: "0",
     customerRate: "0",
   });
+
 
   const form = useForm<OrderDetailsFormValues>({
     resolver: zodResolver(orderDetailsFormSchema),
@@ -86,38 +187,38 @@ export default function OrderDetailsForm() {
   };
 
 
- async function onSubmit(data: OrderDetailsFormValues) {
-  try {
-    setIsSubmitting(true);
+  async function onSubmit(data: OrderDetailsFormValues) {
+    try {
+      setIsSubmitting(true);
 
-    const formData = {
-      ...data,
-      foreignBankCharges: data.foreignBankCharges === "OUR" ? 0 : 1,
-      margin: parseFloat(data.margin),
-      ibrRate: parseFloat(data.ibrRate),
-      amount: parseFloat(data.amount),
-      totalAmount: data.totalAmount ? parseFloat(data.totalAmount.replace(/,/g, '')) : 0,
-      customerRate: data.customerRate ? parseFloat(data.customerRate) : 0,
-    };
+      const formData = {
+        ...data,
+        foreignBankCharges: data.foreignBankCharges === "OUR" ? 0 : 1,
+        margin: parseFloat(data.margin),
+        ibrRate: parseFloat(data.ibrRate),
+        amount: parseFloat(data.amount),
+        totalAmount: data.totalAmount ? parseFloat(data.totalAmount.replace(/,/g, '')) : 0,
+        customerRate: data.customerRate ? parseFloat(data.customerRate) : 0,
+      };
 
-    const response = await axios.post('/api/orders', formData);
-    
-    if (response.status === 200) {
-       if (typeof window !== 'undefined') {
-      // Save to localStorage
-      localStorage.setItem('selectedPayer', data.payer);
-      localStorage.setItem('educationLoan', data.educationLoan || "no"); // Save education loan selection
-      localStorage.setItem('fromPlaceOrder', 'true');
-       }
-      // Redirect to sender details page
-      router.push("/staff/dashboard/sender-details");
+      const response = await axios.post('/api/orders', formData);
+
+      if (response.status === 200) {
+        if (typeof window !== 'undefined') {
+          // Save to localStorage
+          localStorage.setItem('selectedPayer', data.payer);
+          localStorage.setItem('educationLoan', data.educationLoan || "no"); // Save education loan selection
+          localStorage.setItem('fromPlaceOrder', 'true');
+        }
+        // Redirect to sender details page
+        router.push("/staff/dashboard/sender-details");
+      }
+    } catch (error) {
+      console.error("Form submission error:", error);
+    } finally {
+      setIsSubmitting(false);
     }
-  } catch (error) {
-    console.error("Form submission error:", error);
-  } finally {
-    setIsSubmitting(false);
   }
-}
   function resetForm() {
     form.reset();
     setShowCalculation(false);
@@ -144,7 +245,7 @@ export default function OrderDetailsForm() {
         form.setValue("ibrRate", rate.toString());
       });
     }
-  }, [currency,form]);
+  }, [currency, form]);
 
   useEffect(() => {
     if (foreignBankCharges === "OUR") {
@@ -160,30 +261,30 @@ export default function OrderDetailsForm() {
     }
   }, [foreignBankCharges]);
 
-useEffect(() => {
-  const currentAmount = parseFloat(amount || '0');
-  const currentMargin = parseFloat(margin || '0');
-  const currentIbrRate = parseFloat(ibrRate || '0');
-  
-  if (currentAmount && currentMargin) {
-    const totalAmount = (currentIbrRate + currentMargin) * currentAmount;
-    form.setValue("customerRate", (currentIbrRate + currentMargin).toFixed(2).toString());
-    
-    setCalculatedValues(prev => ({
-      ...prev,
-      inrAmount: totalAmount.toString(),
-      gst: calculateGst(totalAmount).toString(),
-      tcsApplicable: form.watch("educationLoan") === "yes" 
-        ? "0" 
-        : calculateTcs(totalAmount).toString(),
-      totalPayable: calculateTotalPayable(totalAmount, parseFloat(prev.bankFee)).toString(),
-    }));
-  }
-}, [amount, margin, ibrRate, calculatedValues.bankFee, form]);
+  useEffect(() => {
+    const currentAmount = parseFloat(amount || '0');
+    const currentMargin = parseFloat(margin || '0');
+    const currentIbrRate = parseFloat(ibrRate || '0');
+
+    if (currentAmount && currentMargin) {
+      const totalAmount = (currentIbrRate + currentMargin) * currentAmount;
+      form.setValue("customerRate", (currentIbrRate + currentMargin).toFixed(2).toString());
+
+      setCalculatedValues(prev => ({
+        ...prev,
+        inrAmount: totalAmount.toString(),
+        gst: calculateGst(totalAmount).toString(),
+        tcsApplicable: form.watch("educationLoan") === "yes"
+          ? "0"
+          : calculateTcs(totalAmount).toString(),
+        totalPayable: calculateTotalPayable(totalAmount, parseFloat(prev.bankFee)).toString(),
+      }));
+    }
+  }, [amount, margin, ibrRate, calculatedValues.bankFee, form]);
 
   useEffect(() => {
     form.setValue("totalAmount", calculatedValues.totalPayable.toString());
-  }, [calculatedValues.totalPayable,form]);
+  }, [calculatedValues.totalPayable, form]);
 
   useEffect(() => {
     async function fetchOrders() {
@@ -195,7 +296,7 @@ useEffect(() => {
         console.error('Error fetching orders:', error);
       }
     }
-    
+
     fetchOrders();
   }, []);
 
@@ -252,87 +353,87 @@ useEffect(() => {
               )}
             />
 
-        <div className="flex flex-col md:flex-row gap-6">
-  {/* Education Loan Section */}
-  <div className="flex-1">
-    <p className="text-gray-700 font-normal mb-2">Education loan</p>
-    <FormField
-      control={form.control}
-      name="educationLoan"
-      render={({ field }) => (
-        <RadioGroup 
-          onValueChange={(value) => {
-            field.onChange(value);
-            // Update TCS applicability based on selection
-            if (value === "yes") {
-              setCalculatedValues(prev => ({
-                ...prev,
-                tcsApplicable: "0",
-              }));
-            } else {
-              setCalculatedValues(prev => ({
-                ...prev,
-                tcsApplicable: calculateTcs(parseFloat(prev.inrAmount)).toString(),
-              }));
-            }
-          }} 
-          value={field.value} 
-          className="flex items-center gap-6"
-        >
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="yes" id="yes" className="border-blue-600 text-blue-600" />
-            <Label htmlFor="yes" className="font-normal">
-              Yes
-            </Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="no" id="no" />
-            <Label htmlFor="no" className="font-normal">
-              No
-            </Label>
-          </div>
-        </RadioGroup>
-      )}
-    />
-    {form.watch("educationLoan") === "yes" ? (
-      <p className="text-xs text-green-600 mt-1">*No TCS applicable</p>
-    ) : (
-      <p className="text-xs text-green-600 mt-1">*5% TCS applicable</p>
-    )}
-  </div>
+            <div className="flex flex-col md:flex-row gap-6">
+              {/* Education Loan Section */}
+              <div className="flex-1">
+                <p className="text-gray-700 font-normal mb-2">Education loan</p>
+                <FormField
+                  control={form.control}
+                  name="educationLoan"
+                  render={({ field }) => (
+                    <RadioGroup
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        // Update TCS applicability based on selection
+                        if (value === "yes") {
+                          setCalculatedValues(prev => ({
+                            ...prev,
+                            tcsApplicable: "0",
+                          }));
+                        } else {
+                          setCalculatedValues(prev => ({
+                            ...prev,
+                            tcsApplicable: calculateTcs(parseFloat(prev.inrAmount)).toString(),
+                          }));
+                        }
+                      }}
+                      value={field.value}
+                      className="flex items-center gap-6"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="yes" id="yes" className="border-blue-600 text-blue-600" />
+                        <Label htmlFor="yes" className="font-normal">
+                          Yes
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="no" id="no" />
+                        <Label htmlFor="no" className="font-normal">
+                          No
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  )}
+                />
+                {form.watch("educationLoan") === "yes" ? (
+                  <p className="text-xs text-green-600 mt-1">*No TCS applicable</p>
+                ) : (
+                  <p className="text-xs text-green-600 mt-1">*5% TCS applicable</p>
+                )}
+              </div>
 
-  
 
-  {/* Foreign Bank Charges Section */}
-  <div className="flex-1">
-    <p className="text-gray-700 font-normal mb-2">Foreign bank charges</p>
-    <FormField
-      control={form.control}
-      name="foreignBankCharges"
-      render={({ field }) => (
-        <RadioGroup onValueChange={field.onChange} value={field.value} className="flex items-center gap-6">
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="OUR" id="our" className="border-blue-600 text-blue-600" />
-            <Label htmlFor="our" className="font-normal">
-              OUR
-            </Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="BEN" id="ben" />
-            <Label htmlFor="ben" className="font-normal">
-              BEN
-            </Label>
-          </div>
-        </RadioGroup>
-      )}
-    />
-    {form.watch("foreignBankCharges") === "OUR" ? (
-      <p className="text-xs text-green-600 mt-1">*Zero foreign bank charges </p>
-    ) : (
-      <p className="text-xs text-green-600 mt-1">*Receiver bank charges applicable</p>
-    )}
-  </div>
-  </div>
+
+              {/* Foreign Bank Charges Section */}
+              <div className="flex-1">
+                <p className="text-gray-700 font-normal mb-2">Foreign bank charges</p>
+                <FormField
+                  control={form.control}
+                  name="foreignBankCharges"
+                  render={({ field }) => (
+                    <RadioGroup onValueChange={field.onChange} value={field.value} className="flex items-center gap-6">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="OUR" id="our" className="border-blue-600 text-blue-600" />
+                        <Label htmlFor="our" className="font-normal">
+                          OUR
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="BEN" id="ben" />
+                        <Label htmlFor="ben" className="font-normal">
+                          BEN
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  )}
+                />
+                {form.watch("foreignBankCharges") === "OUR" ? (
+                  <p className="text-xs text-green-600 mt-1">*Zero foreign bank charges </p>
+                ) : (
+                  <p className="text-xs text-green-600 mt-1">*Receiver bank charges applicable</p>
+                )}
+              </div>
+            </div>
             {/* Rest of the left column fields remain the same */}
             <FormField
               control={form.control}
@@ -686,6 +787,7 @@ useEffect(() => {
         <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
           <Button
             type="button"
+            onClick={() => generateQuotePDF(form.getValues(), calculatedValues)}
             variant="outline"
             className="text-white border-none hover:opacity-90 flex items-center gap-2 h-12 rounded-md px-6"
             style={{
