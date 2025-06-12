@@ -66,6 +66,7 @@ export async function POST(req: Request) {
         currency,
         totalAmount: parseFloat(totalAmount),
         customerRate: parseFloat(customerRate) || 0,
+        status: "Pending",
       },
     });
 
