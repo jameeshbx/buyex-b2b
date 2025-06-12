@@ -1,0 +1,7 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+use yarn, typescript, dont ever cause prisma migrate to reset to loose data
+prisma connection defined in lib/db.ts
