@@ -3,11 +3,14 @@ export type UserType = "Admin" | "Staff"
 export interface User {
   id: string
   userId: string
-  userType: UserType
   name: string
   email: string
-  date: string
   status: boolean
+  date: string
+  userType: UserType
+  // For API compatibility
+  role?: "ADMIN" | "MANAGER"  // From your API
+  createdAt?: string          // From your API
 }
 
 export interface UserFormData {

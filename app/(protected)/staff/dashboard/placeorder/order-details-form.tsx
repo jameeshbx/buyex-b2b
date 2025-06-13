@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
-import { Download, ArrowRight, RotateCcw, Play } from "lucide-react"
+import { Download, ArrowRight, RotateCcw, Play, Loader2 } from "lucide-react"
 import axios from 'axios';
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form"
@@ -35,7 +35,8 @@ import { calculateGst, calculateTcs, calculateTotalPayable, getLiveRate } from "
 
 export default function OrderDetailsForm() {
   const [showCalculation, setShowCalculation] = useState(false);
-    const [, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const router = useRouter()
   const [calculatedValues, setCalculatedValues] = useState({
     inrAmount: "0",
@@ -86,34 +87,53 @@ export default function OrderDetailsForm() {
   };
 
 
- async function onSubmit(data: OrderDetailsFormValues) {
+async function onSubmit(data: OrderDetailsFormValues) {
   try {
     setIsSubmitting(true);
 
-    const formData = {
-      ...data,
+      // Prepare the form data for submission
+       const formData = {
+      purpose: data.purpose,
       foreignBankCharges: data.foreignBankCharges === "OUR" ? 0 : 1,
+      educationLoan: data.educationLoan === "yes",
+      payer: data.payer,
+      forexPartner: data.forexPartner,
       margin: parseFloat(data.margin),
+      receiverBankCountry: data.receiverBankCountry,
+      studentName: data.studentName,
+      consultancy: data.consultancy,
       ibrRate: parseFloat(data.ibrRate),
       amount: parseFloat(data.amount),
-      totalAmount: data.totalAmount ? parseFloat(data.totalAmount.replace(/,/g, '')) : 0,
-      customerRate: data.customerRate ? parseFloat(data.customerRate) : 0,
+      currency: data.currency,
+      totalAmount: parseFloat(calculatedValues.totalPayable),
+      customerRate: parseFloat(data.customerRate || "0"),
     };
+
+
+       console.log('Submitting form data:', formData); // Debug log
 
     const response = await axios.post('/api/orders', formData);
     
-    if (response.status === 200) {
-       if (typeof window !== 'undefined') {
+    console.log('API response:', response); // Debug log
+
+      if (response.status === 200 || response.status === 201) {
       // Save to localStorage
-      localStorage.setItem('selectedPayer', data.payer);
-      localStorage.setItem('educationLoan', data.educationLoan || "no"); // Save education loan selection
-      localStorage.setItem('fromPlaceOrder', 'true');
-       }
-      // Redirect to sender details page
-      router.push("/staff/dashboard/sender-details");
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('selectedPayer', data.payer);
+        localStorage.setItem('educationLoan', data.educationLoan || "no");
+        localStorage.setItem('fromPlaceOrder', 'true');
+        localStorage.setItem('orderId', response.data.id); // Store the order ID
+      }
+        // Redirect to sender details page
+        router.push("/staff/dashboard/sender-details");
+    } else {
+      console.error('Unexpected response status:', response.status);
+      // You might want to show an error message to the user here
     }
   } catch (error) {
     console.error("Form submission error:", error);
+    // Show error to user
+    alert('Failed to submit form. Please try again.');
   } finally {
     setIsSubmitting(false);
   }
@@ -144,7 +164,7 @@ export default function OrderDetailsForm() {
         form.setValue("ibrRate", rate.toString());
       });
     }
-  }, [currency,form]);
+  }, [currency, form]);
 
   useEffect(() => {
     if (foreignBankCharges === "OUR") {
@@ -160,30 +180,30 @@ export default function OrderDetailsForm() {
     }
   }, [foreignBankCharges]);
 
-useEffect(() => {
-  const currentAmount = parseFloat(amount || '0');
-  const currentMargin = parseFloat(margin || '0');
-  const currentIbrRate = parseFloat(ibrRate || '0');
-  
-  if (currentAmount && currentMargin) {
-    const totalAmount = (currentIbrRate + currentMargin) * currentAmount;
-    form.setValue("customerRate", (currentIbrRate + currentMargin).toFixed(2).toString());
-    
-    setCalculatedValues(prev => ({
-      ...prev,
-      inrAmount: totalAmount.toString(),
-      gst: calculateGst(totalAmount).toString(),
-      tcsApplicable: form.watch("educationLoan") === "yes" 
-        ? "0" 
-        : calculateTcs(totalAmount).toString(),
-      totalPayable: calculateTotalPayable(totalAmount, parseFloat(prev.bankFee)).toString(),
-    }));
-  }
-}, [amount, margin, ibrRate, calculatedValues.bankFee, form]);
+  useEffect(() => {
+    const currentAmount = parseFloat(amount || '0');
+    const currentMargin = parseFloat(margin || '0');
+    const currentIbrRate = parseFloat(ibrRate || '0');
+
+    if (currentAmount && currentMargin) {
+      const totalAmount = (currentIbrRate + currentMargin) * currentAmount;
+      form.setValue("customerRate", (currentIbrRate + currentMargin).toFixed(2).toString());
+
+      setCalculatedValues(prev => ({
+        ...prev,
+        inrAmount: totalAmount.toString(),
+        gst: calculateGst(totalAmount).toString(),
+        tcsApplicable: form.watch("educationLoan") === "yes"
+          ? "0"
+          : calculateTcs(totalAmount).toString(),
+        totalPayable: calculateTotalPayable(totalAmount, parseFloat(prev.bankFee)).toString(),
+      }));
+    }
+  }, [amount, margin, ibrRate, calculatedValues.bankFee, form]);
 
   useEffect(() => {
     form.setValue("totalAmount", calculatedValues.totalPayable.toString());
-  }, [calculatedValues.totalPayable,form]);
+  }, [calculatedValues.totalPayable, form]);
 
   useEffect(() => {
     async function fetchOrders() {
@@ -195,7 +215,7 @@ useEffect(() => {
         console.error('Error fetching orders:', error);
       }
     }
-    
+
     fetchOrders();
   }, []);
 
@@ -219,12 +239,11 @@ useEffect(() => {
                       // Automatically set country based on purpose
                       if (value === "Blocked account transfer") {
                         form.setValue("receiverBankCountry", "Germany")
-                        form.setValue("currency", "EUR") // Set currency based on country
+                        form.setValue("currency", "EUR")
                       } else if (value === "GIC Canada fee deposite") {
                         form.setValue("receiverBankCountry", "Canada")
-                        form.setValue("currency", "CAD") // Set currency based on country
+                        form.setValue("currency", "CAD")
                       } else {
-                        // Reset to empty if not one of the special purposes
                         form.setValue("receiverBankCountry", "")
                         form.setValue("currency", "")
                       }
@@ -248,91 +267,94 @@ useEffect(() => {
                       <SelectItem value="GIC Canada fee deposite">GIC Canada fee deposite</SelectItem>
                     </SelectContent>
                   </Select>
+                  {form.formState.errors.purpose && (
+                    <p className="text-red-500 text-xs mt-1">{form.formState.errors.purpose.message}</p>
+                  )}
                 </FormItem>
               )}
             />
 
-        <div className="flex flex-col md:flex-row gap-6">
-  {/* Education Loan Section */}
-  <div className="flex-1">
-    <p className="text-gray-700 font-normal mb-2">Education loan</p>
-    <FormField
-      control={form.control}
-      name="educationLoan"
-      render={({ field }) => (
-        <RadioGroup 
-          onValueChange={(value) => {
-            field.onChange(value);
-            // Update TCS applicability based on selection
-            if (value === "yes") {
-              setCalculatedValues(prev => ({
-                ...prev,
-                tcsApplicable: "0",
-              }));
-            } else {
-              setCalculatedValues(prev => ({
-                ...prev,
-                tcsApplicable: calculateTcs(parseFloat(prev.inrAmount)).toString(),
-              }));
-            }
-          }} 
-          value={field.value} 
-          className="flex items-center gap-6"
-        >
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="yes" id="yes" className="border-blue-600 text-blue-600" />
-            <Label htmlFor="yes" className="font-normal">
-              Yes
-            </Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="no" id="no" />
-            <Label htmlFor="no" className="font-normal">
-              No
-            </Label>
-          </div>
-        </RadioGroup>
-      )}
-    />
-    {form.watch("educationLoan") === "yes" ? (
-      <p className="text-xs text-green-600 mt-1">*No TCS applicable</p>
-    ) : (
-      <p className="text-xs text-green-600 mt-1">*5% TCS applicable</p>
-    )}
-  </div>
+            <div className="flex flex-col md:flex-row gap-6">
+              {/* Education Loan Section */}
+              <div className="flex-1">
+                <p className="text-gray-700 font-normal mb-2">Education loan</p>
+                <FormField
+                  control={form.control}
+                  name="educationLoan"
+                  render={({ field }) => (
+                    <RadioGroup
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        // Update TCS applicability based on selection
+                        if (value === "yes") {
+                          setCalculatedValues(prev => ({
+                            ...prev,
+                            tcsApplicable: "0",
+                          }));
+                        } else {
+                          setCalculatedValues(prev => ({
+                            ...prev,
+                            tcsApplicable: calculateTcs(parseFloat(prev.inrAmount)).toString(),
+                          }));
+                        }
+                      }}
+                      value={field.value}
+                      className="flex items-center gap-6"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="yes" id="yes" className="border-blue-600 text-blue-600" />
+                        <Label htmlFor="yes" className="font-normal">
+                          Yes
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="no" id="no" />
+                        <Label htmlFor="no" className="font-normal">
+                          No
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  )}
+                />
+                {form.watch("educationLoan") === "yes" ? (
+                  <p className="text-xs text-green-600 mt-1">*No TCS applicable</p>
+                ) : (
+                  <p className="text-xs text-green-600 mt-1">*5% TCS applicable</p>
+                )}
+              </div>
 
-  
 
-  {/* Foreign Bank Charges Section */}
-  <div className="flex-1">
-    <p className="text-gray-700 font-normal mb-2">Foreign bank charges</p>
-    <FormField
-      control={form.control}
-      name="foreignBankCharges"
-      render={({ field }) => (
-        <RadioGroup onValueChange={field.onChange} value={field.value} className="flex items-center gap-6">
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="OUR" id="our" className="border-blue-600 text-blue-600" />
-            <Label htmlFor="our" className="font-normal">
-              OUR
-            </Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="BEN" id="ben" />
-            <Label htmlFor="ben" className="font-normal">
-              BEN
-            </Label>
-          </div>
-        </RadioGroup>
-      )}
-    />
-    {form.watch("foreignBankCharges") === "OUR" ? (
-      <p className="text-xs text-green-600 mt-1">*Zero foreign bank charges </p>
-    ) : (
-      <p className="text-xs text-green-600 mt-1">*Receiver bank charges applicable</p>
-    )}
-  </div>
-  </div>
+
+              {/* Foreign Bank Charges Section */}
+              <div className="flex-1">
+                <p className="text-gray-700 font-normal mb-2">Foreign bank charges</p>
+                <FormField
+                  control={form.control}
+                  name="foreignBankCharges"
+                  render={({ field }) => (
+                    <RadioGroup onValueChange={field.onChange} value={field.value} className="flex items-center gap-6">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="OUR" id="our" className="border-blue-600 text-blue-600" />
+                        <Label htmlFor="our" className="font-normal">
+                          OUR
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="BEN" id="ben" />
+                        <Label htmlFor="ben" className="font-normal">
+                          BEN
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  )}
+                />
+                {form.watch("foreignBankCharges") === "OUR" ? (
+                  <p className="text-xs text-green-600 mt-1">*Zero foreign bank charges </p>
+                ) : (
+                  <p className="text-xs text-green-600 mt-1">*Receiver bank charges applicable</p>
+                )}
+              </div>
+            </div>
             {/* Rest of the left column fields remain the same */}
             <FormField
               control={form.control}
@@ -702,9 +724,16 @@ useEffect(() => {
           <Button
             type="submit"
             className="bg-dark-blue hover:bg-medium-blue text-white flex items-center gap-2 h-12 rounded-md px-6 border-none"
+            disabled={isSubmitting}
           >
-            <Play className="h-4 w-4" />
-            <span className="font-medium">PROCEED</span>
+            {isSubmitting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                <Play className="h-4 w-4" />
+                <span className="font-medium">PROCEED</span>
+              </>
+            )}
           </Button>
           <Button
             type="button"
