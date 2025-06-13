@@ -19,6 +19,7 @@ import BreadcrumbMenubar from "../../(components)/Menubar"
 import axios from "axios"
 import { useRouter } from "next/navigation"
 import { Beneficiary } from "@prisma/client"
+import { z } from "zod"
 
 
 
@@ -38,18 +39,20 @@ export default function BeneficiaryDetailsPage() {
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null)
   const [, setBeneficiaries] = useState<Beneficiary[]>([])
 
-  const {
-    register,
-    handleSubmit,
-    watch,
-    reset,
-    setValue,
-    formState: { errors },
-  } = useForm<BeneficiaryFormValues>({
-    resolver: zodResolver(beneficiaryFormSchema),
-    defaultValues: defaultFormValues,
-  })
+  const { 
+  register, 
+  handleSubmit, 
+  watch, 
+  reset, 
+  setValue, 
+  formState: { errors, isSubmitting }  // Add isSubmitting here
+} = useForm<BeneficiaryFormValues>({
+  resolver: zodResolver(beneficiaryFormSchema),
+  defaultValues: defaultFormValues,
+});
 
+
+const [submitError, setSubmitError] = useState<string | null>(null);
   const existingReceiver = watch("existingReceiver")
   const receiverCountry = watch("receiverCountry")
   const receiverBankCountry = watch("receiverBankCountry")
@@ -60,34 +63,41 @@ useEffect(() => {
         const response = await axios.get('/api/beneficiaries');
         setBeneficiaries(response.data);
       } catch (error) {
-        console.error("Failed to fetch beneficiaries:", error);
+        console.error("Failed to fetch beneficiaries:", error); 
       }
     };
     
     fetchBeneficiaries();
   }, []);
 
-  const onSubmit = async (data: BeneficiaryFormValues) => {
-    try {
-      if (existingReceiver === "YES" && watch("selectedReceiverId")) {
-        // Update existing beneficiary
-        const response = await axios.put(`/api/beneficiaries/${watch("selectedReceiverId")}`, data);
-        if (response.data) {
-          router.push("/staff/dashboard/document");
-        }
-      } else {
-        // Create new beneficiary
-        const response = await axios.post('/api/beneficiaries', data);
-        if (response.data) {
-          router.push("/staff/dashboard/document");
-        }
-      }
-    } catch (error) {
-      console.error("Failed to submit beneficiary:", error);
+const onSubmit = async (data: BeneficiaryFormValues) => {
+  setSubmitError(null);
+  try {
+    const submissionData = {
+      ...data,
+      status: true,
+    };
+
+    let response;
+    
+    if (existingReceiver === "YES" && watch("selectedReceiverId")) {
+      response = await axios.put(`/api/beneficiaries/${watch("selectedReceiverId")}`, submissionData);
+    } else {
+      response = await axios.post('/api/beneficiaries', submissionData);
     }
-  };
 
-
+    if (response.data) {
+      router.push("/staff/dashboard/document-upload");
+    }
+  } catch (error) {
+    setSubmitError(
+      error instanceof z.ZodError 
+        ? "Validation failed. Please check all fields."
+        : "Failed to submit beneficiary. Please try again."
+    );
+    console.error("Submission error:", error);
+  }
+};
 
   const handleReset = () => {
     reset(defaultFormValues)
@@ -1055,22 +1065,35 @@ useEffect(() => {
             )}
 
             {/* Form buttons */}
-            <div className="flex flex-col sm:flex-row justify-center mt-8 space-y-4 sm:space-y-0 sm:space-x-4">
-                <button
-                type="submit"
-                className="bg-dark-blue text-white font-jakarta px-6 sm:px-8 py-3 rounded-md flex items-center justify-center text-sm sm:text-base"
-                onClick={(e) => {
-                  // Prevent default form submission to handle navigation manually
-                  e.preventDefault()
-                  handleSubmit(() => {
-                  // You can do any validation or API call here if needed
-                  window.location.href = "/staff/dashboard/document"
-                  })()
-                }}
-                >
-                <Image src="/continue.png" alt="Continue" className="mr-2 h-3 w-3" width={20} height={20} />
-                CONTINUE
-                </button>
+            {submitError && (
+  <div className="text-red-500 mb-4 p-2 bg-red-50 rounded-md text-center">
+    {submitError}
+  </div>
+)}
+          <div className="flex flex-col sm:flex-row justify-center mt-8 space-y-4 sm:space-y-0 sm:space-x-4">
+  <button
+    type="submit"
+    disabled={isSubmitting}
+    className={`bg-dark-blue text-white font-jakarta px-6 sm:px-8 py-3 rounded-md flex items-center justify-center text-sm sm:text-base ${
+      isSubmitting ? "opacity-70 cursor-not-allowed" : ""
+    }`}
+  >
+    {isSubmitting ? (
+      <span className="flex items-center">
+        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Processing...
+      </span>
+    ) : (
+      <>
+        <Image src="/continue.png" alt="Continue" className="mr-2 h-3 w-3" width={20} height={20} />
+        CONTINUE
+      </>
+    )}
+  </button>
+
               <button
                 type="button"
                 onClick={handleReset}
