@@ -1,12 +1,13 @@
+// schema/orderdetails.ts
 import { z } from "zod"
 
 export const orderDetailsFormSchema = z.object({
   purpose: z.string().min(1, { message: "Purpose is required" }),
   foreignBankCharges: z.enum(["OUR", "BEN"]),
-  educationLoan: z.enum(["yes", "no"]).optional(), // Add this line
+  educationLoan: z.enum(["yes", "no"]).optional(),
   payer: z.string().min(1, { message: "Payer is required" }),
   forexPartner: z.string().min(1, { message: "Forex partner is required" }),
-   margin: z.string().refine((val) => {
+  margin: z.string().refine((val) => {
     const num = Number(val);
     return !isNaN(num) && num >= 0.2 && num <= 3;
   }, {

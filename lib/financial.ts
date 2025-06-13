@@ -34,11 +34,11 @@ export const calculateGst = (amount: number) => {
   if (amount <= GST_BASE) {
     return (amount * 0.01 * 0.18).toFixed(2).toString();
   } else if (amount <= GST_SLAB) {
-    return ((BASE_GST_AMOUNT + 0.05 * (amount - GST_BASE)) * GST_RATE)
+    return (( 0.05 * (amount - GST_BASE) + BASE_GST_AMOUNT ) * GST_RATE)
       .toFixed(2)
       .toString();
   } else {
-    return ((ABOVE_SLAB_GST_AMOUNT + 0.01 * (amount - GST_SLAB)) * GST_RATE)
+    return (( 0.01 * (amount - GST_SLAB) + ABOVE_SLAB_GST_AMOUNT) * GST_RATE)
       .toFixed(2)
       .toString();
   }

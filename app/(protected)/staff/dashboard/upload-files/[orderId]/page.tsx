@@ -91,7 +91,7 @@ const handleFileSelection = useCallback(async (fileList: FileList) => {
   }
 
   setSelectedFiles((prev) => [...prev, ...newFiles])
-}, []) // Empty dependency array since we don't use any external values
+}, [toast]) // Empty dependency array since we don't use any external values
 
 const handleDrop = useCallback((e: React.DragEvent) => {
   e.preventDefault()

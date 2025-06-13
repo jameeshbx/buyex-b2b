@@ -1,12 +1,21 @@
 "use client"
 
-import { useState, useMemo } from "react"
-import { staffData as initialStaffData, type StaffMember } from "@/data/manage-users"
+import { useState, useMemo, useEffect } from "react"
+import axios from "axios"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { PencilIcon, ChevronUpIcon, ChevronDownIcon, FilterIcon, SearchIcon } from "lucide-react"
 import { Topbar } from "../../(components)/Topbar"
 import { pagesData } from "@/data/navigation"
+
+interface StaffMember {
+  id: string
+  name: string
+  email: string
+  role: "ADMIN" | "MANAGER"
+  status: boolean
+  createdAt: string
+}
 
 type SortField = keyof StaffMember
 type SortDirection = "asc" | "desc"
@@ -14,12 +23,14 @@ type SortDirection = "asc" | "desc"
 export default function ManageUsersPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedItems, setSelectedItems] = useState<string[]>([])
-  const [staffData, setStaffData] = useState<StaffMember[]>(initialStaffData)
+  const [staffData, setStaffData] = useState<StaffMember[]>([])
   const [sortField, setSortField] = useState<SortField | null>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
   const [toggleDialogOpen, setToggleDialogOpen] = useState(false)
-  const [pendingToggle, setPendingToggle] = useState<{ id: string; currentStatus: string; name: string } | null>(null)
+  const [pendingToggle, setPendingToggle] = useState<{ id: string; currentStatus: boolean; name: string } | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   // Dropdown state and logic for user types
   const [dropdownOpen, setDropdownOpen] = useState(false)
@@ -30,11 +41,29 @@ export default function ManageUsersPage() {
     { value: "staffs", label: "Staffs" },
     { value: "sub-agents", label: "Sub agents" },
   ]
+
   const handleUserTypeChange = (value: string) => {
     setSelectedUserTypes((prev) => (prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]))
   }
 
   const itemsPerPage = 4
+
+  // Fetch users on component mount
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setLoading(true)
+        const response = await axios.get('/api/users')
+        setStaffData(response.data)
+      } catch (err) {
+        setError("Failed to fetch users")
+        console.error("Error fetching users:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchUsers()
+  }, [])
 
   const sortedData = useMemo(() => {
     let filteredData = staffData
@@ -43,7 +72,7 @@ export default function ManageUsersPage() {
     if (searchTerm) {
       filteredData = staffData.filter(
         (staff) =>
-          staff.staffName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          staff.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           staff.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
           staff.id.toLowerCase().includes(searchTerm.toLowerCase()),
       )
@@ -60,8 +89,14 @@ export default function ManageUsersPage() {
         return sortDirection === "asc" ? comparison : -comparison
       }
 
-      if (typeof aValue === "number" && typeof bValue === "number") {
-        return sortDirection === "asc" ? aValue - bValue : bValue - aValue
+      if (typeof aValue === "boolean" && typeof bValue === "boolean") {
+        return sortDirection === "asc" ? (aValue === bValue ? 0 : aValue ? -1 : 1) : (aValue === bValue ? 0 : aValue ? 1 : -1)
+      }
+
+      if (sortField === "createdAt") {
+        const dateA = new Date(aValue as string)
+        const dateB = new Date(bValue as string)
+        return sortDirection === "asc" ? dateA.getTime() - dateB.getTime() : dateB.getTime() - dateA.getTime()
       }
 
       return 0
@@ -98,23 +133,37 @@ export default function ManageUsersPage() {
     }
   }
 
-  const handleStatusToggle = (id: string, currentStatus: string, name: string) => {
+  const handleStatusToggle = (id: string, currentStatus: boolean, name: string) => {
     setPendingToggle({ id, currentStatus, name })
     setToggleDialogOpen(true)
   }
 
-  const confirmStatusToggle = () => {
-    if (pendingToggle) {
-      setStaffData((prevData) =>
-        prevData.map((staff) =>
+  const confirmStatusToggle = async () => {
+    if (!pendingToggle) return
+    
+    try {
+      const newStatus = !pendingToggle.currentStatus
+      
+      // Update in the database
+      await axios.put(`/api/users?id=${pendingToggle.id}`, {
+        status: newStatus
+      })
+
+      // Update local state
+      setStaffData(prevData =>
+        prevData.map(staff =>
           staff.id === pendingToggle.id
-            ? { ...staff, status: staff.status === "active" ? "inactive" : "active" }
-            : staff,
-        ),
+            ? { ...staff, status: newStatus }
+            : staff
+        )
       )
+      
+      setToggleDialogOpen(false)
+      setPendingToggle(null)
+    } catch (err) {
+      console.error("Error updating user status:", err)
+      setError("Failed to update user status")
     }
-    setToggleDialogOpen(false)
-    setPendingToggle(null)
   }
 
   const cancelStatusToggle = () => {
@@ -125,6 +174,19 @@ export default function ManageUsersPage() {
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
   }
+
+  const handleEditUser = async (userId: string) => {
+    try {
+      // Fetch user data for editing
+      const response = await axios.get(`/api/users?id=${userId}`)
+      console.log("User data for editing:", response.data)
+      // Here you would typically open a modal or form with the user data
+    } catch (err) {
+      console.error("Error fetching user data:", err)
+      setError("Failed to fetch user data")
+    }
+  }
+
 
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) {
@@ -143,6 +205,31 @@ export default function ManageUsersPage() {
     )
   }
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#1e5a73]"></div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-white p-6 rounded-lg shadow-md max-w-md w-full text-center">
+          <h2 className="text-xl font-semibold text-red-600 mb-4">Error</h2>
+          <p className="text-gray-700 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-[#1e5a73] text-white px-4 py-2 rounded-md hover:bg-[#164a5e] transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="sticky top-0 z-40 bg-gray-50">
@@ -153,7 +240,6 @@ export default function ManageUsersPage() {
         <div className="max-w-7xl mx-auto">
           {/* Header Controls - Responsive Layout */}
           <div className="mb-4 sm:mb-6 space-y-4">
-            {/* Mobile: Stack vertically, Desktop: Side by side */}
             <div className="flex flex-col space-y-3 sm:space-y-4 lg:flex-row lg:justify-between lg:items-center lg:space-y-0 lg:gap-4">
               {/* Filter Section */}
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
@@ -288,11 +374,11 @@ export default function ManageUsersPage() {
                     <th
                       scope="col"
                       className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-100 font-jakarta"
-                      onClick={() => handleSort("staffName")}
+                      onClick={() => handleSort("name")}
                     >
                       <div className="flex items-center font-jakarta">
                         Staff name
-                        <SortIcon field="staffName" />
+                        <SortIcon field="name" />
                       </div>
                     </th>
                     <th
@@ -330,14 +416,14 @@ export default function ManageUsersPage() {
                         <Checkbox
                           checked={selectedItems.includes(staff.id)}
                           onChange={() => handleSelectItem(staff.id)}
-                          aria-label={`Select ${staff.staffName}`}
+                          aria-label={`Select ${staff.name}`}
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 font-jakarta">
                         {staff.id}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-jakarta">
-                        {staff.staffName}
+                        {staff.name}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-jakarta">{staff.email}</td>
                       <td className="px-6 py-4 whitespace-nowrap font-jakarta">
@@ -346,13 +432,13 @@ export default function ManageUsersPage() {
                             <div
                               className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#1e5a73] focus:ring-offset-2"
                               style={{
-                                backgroundColor: staff.status === "active" ? "#1e5a73" : "#e5e7eb",
+                                backgroundColor: staff.status ? "#1e5a73" : "#e5e7eb",
                               }}
-                              onClick={() => handleStatusToggle(staff.id, staff.status, staff.staffName)}
+                              onClick={() => handleStatusToggle(staff.id, staff.status, staff.name)}
                             >
                               <span
                                 className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                                  staff.status === "active" ? "translate-x-6" : "translate-x-1"
+                                  staff.status ? "translate-x-6" : "translate-x-1"
                                 }`}
                               />
                             </div>
@@ -363,11 +449,11 @@ export default function ManageUsersPage() {
                             <div className="absolute top-8 left-0 z-50 bg-white border border-gray-200 shadow-xl rounded-lg p-4 min-w-[300px]">
                               <div className="mb-4">
                                 <h3 className="text-lg font-semibold text-gray-900 mb-2 font-jakarta">
-                                  {pendingToggle?.currentStatus === "active" ? "Deactivate" : "Activate"} Staff Member
+                                  {pendingToggle?.currentStatus ? "Deactivate" : "Activate"} Staff Member
                                 </h3>
                                 <p className="text-sm text-gray-600 font-jakarta">
                                   Are you sure you want to{" "}
-                                  {pendingToggle?.currentStatus === "active" ? "deactivate" : "activate"}{" "}
+                                  {pendingToggle?.currentStatus ? "deactivate" : "activate"}{" "}
                                   <strong className="font-jakarta">{pendingToggle?.name}</strong>? This will change
                                   their access status.
                                 </p>
@@ -382,12 +468,12 @@ export default function ManageUsersPage() {
                                 <button
                                   onClick={confirmStatusToggle}
                                   className={`px-4 py-2 text-sm font-medium text-white rounded-md transition-colors font-jakarta ${
-                                    pendingToggle?.currentStatus === "active"
+                                    pendingToggle?.currentStatus
                                       ? "bg-red-600 hover:bg-red-700"
                                       : "bg-green-600 hover:bg-green-700"
                                   }`}
                                 >
-                                  {pendingToggle?.currentStatus === "active" ? "Deactivate" : "Activate"}
+                                  {pendingToggle?.currentStatus ? "Deactivate" : "Activate"}
                                 </button>
                               </div>
                             </div>
@@ -399,7 +485,7 @@ export default function ManageUsersPage() {
                           variant="ghost"
                           size="sm"
                           className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-full p-2 font-jakarta"
-                          onClick={() => console.log(`Edit ${staff.staffName}`)}
+                          onClick={() => handleEditUser(staff.id)}
                         >
                           <PencilIcon className="h-4 w-4" />
                           <span className="sr-only font-jakarta">Edit</span>
@@ -421,10 +507,10 @@ export default function ManageUsersPage() {
                         <Checkbox
                           checked={selectedItems.includes(staff.id)}
                           onChange={() => handleSelectItem(staff.id)}
-                          aria-label={`Select ${staff.staffName}`}
+                          aria-label={`Select ${staff.name}`}
                         />
                         <div>
-                          <h3 className="font-semibold text-gray-900 font-jakarta">{staff.staffName}</h3>
+                          <h3 className="font-semibold text-gray-900 font-jakarta">{staff.name}</h3>
                           <p className="text-sm text-gray-500 font-jakarta">ID: {staff.id}</p>
                         </div>
                       </div>
@@ -432,7 +518,7 @@ export default function ManageUsersPage() {
                         variant="ghost"
                         size="sm"
                         className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-full p-2 font-jakarta"
-                        onClick={() => console.log(`Edit ${staff.staffName}`)}
+                        onClick={() => handleEditUser(staff.id)}
                       >
                         <PencilIcon className="h-4 w-4" />
                       </Button>
@@ -441,6 +527,9 @@ export default function ManageUsersPage() {
                     <div className="space-y-2 mb-3">
                       <p className="text-sm text-gray-600 font-jakarta">
                         <span className="font-medium">Email:</span> {staff.email}
+                      </p>
+                      <p className="text-sm text-gray-600 font-jakarta">
+                        <span className="font-medium">Role:</span> {staff.role}
                       </p>
                     </div>
 
@@ -451,13 +540,13 @@ export default function ManageUsersPage() {
                           <div
                             className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#1e5a73] focus:ring-offset-2"
                             style={{
-                              backgroundColor: staff.status === "active" ? "#1e5a73" : "#e5e7eb",
+                              backgroundColor: staff.status ? "#1e5a73" : "#e5e7eb",
                             }}
-                            onClick={() => handleStatusToggle(staff.id, staff.status, staff.staffName)}
+                            onClick={() => handleStatusToggle(staff.id, staff.status, staff.name)}
                           >
                             <span
                               className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                                staff.status === "active" ? "translate-x-6" : "translate-x-1"
+                                staff.status ? "translate-x-6" : "translate-x-1"
                               }`}
                             />
                           </div>
@@ -469,11 +558,11 @@ export default function ManageUsersPage() {
                             <div className="bg-white border border-gray-200 shadow-xl rounded-lg p-4 w-full max-w-sm">
                               <div className="mb-4">
                                 <h3 className="text-lg font-semibold text-gray-900 mb-2 font-jakarta">
-                                  {pendingToggle?.currentStatus === "active" ? "Deactivate" : "Activate"} Staff Member
+                                  {pendingToggle?.currentStatus ? "Deactivate" : "Activate"} Staff Member
                                 </h3>
                                 <p className="text-sm text-gray-600 font-jakarta">
                                   Are you sure you want to{" "}
-                                  {pendingToggle?.currentStatus === "active" ? "deactivate" : "activate"}{" "}
+                                  {pendingToggle?.currentStatus ? "deactivate" : "activate"}{" "}
                                   <strong className="font-jakarta">{pendingToggle?.name}</strong>? This will change
                                   their access status.
                                 </p>
@@ -488,12 +577,12 @@ export default function ManageUsersPage() {
                                 <button
                                   onClick={confirmStatusToggle}
                                   className={`px-4 py-2 text-sm font-medium text-white rounded-md transition-colors font-jakarta ${
-                                    pendingToggle?.currentStatus === "active"
+                                    pendingToggle?.currentStatus
                                       ? "bg-red-600 hover:bg-red-700"
                                       : "bg-green-600 hover:bg-green-700"
                                   }`}
                                 >
-                                  {pendingToggle?.currentStatus === "active" ? "Deactivate" : "Activate"}
+                                  {pendingToggle?.currentStatus ? "Deactivate" : "Activate"}
                                 </button>
                               </div>
                             </div>
