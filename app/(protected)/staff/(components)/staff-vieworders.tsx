@@ -432,7 +432,7 @@ export default function Dashboard() {
                             </div>
                             {order.receiverAccount && (
                               <div>
-                                <h4 className="font-semibold font-jakarta text-gray-900 mb-2">Receiver's account</h4>
+                                <h4 className="font-semibold font-jakarta text-gray-900 mb-2">Receiver&#39;s account</h4>
                                 <p className="text-gray-600 font-jakarta text-sm break-all bg-gray-50 p-2 rounded-sm">
                                   {order.receiverAccount}
                                 </p>
