@@ -1,7 +1,7 @@
 // app/dashboard/page.tsx
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ChevronDown, ChevronRight, Upload } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -9,13 +9,52 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
 import React from "react"
-import { Order, orders, statusOptions, nonChangeableStatuses } from "@/data/staff-dashboard"
+import axios from "axios"
+import { statusOptions, nonChangeableStatuses } from "@/data/staff-dashboard"
+
+interface Order {
+  id: string;
+  createdAt: string;
+  purpose: string;
+  studentName: string;
+  currency: string;
+  amount: number;
+  totalAmount: number;
+  customerRate: number;
+  status: string;
+  receiverAccount?: string;
+  receiverBankCountry?: string;
+  forexPartner?: string;
+}
 
 export default function Dashboard() {
+  const [orders, setOrders] = useState<Order[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
-  const [orderStatuses, setOrderStatuses] = useState<Record<string, string>>(
-    orders.reduce((acc, order) => ({ ...acc, [order.id]: order.status }), {})
-  )
+  const [orderStatuses, setOrderStatuses] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const response = await axios.get('/api/orders')
+        setOrders(response.data)
+        // Initialize statuses
+        const initialStatuses = response.data.reduce((acc: Record<string, string>, order: Order) => ({
+          ...acc,
+          [order.id]: order.status
+        }), {})
+        setOrderStatuses(initialStatuses)
+      } catch (err) {
+        console.error("Failed to fetch orders:", err)
+        setError("Failed to load orders. Please try again later.")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchOrders()
+  }, [])
 
   const toggleRowExpansion = (orderId: string) => {
     const newExpanded = new Set(expandedRows)
@@ -27,8 +66,18 @@ export default function Dashboard() {
     setExpandedRows(newExpanded)
   }
 
-  const handleStatusChange = (orderId: string, newStatus: string) => {
-    setOrderStatuses((prev) => ({ ...prev, [orderId]: newStatus }))
+  const handleStatusChange = async (orderId: string, newStatus: string) => {
+    try {
+      // Optimistic UI update
+      setOrderStatuses(prev => ({ ...prev, [orderId]: newStatus }))
+      
+      // Update in database
+      await axios.patch(`/api/orders/${orderId}`, { status: newStatus })
+    } catch (err) {
+      console.error("Failed to update status:", err)
+      // Revert if failed
+      setOrderStatuses(prev => ({ ...prev, [orderId]: prev[orderId] }))
+    }
   }
 
   const getStatusBadgeColor = (status: string) => {
@@ -54,15 +103,23 @@ export default function Dashboard() {
     }
   }
 
-  const getCustomerRateColor = (rate: string) => {
-    const numRate = Number.parseFloat(rate)
-    if (numRate >= 0.4) return "bg-red-100 text-red-800"
-    if (numRate >= 0.3) return "bg-green-100 text-green-800"
+  const getCustomerRateColor = (rate: number) => {
+    if (rate >= 0.4) return "bg-red-100 text-red-800"
+    if (rate >= 0.3) return "bg-green-100 text-green-800"
     return "bg-gray-100 text-gray-800"
   }
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    })
+  }
+
   const renderStatusElement = (order: Order) => {
-    const currentStatus = orderStatuses[order.id]
+    const currentStatus = orderStatuses[order.id] || order.status
 
     if (nonChangeableStatuses.includes(currentStatus)) {
       if (currentStatus === "Quote downloaded" || currentStatus === "Documents placed") {
@@ -102,6 +159,33 @@ export default function Dashboard() {
     }
   }
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600">Loading orders...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-500">{error}</p>
+          <Button 
+            variant="outline" 
+            className="mt-4"
+            onClick={() => window.location.reload()}
+          >
+            Retry
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto">
@@ -115,8 +199,7 @@ export default function Dashboard() {
         <Card className="shadow-sm p-6">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
             <CardTitle className="text-xl font-semibold font-jakarta text-gray-900">Order history</CardTitle>
-           
-            <Link  className="text-dark-blue text-sm hover:text-blue-800" href={"/staff/dashboard/view-orders"}>See More</Link>
+            <Link className="text-dark-blue text-sm hover:text-blue-800" href={"/staff/dashboard/view-orders"}>See More</Link>
           </CardHeader>
           <CardContent className="p-0">
             {/* Responsive Order List */}
@@ -136,7 +219,7 @@ export default function Dashboard() {
               </div>
 
               {/* Order Rows */}
-              {orders.slice(-5).map((order: Order) => (
+              {orders.slice(0, 5).map((order: Order) => (
                 <React.Fragment key={order.id}>
                   {/* Main Row */}
                   <div
@@ -151,14 +234,14 @@ export default function Dashboard() {
                         ) : (
                           <ChevronRight className="h-4 w-4 text-gray-400" />
                         )}
-                        <span className="font-semibold text-sm font-jakarta text-gray-900">{order.id}</span>
+                        <span className="font-semibold text-sm font-jakarta text-gray-900">#{order.id.slice(0, 8)}</span>
                       </div>
-                      <div className="text-gray-600 text-sm font-jakarta">{order.date}</div>
+                      <div className="text-gray-600 text-sm font-jakarta">{formatDate(order.createdAt)}</div>
                       <div className="text-gray-600 text-sm font-jakarta">{order.purpose}</div>
-                      <div className="text-gray-600 text-sm font-jakarta">{order.name}</div>
+                      <div className="text-gray-600 text-sm font-jakarta">{order.studentName}</div>
                       <div className="text-gray-600 text-sm font-jakarta">{order.currency}</div>
-                      <div className="font-semibold text-sm font-jakarta text-gray900">{order.fcyAmt}</div>
-                      <div className="font-semibold text-sm font-jakarta text-gray-900">{order.inrAmt}</div>
+                      <div className="font-semibold text-sm font-jakarta text-gray900">{order.amount}</div>
+                      <div className="font-semibold text-sm font-jakarta text-gray-900">{order.totalAmount}</div>
                       <div>
                         <Badge className={`${getCustomerRateColor(order.customerRate)} border-0`}>
                           {order.customerRate}
@@ -169,14 +252,14 @@ export default function Dashboard() {
                       </div>
                       <div onClick={(e) => e.stopPropagation()}>
                         <Link href={`/staff/dashboard/upload-files/${order.id}`}>
-                            <Button
-                              size="sm"
-                              className="bg-dark-blue hover:bg-blue-700 text-white px-2 py-2 text-xs h-7"
-                            >
-                              <Upload className="h-2 w-2" />
-                              Uploads
-                            </Button>
-                          </Link>
+                          <Button
+                            size="sm"
+                            className="bg-dark-blue hover:bg-blue-700 text-white px-2 py-2 text-xs h-7"
+                          >
+                            <Upload className="h-2 w-2" />
+                            Uploads
+                          </Button>
+                        </Link>
                       </div>
                     </div>
 
@@ -190,15 +273,15 @@ export default function Dashboard() {
                             <ChevronRight className="h-4 w-4 text-gray-400" />
                           )}
                           <div>
-                            <div className="font-medium font-jakarta text-gray-900">#{order.id}</div>
-                            <div className="text-sm font-jakarta text-gray-600">{order.date}</div>
+                            <div className="font-medium font-jakarta text-gray-900">#{order.id.slice(0, 8)}</div>
+                            <div className="text-sm font-jakarta text-gray-600">{formatDate(order.createdAt)}</div>
                           </div>
                         </div>
                         <div className="text-right">
                           <div className="font-medium font-jakarta text-gray-900">
-                            {order.fcyAmt} {order.currency}
+                            {order.amount} {order.currency}
                           </div>
-                          <div className="text-sm font-jakarta text-gray-600">{order.inrAmt}</div>
+                          <div className="text-sm font-jakarta text-gray-600">{order.totalAmount}</div>
                         </div>
                       </div>
 
@@ -209,7 +292,7 @@ export default function Dashboard() {
                         </div>
                         <div>
                           <span className="text-gray-600 font-jakarta">Name:</span>
-                          <div className="font-medium font-jakarta text-gray-900">{order.name}</div>
+                          <div className="font-medium font-jakarta text-gray-900">{order.studentName}</div>
                         </div>
                       </div>
 
@@ -223,12 +306,12 @@ export default function Dashboard() {
                           </div>
                         </div>
                         <div onClick={(e) => e.stopPropagation()}>
-                         <Link href={`/staff/dashboard/upload-files/${order.id}`}>
-                              <Button size="sm" className="bg-dark-blue hover:bg-blue-700 text-white">
-                                <Upload className="h-4 w-4 mr-1" />
-                                Uploads
-                              </Button>
-                            </Link>
+                          <Link href={`/staff/dashboard/upload-files/${order.id}`}>
+                            <Button size="sm" className="bg-dark-blue hover:bg-blue-700 text-white">
+                              <Upload className="h-4 w-4 mr-1" />
+                              Uploads
+                            </Button>
+                          </Link>
                         </div>
                       </div>
                     </div>
@@ -244,23 +327,29 @@ export default function Dashboard() {
                             <p className="text-gray-600 font-jakarta bg-gray-50 p-2 rounded-sm">{order.purpose}</p>
                           </div>
                           <div>
-                            <h4 className="font-semibold font-jakarta text-gray-900 mb-2">Receiver&#39;s full name</h4>
-                            <p className="text-gray-600 font-jakarta bg-gray-50 p-2 rounded-sm">{order.name}</p>
+                            <h4 className="font-semibold font-jakarta text-gray-900 mb-2">Student name</h4>
+                            <p className="text-gray-600 font-jakarta bg-gray-50 p-2 rounded-sm">{order.studentName}</p>
                           </div>
-                          <div>
-                            <h4 className="font-semibold font-jakarta text-gray-900 mb-2">Receiver&#39;s account</h4>
-                            <p className="text-gray-600 font-jakarta text-sm break-all bg-gray-50 p-2 rounded-sm">
-                              {order.receiverAccount}
-                            </p>
-                          </div>
-                          <div>
-                            <h4 className="font-semibold font-jakarta text-gray-900 mb-2">Receiver Country</h4>
-                            <p className="text-gray-600 font-jakarta bg-gray-50 p-2 rounded-sm">{order.receiverCountry}</p>
-                          </div>
-                          <div>
-                            <h4 className="font-semibold font-jakarta text-gray-900 mb-2">Forex Partner</h4>
-                            <p className="text-gray-600 font-jakarta bg-gray-50 p-2 rounded-sm">{order.forexPartner}</p>
-                          </div>
+                          {order.receiverAccount && (
+                            <div>
+                              <h4 className="font-semibold font-jakarta text-gray-900 mb-2">Receiver&#39;s account</h4>
+                              <p className="text-gray-600 font-jakarta text-sm break-all bg-gray-50 p-2 rounded-sm">
+                                {order.receiverAccount}
+                              </p>
+                            </div>
+                          )}
+                          {order.receiverBankCountry && (
+                            <div>
+                              <h4 className="font-semibold font-jakarta text-gray-900 mb-2">Receiver Country</h4>
+                              <p className="text-gray-600 font-jakarta bg-gray-50 p-2 rounded-sm">{order.receiverBankCountry}</p>
+                            </div>
+                          )}
+                          {order.forexPartner && (
+                            <div>
+                              <h4 className="font-semibold font-jakarta text-gray-900 mb-2">Forex Partner</h4>
+                              <p className="text-gray-600 font-jakarta bg-gray-50 p-2 rounded-sm">{order.forexPartner}</p>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
