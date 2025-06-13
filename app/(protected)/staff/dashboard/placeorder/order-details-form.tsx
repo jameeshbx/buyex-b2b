@@ -268,6 +268,12 @@ export default function OrderDetailsForm() {
 
     if (currentAmount && currentMargin) {
       const totalAmount = (currentIbrRate + currentMargin) * currentAmount;
+      console.log("Total Amount:", totalAmount);
+      console.log("IBR Rate:", currentIbrRate);
+      console.log("Margin:", currentMargin);
+      console.log("Customer Rate:", (currentIbrRate + currentMargin).toFixed(2));
+      console.log("Amount:", currentAmount);
+      
       form.setValue("customerRate", (currentIbrRate + currentMargin).toFixed(2).toString());
 
       setCalculatedValues(prev => ({
