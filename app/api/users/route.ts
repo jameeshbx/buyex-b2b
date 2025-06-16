@@ -8,10 +8,8 @@ import { hash } from "bcryptjs";
 // Validation schema for user creation
 const createUserSchema = z.object({
   userType: z.enum(["Admin", "Staff"]),
-  userId: z.string().min(1, { message: "User ID is required" }),
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
-  email: z.string().email({ message: "Please enter a valid email address" }),
-  status: z.boolean().optional(),
+  email: z.string().email({ message: "Please enter a valid email address" })
 });
 
 // Validation schema for user update
@@ -79,10 +77,8 @@ const createInvitationEmail = (name: string, email: string, password: string) =>
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    
     // Validate request body
     const validatedData = createUserSchema.parse(body);
-    
     // Check if user already exists
     const existingUser = await db.user.findUnique({
       where: { email: validatedData.email },
