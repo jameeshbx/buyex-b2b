@@ -11,9 +11,30 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import Link from "next/link"
 import React from "react"
-import { type Order, orders, statusOptions, nonChangeableStatuses, purposeOptions } from "@/data/staff-dashboard"
+import axios from "axios"
+import { statusOptions, nonChangeableStatuses, purposeOptions } from "@/data/staff-dashboard"
+
+interface Order {
+  id: string;
+  createdAt: string;
+  purpose: string;
+  studentName: string;
+  currency: string;
+  amount: number;
+  totalAmount: number;
+  customerRate: number;
+  status: string;
+  receiverAccount?: string;
+  receiverBankCountry?: string;
+  forexPartner?: string;
+  addedBy?: string;
+  addedDate?: string;
+}
 
 export default function Dashboard() {
+  const [orders, setOrders] = useState<Order[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
   const [orderStatuses, setOrderStatuses] = useState<Record<string, string>>({})
   const [currentPage, setCurrentPage] = useState(1)
@@ -22,9 +43,27 @@ export default function Dashboard() {
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([])
   const itemsPerPage = 5
 
-  // Initialize order statuses
+  // Fetch orders from API
   useEffect(() => {
-    setOrderStatuses(orders.reduce((acc, order) => ({ ...acc, [order.id]: order.status }), {}))
+    const fetchOrders = async () => {
+      try {
+        const response = await axios.get('/api/orders')
+        setOrders(response.data)
+        // Initialize statuses
+        const initialStatuses = response.data.reduce((acc: Record<string, string>, order: Order) => ({
+          ...acc,
+          [order.id]: order.status
+        }), {})
+        setOrderStatuses(initialStatuses)
+      } catch (err) {
+        console.error("Failed to fetch orders:", err)
+        setError("Failed to load orders. Please try again later.")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchOrders()
   }, [])
 
   // Filter and search orders
@@ -42,7 +81,7 @@ export default function Dashboard() {
       result = result.filter(
         (order) =>
           order.id.toLowerCase().includes(query) ||
-          order.name.toLowerCase().includes(query) ||
+          order.studentName.toLowerCase().includes(query) ||
           order.purpose.toLowerCase().includes(query) ||
           order.currency.toLowerCase().includes(query) ||
           order.status.toLowerCase().includes(query),
@@ -51,7 +90,7 @@ export default function Dashboard() {
 
     setFilteredOrders(result)
     setCurrentPage(1) // Reset to first page when filters change
-  }, [purposeFilter, searchQuery])
+  }, [purposeFilter, searchQuery, orders])
 
   const toggleRowExpansion = (orderId: string) => {
     const newExpanded = new Set(expandedRows)
@@ -63,8 +102,18 @@ export default function Dashboard() {
     setExpandedRows(newExpanded)
   }
 
-  const handleStatusChange = (orderId: string, newStatus: string) => {
-    setOrderStatuses((prev) => ({ ...prev, [orderId]: newStatus }))
+  const handleStatusChange = async (orderId: string, newStatus: string) => {
+    try {
+      // Optimistic UI update
+      setOrderStatuses(prev => ({ ...prev, [orderId]: newStatus }))
+      
+      // Update in database
+      await axios.patch(`/api/orders/${orderId}`, { status: newStatus })
+    } catch (err) {
+      console.error("Failed to update status:", err)
+      // Revert if failed
+      setOrderStatuses(prev => ({ ...prev, [orderId]: prev[orderId] }))
+    }
   }
 
   const getStatusBadgeColor = (status: string) => {
@@ -92,11 +141,19 @@ export default function Dashboard() {
     }
   }
 
-  const getCustomerRateColor = (rate: string) => {
-    const numRate = Number.parseFloat(rate)
-    if (numRate >= 0.4) return "bg-red-100 text-red-800"
-    if (numRate >= 0.3) return "bg-green-100 text-green-800"
+  const getCustomerRateColor = (rate: number) => {
+    if (rate >= 0.4) return "bg-red-100 text-red-800"
+    if (rate >= 0.3) return "bg-green-100 text-green-800"
     return "bg-gray-100 text-gray-800"
+  }
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    })
   }
 
   const renderStatusElement = (order: Order) => {
@@ -141,6 +198,33 @@ export default function Dashboard() {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page)
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600">Loading orders...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-500">{error}</p>
+          <Button 
+            variant="outline" 
+            className="mt-4"
+            onClick={() => window.location.reload()}
+          >
+            Retry
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -225,21 +309,21 @@ export default function Dashboard() {
                           ) : (
                             <ChevronRight className="h-4 w-4 text-gray-400" />
                           )}
-                          <span className="font-semibold text-sm font-jakarta text-gray-900">{order.id}</span>
+                          <span className="font-semibold text-sm font-jakarta text-gray-900">#{order.id.slice(0, 8)}</span>
                         </div>
-                        <div className="text-gray-600 text-sm font-jakarta">{order.date}</div>
+                        <div className="text-gray-600 text-sm font-jakarta">{formatDate(order.createdAt)}</div>
                         <div className="text-gray-600 text-sm font-jakarta">{order.purpose}</div>
-                        <div className="text-gray-600 text-sm font-jakarta">{order.name}</div>
+                        <div className="text-gray-600 text-sm font-jakarta">{order.studentName}</div>
                         <div className="text-gray-600 text-sm font-jakarta">{order.currency}</div>
-                        <div className="font-semibold text-sm font-jakarta text-gray900">{order.fcyAmt}</div>
-                        <div className="font-semibold text-sm font-jakarta text-gray-900">{order.inrAmt}</div>
+                        <div className="font-semibold text-sm font-jakarta text-gray900">{order.amount}</div>
+                        <div className="font-semibold text-sm font-jakarta text-gray-900">{order.totalAmount}</div>
                         <div>
                           <Badge className={`${getCustomerRateColor(order.customerRate)} border-0`}>
                             {order.customerRate}
                           </Badge>
                         </div>
                         <div onClick={(e) => e.stopPropagation()}>{renderStatusElement(order)}</div>
-                        <div onClick={(e) => e.stopPropagation()} className="flex items-center  ">
+                        <div onClick={(e) => e.stopPropagation()} className="flex items-center">
                           <Link href={`/staff/dashboard/upload-files/${order.id}`}>
                             <Button
                               size="sm"
@@ -258,8 +342,8 @@ export default function Dashboard() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem className="flex flex-col items-start">
-                                <span className="font-medium">Added by: {order.addedBy || "StaffA"}</span>
-                                <span className="text-xs text-gray-500">{order.addedDate || "03-24-24"}</span>
+                                <span className="font-medium">Added by: {order.addedBy || "Staff"}</span>
+                                <span className="text-xs text-gray-500">{formatDate(order.createdAt)}</span>
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -276,15 +360,15 @@ export default function Dashboard() {
                               <ChevronRight className="h-4 w-4 text-gray-400" />
                             )}
                             <div>
-                              <div className="font-medium font-jakarta text-gray-900">#{order.id}</div>
-                              <div className="text-sm font-jakarta text-gray-600">{order.date}</div>
+                              <div className="font-medium font-jakarta text-gray-900">#{order.id.slice(0, 8)}</div>
+                              <div className="text-sm font-jakarta text-gray-600">{formatDate(order.createdAt)}</div>
                             </div>
                           </div>
                           <div className="text-right">
                             <div className="font-medium font-jakarta text-gray-900">
-                              {order.fcyAmt} {order.currency}
+                              {order.amount} {order.currency}
                             </div>
-                            <div className="text-sm font-jakarta text-gray-600">{order.inrAmt}</div>
+                            <div className="text-sm font-jakarta text-gray-600">{order.totalAmount}</div>
                           </div>
                         </div>
 
@@ -295,7 +379,7 @@ export default function Dashboard() {
                           </div>
                           <div>
                             <span className="text-gray-600 font-jakarta">Name:</span>
-                            <div className="font-medium font-jakarta text-gray-900">{order.name}</div>
+                            <div className="font-medium font-jakarta text-gray-900">{order.studentName}</div>
                           </div>
                         </div>
 
@@ -321,8 +405,8 @@ export default function Dashboard() {
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem className="flex flex-col items-start">
-                                  <span className="font-medium">Added by: {order.addedBy || "StaffA"}</span>
-                                  <span className="text-xs text-gray-500">{order.addedDate || "03-24-24"}</span>
+                                  <span className="font-medium">Added by: {order.addedBy || "Staff"}</span>
+                                  <span className="text-xs text-gray-500">{formatDate(order.createdAt)}</span>
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -342,32 +426,38 @@ export default function Dashboard() {
                             </div>
                             <div>
                               <h4 className="font-semibold font-jakarta text-gray-900 mb-2">
-                                Receiver&#39;s full name
+                                Student name
                               </h4>
-                              <p className="text-gray-600 font-jakarta bg-gray-50 p-2 rounded-sm">{order.name}</p>
+                              <p className="text-gray-600 font-jakarta bg-gray-50 p-2 rounded-sm">{order.studentName}</p>
                             </div>
+                            {order.receiverAccount && (
+                              <div>
+                                <h4 className="font-semibold font-jakarta text-gray-900 mb-2">Receiver&#39;s account</h4>
+                                <p className="text-gray-600 font-jakarta text-sm break-all bg-gray-50 p-2 rounded-sm">
+                                  {order.receiverAccount}
+                                </p>
+                              </div>
+                            )}
+                            {order.receiverBankCountry && (
+                              <div>
+                                <h4 className="font-semibold font-jakarta text-gray-900 mb-2">Receiver Country</h4>
+                                <p className="text-gray-600 font-jakarta bg-gray-50 p-2 rounded-sm">
+                                  {order.receiverBankCountry}
+                                </p>
+                              </div>
+                            )}
+                            {order.forexPartner && (
+                              <div>
+                                <h4 className="font-semibold font-jakarta text-gray-900 mb-2">Forex Partner</h4>
+                                <p className="text-gray-600 font-jakarta bg-gray-50 p-2 rounded-sm">
+                                  {order.forexPartner}
+                                </p>
+                              </div>
+                            )}
                             <div>
-                              <h4 className="font-semibold font-jakarta text-gray-900 mb-2">Receiver&#39;s account</h4>
-                              <p className="text-gray-600 font-jakarta text-sm break-all bg-gray-50 p-2 rounded-sm">
-                                {order.receiverAccount}
-                              </p>
-                            </div>
-                            <div>
-                              <h4 className="font-semibold font-jakarta text-gray-900 mb-2">Receiver Country</h4>
+                              <h4 className="font-semibold font-jakarta text-gray-900 mb-2">Added On</h4>
                               <p className="text-gray-600 font-jakarta bg-gray-50 p-2 rounded-sm">
-                                {order.receiverCountry}
-                              </p>
-                            </div>
-                            <div>
-                              <h4 className="font-semibold font-jakarta text-gray-900 mb-2">Forex Partner</h4>
-                              <p className="text-gray-600 font-jakarta bg-gray-50 p-2 rounded-sm">
-                                {order.forexPartner}
-                              </p>
-                            </div>
-                            <div>
-                              <h4 className="font-semibold font-jakarta text-gray-900 mb-2">Added By</h4>
-                              <p className="text-gray-600 font-jakarta bg-gray-50 p-2 rounded-sm">
-                                {order.addedBy || "StaffA"} on {order.addedDate || "03-24-24"}
+                                {formatDate(order.createdAt)}
                               </p>
                             </div>
                           </div>
