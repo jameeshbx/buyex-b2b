@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
-import { Download, ArrowRight, RotateCcw, Play } from "lucide-react"
+import { Download, ArrowRight, RotateCcw, Play, Loader2 } from "lucide-react"
 import axios from 'axios';
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form"
@@ -135,7 +135,8 @@ interface JsPDFWithAutoTable extends jsPDF {
   
 export default function OrderDetailsForm() {
   const [showCalculation, setShowCalculation] = useState(false);
-  const [, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const router = useRouter()
   const [calculatedValues, setCalculatedValues] = useState<CalculatedValues>({
     inrAmount: "0",
@@ -326,12 +327,11 @@ export default function OrderDetailsForm() {
                       // Automatically set country based on purpose
                       if (value === "Blocked account transfer") {
                         form.setValue("receiverBankCountry", "Germany")
-                        form.setValue("currency", "EUR") // Set currency based on country
+                        form.setValue("currency", "EUR")
                       } else if (value === "GIC Canada fee deposite") {
                         form.setValue("receiverBankCountry", "Canada")
-                        form.setValue("currency", "CAD") // Set currency based on country
+                        form.setValue("currency", "CAD")
                       } else {
-                        // Reset to empty if not one of the special purposes
                         form.setValue("receiverBankCountry", "")
                         form.setValue("currency", "")
                       }
@@ -355,6 +355,9 @@ export default function OrderDetailsForm() {
                       <SelectItem value="GIC Canada fee deposite">GIC Canada fee deposite</SelectItem>
                     </SelectContent>
                   </Select>
+                  {form.formState.errors.purpose && (
+                    <p className="text-red-500 text-xs mt-1">{form.formState.errors.purpose.message}</p>
+                  )}
                 </FormItem>
               )}
             />
@@ -810,9 +813,16 @@ export default function OrderDetailsForm() {
           <Button
             type="submit"
             className="bg-dark-blue hover:bg-medium-blue text-white flex items-center gap-2 h-12 rounded-md px-6 border-none"
+            disabled={isSubmitting}
           >
-            <Play className="h-4 w-4" />
-            <span className="font-medium">PROCEED</span>
+            {isSubmitting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                <Play className="h-4 w-4" />
+                <span className="font-medium">PROCEED</span>
+              </>
+            )}
           </Button>
           <Button
             type="button"
