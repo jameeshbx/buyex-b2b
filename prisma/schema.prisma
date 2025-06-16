@@ -5,7 +5,7 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["fullTextSearch"]
 }
 
@@ -201,7 +201,7 @@ model Beneficiary {
 }
 
 model Order {
-  id                  String   @id @default(cuid())
+  id                  String      @id @default(cuid())
   purpose             String
   foreignBankCharges  Float
   payer               String
@@ -216,21 +216,34 @@ model Order {
   totalAmount         Float
   customerRate        Float
   status              OrderStatus
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
 
   @@map("orders")
 }
 
 model Document {
-  id          String       @id @default(cuid())
-  role        DocumentRole
-  userId      String
-  type        DocumentType
-  imageUrl    String
-  isVerified  Boolean      @default(false)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id         String       @id @default(cuid())
+  role       DocumentRole
+  userId     String
+  type       DocumentType
+  imageUrl   String
+  isVerified Boolean      @default(false)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
 
   @@map("documents")
+}
+
+model DownloadedQuotes {
+  id           String   @id @default(cuid())
+  username     String
+  createdBy    String
+  quote        Json
+  calculations Json
+  generatedPDF String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("downloaded_quotes")
 }
