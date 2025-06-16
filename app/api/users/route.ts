@@ -154,6 +154,7 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
+    const role = searchParams.get('role');
 
     if (id) {
       const user = await db.user.findUnique({
@@ -176,19 +177,32 @@ export async function GET(req: Request) {
 
       return NextResponse.json(user);
     }
-
-    // If no ID provided, return all users
-    const users = await db.user.findMany({
-      select: {
-        id: true,
-        role: true,
-        name: true,
-        email: true,
-        createdAt: true,
-      },
-    });
-
+if(role === "SUPER_ADMIN"){
+  const users = await db.user.findMany({
+    select: {
+      id: true,
+      role: true,
+      name: true,
+      email: true,
+      createdAt: true,
+    },
+  });
+  return NextResponse.json(users);
+} else {
+  const users = await db.user.findMany({
+    where: {
+      role: "MANAGER",
+    },
+    select: {
+      id: true,
+      role: true,
+      name: true,
+      email: true,
+      createdAt: true,
+    },
+  });
     return NextResponse.json(users);
+}
   } catch (error) {
     console.error("Error fetching users:", error);
     return NextResponse.json(
