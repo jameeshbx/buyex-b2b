@@ -20,21 +20,20 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
-// Utility functions moved from utils.ts
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString)
-  const day = date.getDate()
-  const month = date.toLocaleString("default", { month: "short" })
-  const year = date.getFullYear()
-
-  return `${day} ${month} ${year}`
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  })
 }
 
-type SortField = "date" | "userType" | "userId" | "name" | "email"
+type SortField = "date" | "userType" | "name" | "email"
 type SortDirection = "asc" | "desc"
 
 interface UserTableProps {
@@ -57,7 +56,6 @@ export function UserTable({
   setSearchQuery,
 }: UserTableProps) {
   const [currentPage, setCurrentPage] = useState(1)
-  const [selectedRows, setSelectedRows] = useState<string[]>([])
   const [filterOpen, setFilterOpen] = useState(false)
   const [sortField, setSortField] = useState<SortField>("date")
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
@@ -81,8 +79,7 @@ export function UserTable({
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
       user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.userId.toLowerCase().includes(searchQuery.toLowerCase())
+      user.email.toLowerCase().includes(searchQuery.toLowerCase())
 
     let matchesType = false
     if (filteredUserType === "all") {
@@ -110,10 +107,6 @@ export function UserTable({
         aValue = a.userType.toLowerCase()
         bValue = b.userType.toLowerCase()
         break
-      case "userId":
-        aValue = a.userId.toLowerCase()
-        bValue = b.userId.toLowerCase()
-        break
       case "name":
         aValue = a.name.toLowerCase()
         bValue = b.name.toLowerCase()
@@ -126,12 +119,8 @@ export function UserTable({
         return 0
     }
 
-    if (aValue < bValue) {
-      return sortDirection === "asc" ? -1 : 1
-    }
-    if (aValue > bValue) {
-      return sortDirection === "asc" ? 1 : -1
-    }
+    if (aValue < bValue) return sortDirection === "asc" ? -1 : 1
+    if (aValue > bValue) return sortDirection === "asc" ? 1 : -1
     return 0
   })
 
@@ -139,6 +128,7 @@ export function UserTable({
   const endIndex = startIndex + itemsPerPage
   const currentUsers = sortedUsers.slice(startIndex, endIndex)
   const totalPages = Math.ceil(sortedUsers.length / itemsPerPage)
+
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -161,17 +151,7 @@ export function UserTable({
     )
   }
 
-  const handleSelectRow = (id: string) => {
-    setSelectedRows((prev) => (prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]))
-  }
 
-  const handleSelectAllRows = () => {
-    if (selectedRows.length === currentUsers.length) {
-      setSelectedRows([])
-    } else {
-      setSelectedRows(currentUsers.map((user) => user.id))
-    }
-  }
 
   const handleApplyFilters = () => {
     if (tempFilters.admin && tempFilters.staff) {
@@ -250,7 +230,6 @@ export function UserTable({
             <Button
               variant="outline"
               className="flex items-center gap-2 bg-[#004976] text-white hover:bg-[#003a5e] w-full sm:w-auto"
-              data-cy="filter-button"
             >
               Filter by usertype <ChevronDown className="h-4 w-4" />
             </Button>
@@ -263,7 +242,6 @@ export function UserTable({
                     id="admin-filter"
                     checked={tempFilters.admin}
                     onChange={(e) => setTempFilters((prev) => ({ ...prev, admin: (e.target as HTMLInputElement).checked }))}
-                    data-cy="admin-filter-checkbox"
                   />
                   <label htmlFor="admin-filter" className="text-sm font-medium">
                     Admin
@@ -274,7 +252,6 @@ export function UserTable({
                     id="staff-filter"
                     checked={tempFilters.staff}
                     onChange={(e) => setTempFilters((prev) => ({ ...prev, staff: (e.target as HTMLInputElement).checked }))}
-                    data-cy="staff-filter-checkbox"
                   />
                   <label htmlFor="staff-filter" className="text-sm font-medium">
                     Staff
@@ -286,7 +263,6 @@ export function UserTable({
                   size="sm"
                   onClick={handleApplyFilters}
                   className="bg-[#004976] hover:bg-[#003a5e]"
-                  data-cy="apply-filter-button"
                 >
                   Apply
                 </Button>
@@ -298,14 +274,13 @@ export function UserTable({
         <div className="relative w-full sm:w-auto sm:min-w-[300px]">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
-            placeholder="Search"
+            placeholder="Search by name or email"
             className="pl-10 w-full"
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value)
-              setCurrentPage(1) // Reset to first page when searching
+              setCurrentPage(1)
             }}
-            data-cy="search-input"
           />
         </div>
       </div>
@@ -315,19 +290,10 @@ export function UserTable({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-12">
-                  <Checkbox
-                    checked={selectedRows.length === currentUsers.length && currentUsers.length > 0}
-                    onChange={handleSelectAllRows}
-                    aria-label="Select all"
-                    data-cy="select-all"
-                  />
-                </TableHead>
                 <TableHead className="whitespace-nowrap">
                   <button
                     className="flex items-center gap-1 hover:bg-gray-50 p-1 rounded transition-colors"
                     onClick={() => handleSort("date")}
-                    data-cy="sort-date"
                   >
                     Date {getSortIcon("date")}
                   </button>
@@ -336,25 +302,14 @@ export function UserTable({
                   <button
                     className="flex items-center gap-1 hover:bg-gray-50 p-1 rounded transition-colors"
                     onClick={() => handleSort("userType")}
-                    data-cy="sort-usertype"
                   >
-                    Usertype {getSortIcon("userType")}
-                  </button>
-                </TableHead>
-                <TableHead className="whitespace-nowrap">
-                  <button
-                    className="flex items-center gap-1 hover:bg-gray-50 p-1 rounded transition-colors"
-                    onClick={() => handleSort("userId")}
-                    data-cy="sort-userid"
-                  >
-                    User ID {getSortIcon("userId")}
+                    User Type {getSortIcon("userType")}
                   </button>
                 </TableHead>
                 <TableHead className="whitespace-nowrap">
                   <button
                     className="flex items-center gap-1 hover:bg-gray-50 p-1 rounded transition-colors"
                     onClick={() => handleSort("name")}
-                    data-cy="sort-name"
                   >
                     Name {getSortIcon("name")}
                   </button>
@@ -363,9 +318,8 @@ export function UserTable({
                   <button
                     className="flex items-center gap-1 hover:bg-gray-50 p-1 rounded transition-colors"
                     onClick={() => handleSort("email")}
-                    data-cy="sort-email"
                   >
-                    Email ID {getSortIcon("email")}
+                    Email {getSortIcon("email")}
                   </button>
                 </TableHead>
                 <TableHead>Status</TableHead>
@@ -375,33 +329,24 @@ export function UserTable({
             <TableBody>
               {currentUsers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-gray-500">
+                  <TableCell colSpan={6} className="text-center py-8 text-gray-500">
                     No users found
                   </TableCell>
                 </TableRow>
               ) : (
                 currentUsers.map((user) => (
-                  <TableRow key={user.id} data-cy={`user-row-${user.id}`} className="hover:bg-gray-50">
-                    <TableCell>
-                      <Checkbox
-                        checked={selectedRows.includes(user.id)}
-                        onChange={() => handleSelectRow(user.id)}
-                        aria-label={`Select ${user.name}`}
-                        data-cy={`select-user-${user.id}`}
-                      />
+                  <TableRow key={user.id}>
+                    <TableCell className="whitespace-nowrap">
+                      {formatDate(user.date)}
                     </TableCell>
-                    <TableCell className="whitespace-nowrap">{formatDate(user.date)}</TableCell>
                     <TableCell>
-                      <span
-                        className={cn(
-                          "px-2 py-1 rounded-full text-xs font-medium",
-                          user.userType === "Admin" ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800",
-                        )}
-                      >
+                      <span className={cn(
+                        "px-2 py-1 rounded-full text-xs font-medium",
+                        user.userType === "Admin" ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800"
+                      )}>
                         {user.userType}
                       </span>
                     </TableCell>
-                    <TableCell className="font-mono text-sm">{user.userId}</TableCell>
                     <TableCell className="font-medium">{user.name}</TableCell>
                     <TableCell className="text-gray-600">{user.email}</TableCell>
                     <TableCell>
@@ -411,7 +356,6 @@ export function UserTable({
                           user.status ? "bg-[#004976]" : "bg-gray-300",
                         )}
                         onClick={() => handleStatusToggle(user.id, user.name)}
-                        data-cy={`status-toggle-${user.id}`}
                       >
                         <div
                           className={cn(
@@ -427,7 +371,6 @@ export function UserTable({
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 text-blue-500 hover:bg-blue-50"
-                          data-cy={`edit-user-${user.id}`}
                         >
                           <Pencil className="h-4 w-4" />
                           <span className="sr-only">Edit</span>
@@ -437,7 +380,6 @@ export function UserTable({
                           size="icon"
                           className="h-8 w-8 text-red-500 hover:bg-red-50"
                           onClick={() => onDeleteUser(user.id)}
-                          data-cy={`delete-user-${user.id}`}
                         >
                           <Trash2 className="h-4 w-4" />
                           <span className="sr-only">Delete</span>

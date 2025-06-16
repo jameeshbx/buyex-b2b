@@ -9,31 +9,12 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import type { UserType, User } from "@/lib/types"
-import { users } from "@/data/native-users"
+import type { UserFormData, UserType } from "@/lib/types"
+import axios from "axios"
 
-// Utility function moved from utils.ts
-function generateUserId(userType: UserType, existingUsers: User[]): string {
-  const prefix = userType === "Admin" ? "adm" : "stf"
-
-  // Find the highest existing ID number for this user type
-  const existingIds = existingUsers
-    .filter((user) => user.userType === userType)
-    .map((user) => {
-      const match = user.userId.match(/\d+/)
-      return match ? Number.parseInt(match[0], 10) : 0
-    })
-
-  const highestId = existingIds.length > 0 ? Math.max(...existingIds) : 0
-  const nextId = highestId + 1
-
-  // Format with leading zeros (e.g., 001, 012, 123)
-  return `${prefix}${nextId.toString().padStart(3, "0")}`
-}
 
 const formSchema = z.object({
   userType: z.enum(["Admin", "Staff"]),
-  userId: z.string().min(1, { message: "User ID is required" }),
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
   email: z.string().email({ message: "Please enter a valid email address" }),
 })
@@ -41,12 +22,12 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>
 
 interface UserFormProps {
-  onAddUser: (user: FormValues) => void
+  onAddUser: (user: UserFormData) => Promise<void>;  // Callback to refresh the table
 }
 
 export function UserForm({ onAddUser }: UserFormProps) {
-  const [, setSelectedUserType] = useState<UserType>("Admin")
-  const [previewUserId, setPreviewUserId] = useState(generateUserId("Admin", users))
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const {
     register,
@@ -58,41 +39,70 @@ export function UserForm({ onAddUser }: UserFormProps) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       userType: "Admin",
-      userId: "",
       name: "",
       email: "",
     },
   })
 
-  const onSubmit = (data: FormValues) => {
-    const userData = {
-      ...data,
-      userId: previewUserId, // Use the current value from the input
+  const onSubmit = async (data: FormValues) => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      // Send data to API endpoint
+      const response = await axios.post('/api/users', {
+        userType: data.userType,
+        name: data.name,
+        email: data.email,
+        // Password will be generated on the server
+      })
+
+      if (response.status === 201) {
+        // Reset form on success
+        reset()
+        // Refresh the table
+        onAddUser({
+          userType: data.userType,
+          name: data.name,
+          email: data.email,
+          userId: ""
+        })
+        // Optionally show success message
+        alert('User created successfully! An invitation email has been sent.')
+      }
+    } catch (err: unknown) {
+  console.error("Error creating user:", err)
+  const axiosError = err as {
+    response?: {
+      data?: {
+        error?: string
+      }
     }
-    onAddUser(userData)
-    reset()
-    // Reset the preview user ID after submission
-    setSelectedUserType("Admin")
-    setPreviewUserId(generateUserId("Admin", users))
+  }
+  setError(axiosError?.response?.data?.error || "Failed to create user")
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleUserTypeChange = (value: UserType) => {
-    setSelectedUserType(value)
     setValue("userType", value)
-    setPreviewUserId(generateUserId(value, users))
   }
 
   return (
     <Card className="bg-white shadow-sm">
       <CardContent className="pt-6">
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
+            {error}
+          </div>
+        )}
         <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* First Row */}
           <div className="space-y-2">
             <Label htmlFor="userType">Usertype</Label>
             <Select
               defaultValue="Admin"
-              onValueChange={(value: UserType) => handleUserTypeChange(value)}
-              data-cy="usertype-select"
+              onValueChange={handleUserTypeChange}
             >
               <SelectTrigger id="userType" className="w-full">
                 <SelectValue placeholder="Select user type" />
@@ -106,33 +116,33 @@ export function UserForm({ onAddUser }: UserFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="userId">User ID</Label>
-            <Input
-              id="userId"
-              value={previewUserId}
-              onChange={(e) => setPreviewUserId(e.target.value)}
-              className="w-full"
-              data-cy="userid-input"
-            />
-            <p className="text-xs text-gray-500">Auto-generated or enter manually</p>
-          </div>
-
-          <div className="space-y-2">
             <Label htmlFor="name">Name</Label>
-            <Input id="name" placeholder="Enter user name" {...register("name")} data-cy="name-input" />
+            <Input
+              id="name"
+              placeholder="Enter user name"
+              {...register("name")}
+            />
             {errors.name && <p className="text-red-500 text-xs">{errors.name.message}</p>}
           </div>
 
-          {/* Second Row */}
           <div className="space-y-2">
             <Label htmlFor="email">Email ID</Label>
-            <Input id="email" type="email" placeholder="Enter email ID" {...register("email")} data-cy="email-input" />
+            <Input
+              id="email"
+              type="email"
+              placeholder="Enter email ID"
+              {...register("email")}
+            />
             {errors.email && <p className="text-red-500 text-xs">{errors.email.message}</p>}
           </div>
 
           <div className="flex items-end">
-            <Button type="submit" className="w-full bg-[#004976] hover:bg-[#003a5e]" data-cy="submit-button">
-              Submit
+            <Button
+              type="submit"
+              className="w-full bg-[#004976] hover:bg-[#003a5e]"
+              disabled={loading}
+            >
+              {loading ? "Creating..." : "Submit"}
             </Button>
           </div>
         </form>

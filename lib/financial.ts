@@ -38,6 +38,7 @@ export const calculateGst = (amount: number) => {
   if (amount <= GST_BASE) {
     calculatedGst = amount * 0.01 * 0.18 + HANDLING_FEE_GST;
   } else if (amount <= GST_SLAB) {
+
     calculatedGst = (BASE_GST_AMOUNT + 0.005 * (amount - GST_BASE)) * GST_RATE + HANDLING_FEE_GST;
   } else {
     calculatedGst = (ABOVE_SLAB_GST_AMOUNT + 0.001 * (amount - GST_SLAB)) * GST_RATE + HANDLING_FEE_GST;

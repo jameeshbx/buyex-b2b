@@ -153,64 +153,25 @@ export const beneficiaryFormSchema = z.object({
   receiverBankAddress: z.string().min(1, "Receiver's bank address is required"),
   receiverBankCountry: z.string().min(1, "Receiver bank's country is required"),
   receiverAccount: z.string().min(1, "Receiver's account is required"),
-  receiverBankSwiftCode: z
-  .string()
-  .min(1, "Receiver's bank swift code is required")
-  .refine(
-    (val) => /^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(val),
-    {
-      message: "Invalid SWIFT code format. Must be 8 or 11 characters (e.g., ABCDGB2L or ABCDGB2LXXX)",
-    }
-  ),
-  iban: z
-    .string()
-    .min(1, "Iban is required")
-    .optional()
-    .refine(
-      (val) => !val || /^[A-Z]{2}[0-9A-Z]{13,32}$/.test(val),
-      { message: "Invalid IBAN format" }
-    ),
-
-  sortCode: z
-    .string()
-    .min(1, "Sort code is required")
-    .optional()
-    .refine((val) => !val || /^\d{6}$/.test(val), {
-      message: "Sort Code must be exactly 6 digits",
-    }),
-
-  transitNumber: z
-    .string()
-    .min(1, "transitNumber is required")
-    .optional()
-    .refine((val) => !val || /^\d{5}$/.test(val), {
-      message: "Transit Number must be exactly 5 digits",
-    }),
-
-  bsbCode: z
-    .string()
-    .min(1, "BSB Code is required")
-    .optional()
-    .refine((val) => !val || /^\d{6}$/.test(val), {
-      message: "BSB Code must be exactly 6 digits",
-    }),
-
-  routingNumber: z
-    .string()
-    .min(1, "Routing Number is required")
-    .optional()
-    .refine((val) => !val || /^\d{9}$/.test(val), {
-      message: "Routing Number must be exactly 9 digits",
-    }),
+  receiverBankSwiftCode: z.string()
+    .min(1, "Receiver's bank swift code is required")
+    .regex(/^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/, "Invalid SWIFT/BIC format"),
+  iban: z.string().optional(),
+  sortCode: z.string().optional(),
+  transitNumber: z.string().optional(),
+  bsbCode: z.string().optional(),
+  routingNumber: z.string().optional(),
   anyIntermediaryBank: z.enum(["YES", "NO"]),
   intermediaryBankName: z.string().optional(),
   intermediaryBankAccountNo: z.string().optional(),
   intermediaryBankIBAN: z.string().optional(),
   intermediaryBankSwiftCode: z.string().optional(),
-  totalRemittance: z.string().min(1, "Total remittance is required"),
-  field70: z.string().min(1, "Field70 is required"),
+  totalRemittance: z.string()
+    .min(1, "Total remittance is required")
+    .regex(/^\d+(\.\d{1,2})?$/, "Invalid amount format"),
+  field70: z.string().optional(),
   selectedReceiverId: z.string().optional(),
-})
+});
 
 export type BeneficiaryFormValues = z.infer<typeof beneficiaryFormSchema>
 

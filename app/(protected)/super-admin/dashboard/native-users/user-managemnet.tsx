@@ -1,53 +1,91 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import axios from "axios"
 import { UserForm } from "./user-form"
 import { UserTable } from "./user-table"
 import type { User, UserType, UserFormData } from "@/lib/types"
-import { users as initialUsers } from "@/data/native-users"
+
+// Define the ApiUser type based on the expected API response
+type ApiUser = {
+  id: string
+  name: string
+  email: string
+  status: boolean
+  createdAt: string
+  role: string
+}
 
 export default function UserManagement() {
-  const [users, setUsers] = useState<User[]>(initialUsers)
+  const [users, setUsers] = useState<User[]>([])
   const [filteredUserType, setFilteredUserType] = useState<UserType | "all">("all")
   const [searchQuery, setSearchQuery] = useState("")
+  const [, setLoading] = useState(true)
+  const [, setError] = useState<string | null>(null)
 
-  const handleAddUser = (user: UserFormData) => {
-    const newUser: User = {
-      id: Math.random().toString(36).substring(2, 9),
-      userId: user.userId, // Use the provided userId instead of generating
-      date: new Date().toISOString(),
-      userType: user.userType,
-      name: user.name,
-      email: user.email,
-      status: true, // Default to active
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setLoading(true)
+        const response = await axios.get('/api/users')
+        const transformedUsers = response.data.map((apiUser: ApiUser) => ({
+          id: apiUser.id,
+          userId: apiUser.id,
+          name: apiUser.name,
+          email: apiUser.email,
+          status: apiUser.status,
+          date: apiUser.createdAt,
+          userType: apiUser.role === "ADMIN" ? "Admin" : "Staff"
+        }))
+        setUsers(transformedUsers)
+      } catch (error) {
+        setError("Failed to fetch users")
+        console.error("Error fetching users:", error)
+      } finally {
+        setLoading(false)
+      }
     }
+    fetchUsers()
+  }, [])
 
-    setUsers([newUser, ...users])
+  const handleAddUser = async (user: UserFormData) => {
+    try {
+      const response = await axios.post('/api/users', {
+        name: user.name,
+        email: user.email,
+        role: user.userType === "Admin" ? "ADMIN" : "MANAGER",
+        status: true
+      })
+
+      const newUser = {
+        id: response.data.user.id,
+        userId: response.data.user.id,
+        name: response.data.user.name,
+        email: response.data.user.email,
+        status: response.data.user.status,
+        date: response.data.user.createdAt,
+        userType: response.data.user.role === "ADMIN" ? "Admin" as UserType : "Staff" as UserType
+      }
+
+      setUsers([newUser, ...users])
+    } catch (err) {
+      console.error("Error adding user:", err)
+      setError("Failed to add user")
+    }
   }
+  function handleToggleStatus(): void {
+  throw new Error("Function not implemented.")
+}
 
-  const handleToggleStatus = (id: string) => {
-    setUsers(users.map((user) => (user.id === id ? { ...user, status: !user.status } : user)))
-  }
-
-  const handleDeleteUser = (id: string) => {
-    setUsers(users.filter((user) => user.id !== id))
-  }
-
-  const filteredUsers = users.filter((user) => {
-    const matchesType = filteredUserType === "all" || user.userType === filteredUserType
-    const matchesSearch =
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.userId.toLowerCase().includes(searchQuery.toLowerCase())
-
-    return matchesType && matchesSearch
-  })
+function handleDeleteUser(): void {
+  throw new Error("Function not implemented.")
+}
 
   return (
     <div className="max-w-7xl mx-auto space-y-8">
       <UserForm onAddUser={handleAddUser} />
       <UserTable
-        users={filteredUsers}
+        users={users}
         onToggleStatus={handleToggleStatus}
         onDeleteUser={handleDeleteUser}
         filteredUserType={filteredUserType}
