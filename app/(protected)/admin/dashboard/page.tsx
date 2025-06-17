@@ -59,22 +59,26 @@ export default function Dashboard() {
 
   // Fetch orders from API
   useEffect(() => {
-    const fetchOrders = async () => {
-      setLoading(true)
-      setError(null)
-      try {
-        const res = await fetch("/api/orders")
-        if (!res.ok) throw new Error("Failed to fetch orders")
-        const data = await res.json()
-        setOrders(data)
-      } catch (err: any) {
-        setError(err.message || "Error fetching orders")
-      } finally {
-        setLoading(false)
+  const fetchOrders = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/orders");
+      if (!res.ok) throw new Error("Failed to fetch orders");
+      const data = await res.json();
+      setOrders(data);
+    } catch (err: unknown) {
+      let errorMessage = "Error fetching orders";
+      if (err instanceof Error) {
+        errorMessage = err.message;
       }
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
     }
-    fetchOrders()
-  }, [])
+  };
+  fetchOrders();
+}, []);
 
   const toggleRowExpansion = (orderId: string) => {
     const newExpanded = new Set(expandedRows)
@@ -87,24 +91,28 @@ export default function Dashboard() {
   }
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
-    try {
-      setLoading(true)
-      const res = await fetch(`/api/orders/${orderId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus }),
-      })
-      if (!res.ok) throw new Error("Failed to update status")
-      const updatedOrder = await res.json()
-      setOrders((prevOrders) =>
-        prevOrders.map((order) => (order.id === orderId ? updatedOrder : order)),
-      )
-    } catch (err: any) {
-      setError(err.message || "Error updating status")
-    } finally {
-      setLoading(false)
+  try {
+    setLoading(true);
+    const res = await fetch(`/api/orders/${orderId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: newStatus }),
+    });
+    if (!res.ok) throw new Error("Failed to update status");
+    const updatedOrder = await res.json();
+    setOrders((prevOrders) =>
+      prevOrders.map((order) => (order.id === orderId ? updatedOrder : order))
+    );
+  } catch (err: unknown) {
+    let errorMessage = "Error updating status";
+    if (err instanceof Error) {
+      errorMessage = err.message;
     }
+    setError(errorMessage);
+  } finally {
+    setLoading(false);
   }
+};
 
   const handleUpdateRateClick = (order: Order) => {
     setSelectedOrder(order)
@@ -115,25 +123,29 @@ export default function Dashboard() {
   }
 
   const handleRateUpdate = async (orderId: string, newRate: number) => {
-    try {
-      setLoading(true)
-      const res = await fetch(`/api/orders/${orderId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fxRate: newRate }),
-      })
-      if (!res.ok) throw new Error("Failed to update FX rate")
-      const updatedOrder = await res.json()
-      setOrders((prevOrders) =>
-        prevOrders.map((order) => (order.id === orderId ? updatedOrder : order)),
-      )
-      setShowRateModal(false)
-    } catch (err: any) {
-      setError(err.message || "Error updating FX rate")
-    } finally {
-      setLoading(false)
+  try {
+    setLoading(true);
+    const res = await fetch(`/api/orders/${orderId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fxRate: newRate }),
+    });
+    if (!res.ok) throw new Error("Failed to update FX rate");
+    const updatedOrder = await res.json();
+    setOrders((prevOrders) =>
+      prevOrders.map((order) => (order.id === orderId ? updatedOrder : order))
+    );
+    setShowRateModal(false);
+  } catch (err: unknown) {
+    let errorMessage = "Error updating FX rate";
+    if (err instanceof Error) {
+      errorMessage = err.message;
     }
+    setError(errorMessage);
+  } finally {
+    setLoading(false);
   }
+};
 
   const handleSeeMoreClick = () => setVisibleRows((prev) => prev + 5)
   const handleSeeLessClick = () => setVisibleRows(5)
