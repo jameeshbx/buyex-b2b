@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { useMediaQuery } from "@/hooks/use-mobile"
 import { usePathname } from "next/navigation"
@@ -65,38 +64,34 @@ export function Sidebar({
 
   const navItems = [
     {
-      href: "/staff/dashboard",
+      href: "/super-admin/dashboard",
       icon: <Image src="/dash.svg" alt="Dashboard" width={24} height={24} className="w-6 h-6" />,
       label: "Dashboard",
-      active: pathname === "/dashboard",
+      active: pathname === "/staff/dashboard",
     },
     {
-      href: "/staff/dashboard/view-orders",
+      href: "/super-admin/dashboard/manage-orders",
       icon: <Image src="/orders.svg" alt="Orders" width={24} height={24} className="w-6 h-6" />,
-      label: "View All Orders",
-      active: pathname === "/orders",
+      label: "Manage Orders",
+      active: pathname === "/super-admin/dashboard/manage-orders",
     },
+   
     {
-      href: "/staff/dashboard/placeorder",
-      icon: <Image src="/placeee.svg" alt="Place Order" width={24} height={24} className="w-6 h-6" />,
-      label: "Place an order",
-      active: pathname === "/placeorder",
-    },
-    {
-      href: "/receivers",
+      href: "/super-admin/dashboard/native-users",
       icon: <Image src="/Placean.svg" alt="Receivers" width={24} height={24} className="w-6 h-6" />,
-      label: "Manage receivers",
-      active: pathname === "/receivers" || pathname === "/receivers/list" || pathname === "/receivers/add",
+      label: "Manage users",
+      active:
+        pathname.includes("/staff/dashboard/reports") || pathname.includes("/staff/dashboard/native-users"),
       isDropdown: true,
     },
   ]
 
   const secondaryItems = [
     {
-      href: "/staff/pages/settings",
+      href: "/super-admin/dashboard/settings",
       icon: <Image src="/Icon-1.svg" alt="Settings" width={24} height={24} className="w-6 h-6" />,
       label: "Settings",
-      active: pathname === "/settings",
+      active: pathname === "/super-admin/dashboard/settings",
     },
     {
       href: "/support",
@@ -116,20 +111,22 @@ export function Sidebar({
     <>
       {/* Mobile overlay */}
       {isMobile && !collapsed && (
-        <div className="fixed inset-0 bg-black/50 z-[49] lg:hidden" onClick={toggleSidebar} aria-hidden="true" />
+        <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={toggleSidebar} aria-hidden="true" />
       )}
 
-      {/* Sidebar container */}
-      <div
+      {/* Sidebar container - Fixed positioning with proper z-index */}
+      <aside
         className={cn(
-          "h-screen bg-white shadow-sm flex flex-col justify-between transition-all duration-300 border-r fixed z-50",
+          "fixed left-0 top-0 h-full bg-white shadow-lg flex flex-col justify-between transition-all duration-300 border-r border-gray-200 z-50",
           collapsed ? "w-16 sm:w-20" : "w-64",
-          isMobile && collapsed ? "translate-x-0" : isMobile && !collapsed ? "translate-x-0" : "translate-x-0",
+          // Mobile behavior
+          isMobile && collapsed && "-translate-x-full",
+          isMobile && !collapsed && "translate-x-0",
         )}
       >
         {/* Header section */}
-        <div className="p-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center">
+        <div className="p-4 flex items-center justify-between border-b border-gray-100">
+          <Link href="/staff/dashboard" className="flex items-center">
             {collapsed ? (
               <div className="relative h-10 w-10">
                 <Image src="/Top.png" alt="Logo" width={40} height={40} className="h-full w-auto object-contain" />
@@ -147,7 +144,7 @@ export function Sidebar({
             )}
           </Link>
 
-          {/* Toggle button - visible on all screen sizes */}
+          {/* Toggle button */}
           <button
             onClick={toggleSidebar}
             className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 transition-colors"
@@ -161,9 +158,9 @@ export function Sidebar({
           </button>
         </div>
 
-        {/* Navigation sections */}
+        {/* Navigation sections - Scrollable content */}
         <div className="flex-1 overflow-y-auto py-4">
-          <div className="space-y-1 px-2">
+          <nav className="space-y-1 px-2">
             {navItems.map((item) => {
               if (item.isDropdown) {
                 return (
@@ -178,7 +175,7 @@ export function Sidebar({
                     >
                       <span
                         className={cn(
-                          "flex-shrink-0 flex items-center justify-center w-6 h-6 mr-3",
+                          "flex-shrink-0 flex items-center justify-center w-6 h-6",
                           item.active ? "text-blue-600" : "text-gray-500",
                         )}
                       >
@@ -186,7 +183,7 @@ export function Sidebar({
                       </span>
                       {!collapsed && (
                         <>
-                          <span className="ml-2 truncate flex-1 text-left">{item.label}</span>
+                          <span className="ml-3 truncate flex-1 text-left">{item.label}</span>
                           <ChevronDown
                             className={cn("w-4 h-4 transition-transform", receiversDropdownOpen && "rotate-180")}
                           />
@@ -198,62 +195,54 @@ export function Sidebar({
                     {receiversDropdownOpen && !collapsed && (
                       <div className="ml-6 mt-1 space-y-1">
                         <Link
-                          href="/staff/dashboard/manage-receivers/list-receivers"
+                          href="/super-admin/dashboard/reports"
                           className={cn(
                             "flex items-center px-3 py-2 rounded-lg mx-2 text-gray-600 hover:bg-gray-100 transition-colors text-sm",
-                            pathname === "/receivers/list" && "bg-blue-50 text-blue-600 font-medium",
+                            pathname === "/super-admin/dashboard/reports" &&
+                              "bg-blue-50 text-blue-600 font-medium",
                           )}
                         >
                           <List className="w-4 h-4 mr-2" />
-                          List receivers
+                          Reports
                         </Link>
                         <Link
-                          href="/staff/dashboard/manage-receivers/add-receivers"
+                          href="/super-admin/dashboard/native-users"
                           className={cn(
                             "flex items-center px-3 py-2 rounded-lg mx-2 text-gray-600 hover:bg-gray-100 transition-colors text-sm",
-                            pathname === "/receivers/add" && "bg-blue-50 text-blue-600 font-medium",
+                            pathname === "/super-admin/dashboard/native-users" &&
+                              "bg-blue-50 text-blue-600 font-medium",
                           )}
                         >
                           <UserPlus className="w-4 h-4 mr-2" />
-                          Add receivers
+                         Native Users
                         </Link>
                       </div>
                     )}
 
                     {/* Icon-only items for collapsed sidebar */}
                     {collapsed && (
-                      <div className="space-y-1">
+                      <div className="space-y-1 mt-1">
                         <Link
-                          href="/receivers/list"
+                          href="/staff/dashboard/reports"
                           className={cn(
                             "flex items-center justify-center px-3 py-2.5 rounded-lg mx-2 text-gray-600 hover:bg-gray-100 transition-colors",
-                            pathname === "/receivers/list" && "bg-blue-50 text-blue-600 font-medium",
+                            pathname === "/staff/dashboard/reports" &&
+                              "bg-blue-50 text-blue-600 font-medium",
                           )}
+                          title="Reports"
                         >
-                          <span
-                            className={cn(
-                              "flex-shrink-0 flex items-center justify-center w-6 h-6",
-                              pathname === "/receivers/list" ? "text-blue-600" : "text-gray-500",
-                            )}
-                          >
-                            <List className="w-5 h-5" />
-                          </span>
+                          <List className="w-5 h-5" />
                         </Link>
                         <Link
-                          href="/receivers/add"
+                          href="/super-admin/dashboard/native-users"
                           className={cn(
                             "flex items-center justify-center px-3 py-2.5 rounded-lg mx-2 text-gray-600 hover:bg-gray-100 transition-colors",
-                            pathname === "/receivers/add" && "bg-blue-50 text-blue-600 font-medium",
+                            pathname === "/super-admin/dashboard/native-users" &&
+                              "bg-blue-50 text-blue-600 font-medium",
                           )}
+                          title="Native users"
                         >
-                          <span
-                            className={cn(
-                              "flex-shrink-0 flex items-center justify-center w-6 h-6",
-                              pathname === "/receivers/add" ? "text-blue-600" : "text-gray-500",
-                            )}
-                          >
-                            <UserPlus className="w-5 h-5" />
-                          </span>
+                          <UserPlus className="w-5 h-5" />
                         </Link>
                       </div>
                     )}
@@ -272,10 +261,11 @@ export function Sidebar({
                 />
               )
             })}
-          </div>
+          </nav>
 
+          {/* Secondary navigation */}
           <div className="border-t border-gray-200 mt-4 pt-4 px-2">
-            <div className="space-y-1">
+            <nav className="space-y-1">
               {secondaryItems.map((item) => (
                 <NavItem
                   key={item.href}
@@ -286,12 +276,17 @@ export function Sidebar({
                   active={item.active}
                 />
               ))}
-            </div>
+            </nav>
           </div>
         </div>
 
-        {/* User profile section */}
-        <div className={cn("border-t p-4 flex items-center", collapsed ? "justify-center" : "justify-between")}>
+        {/* User profile section - Fixed at bottom */}
+        <div
+          className={cn(
+            "border-t border-gray-100 p-4 flex items-center bg-gray-50",
+            collapsed ? "justify-center" : "justify-between",
+          )}
+        >
           <div className="flex items-center min-w-0">
             <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
               <Image src="/boy.jpg" alt="User avatar" width={40} height={40} className="h-full w-full object-cover" />
@@ -299,13 +294,13 @@ export function Sidebar({
             {!collapsed && (
               <div className="ml-3 min-w-0 flex-1 overflow-hidden">
                 <div className="text-sm font-medium text-gray-700 truncate">Welcome back 👋</div>
-                <div className="text-xs text-gray-500 truncate">Staff</div>
+                <div className="text-xs text-gray-500 truncate">Super admin</div>
               </div>
             )}
           </div>
           {!collapsed && <ChevronRight size={16} className="text-gray-400 flex-shrink-0" />}
         </div>
-      </div>
+      </aside>
     </>
   )
 }
@@ -314,7 +309,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false)
   const isMobile = useMobile()
 
-  // Automatically collapse on mobile and expand on desktop
+  // Handle mobile/desktop behavior
   useEffect(() => {
     if (isMobile) {
       setCollapsed(true)
@@ -341,18 +336,23 @@ export function Layout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       <Sidebar collapsed={collapsed} toggleSidebar={toggleSidebar} />
 
-      {/* Main content area */}
+      {/* Main content area - Properly positioned relative to sidebar */}
       <main
         className={cn(
-          "flex-1 overflow-auto transition-[margin] duration-300",
-          collapsed ? "ml-16 sm:ml-20" : "ml-0 md:ml-64",
-          "p-4 sm:p-6 max-w-7xl w-full mx-auto",
+          "transition-all duration-300 min-h-screen",
+          // Desktop: Always account for sidebar space
+          !isMobile && (collapsed ? "ml-16 sm:ml-20" : "ml-64"),
+          // Mobile: Full width when sidebar is collapsed (hidden)
+          isMobile && "ml-0",
         )}
       >
-        {children}
+        {/* Content wrapper with proper padding */}
+        <div className="p-4 sm:p-6 lg:p-8">
+          <div className="max-w-7xl mx-auto">{children}</div>
+        </div>
       </main>
     </div>
   )
