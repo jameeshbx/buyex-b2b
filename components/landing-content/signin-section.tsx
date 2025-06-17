@@ -1,10 +1,11 @@
 "use client"
 
-import React, { useState } from "react"
+import type React from "react"
+import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { signIn } from "next-auth/react"
+import { signIn, getSession } from "next-auth/react"
 import { loginSchema } from "@/schema/signin-validation"
 import type { LoginInput } from "@/schema/signin-validation"
 import { toast } from "sonner"
@@ -44,8 +45,39 @@ export default function LoginPage() {
       })
 
       if (res?.ok) {
+        // Get the session after successful sign-in
+        const session = await getSession()
+
+        if (!session?.user?.role) {
+          toast.error("User role not found")
+          setIsLoading(false)
+          return
+        }
+
+        // Debug: Log the role to see what we're getting
+        console.log("User role from session:", session.user.role)
+
         toast.success("Login successful")
-        router.push("/dashboard")
+
+        // Normalize the role and redirect based on user role
+        const userRole = (session.user.role as string).toUpperCase().replace(/\s+/g, "_")
+        console.log("Normalized role:", userRole)
+
+        switch (userRole) {
+          case "STAFF":
+            router.push("/staff/dashboard")
+            break
+          case "ADMIN":
+            router.push("/admin/dashboard")
+            break
+          case "SUPER_ADMIN":
+          case "SUPERADMIN":
+            router.push("/super-admin/dashboard/native-users")
+            break
+          default:
+            console.log("Unknown role, redirecting to staff dashboard. Role was:", userRole)
+            router.push("/staff/dashboard") // Default fallback
+        }
       } else {
         // Handle specific error cases
         if (res?.error === "CredentialsSignin") {
@@ -116,7 +148,7 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
               />
-              {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+              {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
             </div>
 
             <div className="flex justify-between items-center">
@@ -142,7 +174,6 @@ export default function LoginPage() {
           </p>
         </div>
 
-
         <div className="hidden lg:block absolute bottom-0 left-1/4 transform -translate-x-1/4 pointer-events-none">
           <Image
             src="/unusers.png"
@@ -152,7 +183,6 @@ export default function LoginPage() {
             className="object-contain ml-[-117px] w-[682px] mb-[0px]"
           />
         </div>
-
       </div>
     </div>
   )

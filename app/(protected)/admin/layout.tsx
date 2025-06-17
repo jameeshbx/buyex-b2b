@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from 'react';
-import { Sidebar } from '@/app/(protected)/staff/(components)/Sidebar';
+import { Sidebar } from '@/app/(protected)/admin/(components)/Sidebar';
 
 export default function ClientLayout({
   children,

@@ -1,11 +1,9 @@
+import ChangePassword from '@/components/landing-content/Change-password'
 import React from 'react'
-
-import ChangePassword from '../changepassword/change-pwd'
 
 function page() {
   return (
     <div>
-        
         <ChangePassword/>
     </div>
   )

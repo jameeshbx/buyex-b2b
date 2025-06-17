@@ -1,7 +1,6 @@
 "use client"
-
 import { useState, useMemo, useEffect } from "react"
-import { ChevronDown, ChevronUp, Search, Eye, Trash2, MoreVertical, PenSquare } from "lucide-react"
+import { ChevronDown, ChevronUp, Search, Trash2, MoreVertical, PenSquare } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
@@ -15,42 +14,53 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { countries, existingReceivers } from "@/data/country-data"
+import { countries } from "@/data/country-data"
 import { Topbar } from "../../../(components)/Topbar"
 import { pagesData } from "@/data/navigation"
+import axios from "axios"
+import { toast } from "react-hot-toast"
+import { useRouter } from "next/navigation"
 
 interface Receiver {
   id: string
-  name: string
-  country: string
+  receiverFullName: string
+  receiverCountry: string
   address: string
-  bankName: string
-  bankCountry: string
-  accountNo: string
+  receiverBank: string
+  receiverBankAddress?: string
+  receiverBankCountry: string
+  receiverAccount: string
+  receiverBankSwiftCode?: string
+  iban?: string
+  sortCode?: string
+  transitNumber?: string
+  bsbCode?: string
+  routingNumber?: string
+  anyIntermediaryBank?: "YES" | "NO"
+  intermediaryBankName?: string
+  intermediaryBankAccountNo?: string
+  intermediaryBankIBAN?: string
+  intermediaryBankSwiftCode?: string
   status: boolean
-  createdBy?: string
-  createdAt?: string
+  createdAt: string
+  updatedAt: string
 }
 
 type SortField = keyof Receiver
 type SortDirection = "asc" | "desc"
 
-// Enhanced data with staff information
-const enhancedReceivers: Receiver[] = existingReceivers.map((receiver, index) => ({
-  ...receiver,
-  createdBy: `Staff${String.fromCharCode(65 + (index % 10))}`, // StaffA, StaffB, etc.
-  createdAt: `${9 + (index % 12)}:${20 + ((index * 5) % 40)}AM ${4 - (index % 5)} May`,
-}))
-
 export default function ReceiversTable() {
+  const router = useRouter()
   const [selectedCountry, setSelectedCountry] = useState<string>("")
   const [searchTerm, setSearchTerm] = useState("")
   const [showCountryDropdown, setShowCountryDropdown] = useState(false)
-  const [sortField, setSortField] = useState<SortField>("id")
-  const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
+  const [sortField, setSortField] = useState<SortField>("createdAt")
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc")
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
   const [activeStaffInfo, setActiveStaffInfo] = useState<string | null>(null)
-  const [receivers, setReceivers] = useState<Receiver[]>(enhancedReceivers)
+  const [receivers, setReceivers] = useState<Receiver[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [statusToggleDialog, setStatusToggleDialog] = useState<{
     isOpen: boolean
@@ -63,7 +73,27 @@ export default function ReceiversTable() {
     receiverName: "",
     currentStatus: false,
   })
-  const itemsPerPage = 5
+  const itemsPerPage = 10
+
+  // Fetch receivers from API
+  useEffect(() => {
+    const fetchReceivers = async () => {
+      try {
+        setLoading(true)
+        const response = await axios.get("/api/beneficiaries")
+        setReceivers(response.data)
+        setError(null)
+      } catch (err) {
+        setError("Failed to fetch receivers")
+        console.error("Error fetching receivers:", err)
+        toast.error("Failed to fetch receivers")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchReceivers()
+  }, [])
 
   // Close staff info dropdown when clicking outside
   useEffect(() => {
@@ -73,6 +103,7 @@ export default function ReceiversTable() {
       return () => document.removeEventListener("click", handleClickOutside)
     }
   }, [activeStaffInfo])
+
   const handleSort = (field: SortField) => {
     setSortField(field)
     if (sortField === field) {
@@ -80,8 +111,6 @@ export default function ReceiversTable() {
     } else {
       setSortDirection("asc")
     }
-    // Log the sort state to help debugging
-    console.log(`Sorting by ${field} in ${sortDirection === "asc" ? "ascending" : "descending"} order`)
   }
 
   const handleToggleStatusRequest = (id: string, name: string, currentStatus: boolean) => {
@@ -93,17 +122,42 @@ export default function ReceiversTable() {
     })
   }
 
-  const handleConfirmStatusToggle = () => {
-    const { receiverId } = statusToggleDialog
-    setReceivers((prev) =>
-      prev.map((receiver) => (receiver.id === receiverId ? { ...receiver, status: !receiver.status } : receiver)),
-    )
-    setStatusToggleDialog({
-      isOpen: false,
-      receiverId: "",
-      receiverName: "",
-      currentStatus: false,
-    })
+  const handleConfirmStatusToggle = async () => {
+    const { receiverId, currentStatus } = statusToggleDialog
+    try {
+      const newStatus = !currentStatus
+      
+      // Updated API call with proper data structure
+     await axios.patch(`/api/beneficiaries/${receiverId}`, {
+        status: newStatus
+      })
+
+      // Update local state
+      setReceivers(prev =>
+        prev.map(receiver =>
+          receiver.id === receiverId ? { ...receiver, status: newStatus } : receiver
+        )
+      )
+      
+      toast.success(`Receiver ${newStatus ? "activated" : "deactivated"} successfully`)
+    } catch (error) {
+      console.error("Failed to update receiver status:", error)
+      
+      // More detailed error handling
+      if (axios.isAxiosError(error)) {
+        const errorMessage = error.response?.data?.message || error.response?.data?.error || "Failed to update receiver status"
+        toast.error(errorMessage)
+      } else {
+        toast.error("Failed to update receiver status")
+      }
+    } finally {
+      setStatusToggleDialog({
+        isOpen: false,
+        receiverId: "",
+        receiverName: "",
+        currentStatus: false,
+      })
+    }
   }
 
   const handleCancelStatusToggle = () => {
@@ -127,41 +181,53 @@ export default function ReceiversTable() {
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedRows(new Set(paginatedData.map((r) => r.id)))
+      setSelectedRows(new Set(paginatedData.map(r => r.id)))
     } else {
       setSelectedRows(new Set())
     }
   }
 
-  const handleDelete = (id: string, name: string) => {
+  const handleDelete = async (id: string, name: string) => {
     if (window.confirm(`Are you sure you want to delete ${name}?`)) {
-      setReceivers((prev) => prev.filter((receiver) => receiver.id !== id))
-      setSelectedRows((prev) => {
-        const newSet = new Set(prev)
-        newSet.delete(id)
-        return newSet
-      })
+      try {
+        await axios.delete(`/api/beneficiaries/${id}`)
+        setReceivers(prev => prev.filter(receiver => receiver.id !== id))
+        setSelectedRows(prev => {
+          const newSet = new Set(prev)
+          newSet.delete(id)
+          return newSet
+        })
+        toast.success("Receiver deleted successfully")
+      } catch (error) {
+        console.error("Failed to delete receiver:", error)
+        if (axios.isAxiosError(error)) {
+          const errorMessage = error.response?.data?.message || error.response?.data?.error || "Failed to delete receiver"
+          toast.error(errorMessage)
+        } else {
+          toast.error("Failed to delete receiver")
+        }
+      }
     }
   }
 
-  useEffect(() => {
-    console.log("Sort state changed:", { sortField, sortDirection })
-  }, [sortField, sortDirection])
+  const handleEditReceiver = (receiverId: string) => {
+    router.push(`/staff/dashboard/manage-receivers/add-receivers?edit=${receiverId}`)
+  }
+
   const filteredAndSortedData = useMemo(() => {
-    console.log("Recalculating filtered and sorted data")
     let filtered = [...receivers]
 
     // Filter by country
     if (selectedCountry) {
-      filtered = filtered.filter((receiver) => receiver.country === selectedCountry)
+      filtered = filtered.filter(receiver => receiver.receiverCountry === selectedCountry)
     }
 
     // Filter by search term
     if (searchTerm) {
-      filtered = filtered.filter((receiver) =>
+      filtered = filtered.filter(receiver =>
         Object.values(receiver).some(
-          (value) => value !== undefined && value.toString().toLowerCase().includes(searchTerm.toLowerCase()),
-        ),
+          value => value !== undefined && value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+        )
       )
     }
 
@@ -198,7 +264,6 @@ export default function ReceiversTable() {
       return sortDirection === "asc" ? compareResult : -compareResult
     })
 
-    console.log("Sorted data:", filtered.slice(0, 3)) // Log first 3 items
     return filtered
   }, [receivers, selectedCountry, searchTerm, sortField, sortDirection])
 
@@ -213,19 +278,18 @@ export default function ReceiversTable() {
   useEffect(() => {
     setCurrentPage(1)
   }, [selectedCountry, searchTerm])
+
   const SortIcon = ({ field }: { field: SortField }) => {
     const isActive = sortField === field
     const isAsc = sortDirection === "asc"
 
     if (!isActive) {
-      return (
-        <ChevronDown className="ml-1 h-4 w-4 text-gray-400 opacity-50" data-testid={`sort-icon-${field}-neutral`} />
-      )
+      return <ChevronDown className="ml-1 h-4 w-4 text-gray-400 opacity-50" />
     }
     return isAsc ? (
-      <ChevronUp className="ml-1 h-4 w-4 text-blue-600 font-bold" data-testid={`sort-icon-${field}-asc`} />
+      <ChevronUp className="ml-1 h-4 w-4 text-blue-600 font-bold" />
     ) : (
-      <ChevronDown className="ml-1 h-4 w-4 text-blue-600 font-bold" data-testid={`sort-icon-${field}-desc`} />
+      <ChevronDown className="ml-1 h-4 w-4 text-blue-600 font-bold" />
     )
   }
 
@@ -265,28 +329,60 @@ export default function ReceiversTable() {
     return pages
   }
 
+  if (loading) {
+    return (
+      <div className="w-full min-h-screen flex flex-col bg-gray-50">
+        <div className="sticky top-0 z-40">
+          <Topbar pageData={pagesData.listReceivers} />
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading receivers...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="w-full min-h-screen flex flex-col bg-gray-50">
+        <div className="sticky top-0 z-40">
+          <Topbar pageData={pagesData.listReceivers} />
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-red-600 mb-4">{error}</p>
+            <Button onClick={() => window.location.reload()}>Try Again</Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="w-full min-h-screen flex flex-col bg-gray-50" data-testid="receivers-table">
+    <div className="w-full min-h-screen flex flex-col bg-gray-50">
       <div className="sticky top-0 z-40">
         <Topbar pageData={pagesData.listReceivers} />
       </div>
+
       {/* Status Toggle Confirmation Dialog */}
       <Dialog open={statusToggleDialog.isOpen} onOpenChange={handleCancelStatusToggle}>
-        <DialogContent data-testid="status-toggle-dialog">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Confirm Status Change</DialogTitle>
             <DialogDescription>
-              Are you sure you want to {statusToggleDialog.currentStatus ? "deactivate" : "activate"} the receiver &quot;
-              {statusToggleDialog.receiverName}&quot;?
+              Are you sure you want to {statusToggleDialog.currentStatus ? "deactivate" : "activate"} the receiver
+              &quot;{statusToggleDialog.receiverName}&quot;?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={handleCancelStatusToggle} data-testid="cancel-status-change">
+            <Button variant="outline" onClick={handleCancelStatusToggle}>
               Cancel
             </Button>
             <Button
               onClick={handleConfirmStatusToggle}
-              data-testid="confirm-status-change"
               className={
                 statusToggleDialog.currentStatus ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"
               }
@@ -298,7 +394,7 @@ export default function ReceiversTable() {
       </Dialog>
 
       {/* Fixed Header Section */}
-      <div className="sticky top-0 z-10">
+      <div className="sticky top-0 z-10 bg-white border-b">
         {/* Header with Filter and Search */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 p-4">
           <div className="relative w-full lg:w-auto">
@@ -307,25 +403,19 @@ export default function ReceiversTable() {
                 <Button
                   variant="default"
                   className="bg-dark-blue hover:bg-[#003b61] text-white font-medium w-full lg:w-auto"
-                  data-testid="country-filter-button"
                 >
                   {selectedCountry ? `Filter by country: ${selectedCountry}` : "Filter by country"}
                   <ChevronDown className="ml-2 h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="start"
-                className="w-48 max-h-60 overflow-y-auto"
-                data-testid="country-dropdown"
-              >
-                <DropdownMenuItem onClick={() => setSelectedCountry("")} data-testid="country-option-all">
+              <DropdownMenuContent align="start" className="w-48 max-h-60 overflow-y-auto">
+                <DropdownMenuItem onClick={() => setSelectedCountry("")}>
                   All Countries
                 </DropdownMenuItem>
-                {countries.map((country) => (
+                {countries.map(country => (
                   <DropdownMenuItem
                     key={country.value}
                     onClick={() => setSelectedCountry(country.value)}
-                    data-testid={`country-option-${country.value.toLowerCase()}`}
                   >
                     {country.label}
                   </DropdownMenuItem>
@@ -338,9 +428,8 @@ export default function ReceiversTable() {
             <Input
               placeholder="Search"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={e => setSearchTerm(e.target.value)}
               className="pl-10 w-full lg:w-64 bg-[#f5f8fa] border-gray-300"
-              data-testid="search-input"
             />
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           </div>
@@ -350,14 +439,13 @@ export default function ReceiversTable() {
       {/* Scrollable Table Section */}
       <div className="flex-1 overflow-auto">
         {/* Mobile Card View */}
-        <div className="block lg:hidden space-y-4 p-4" data-testid="mobile-view">
-          {paginatedData.map((receiver) => (
+        <div className="block lg:hidden space-y-4 p-4">
+          {paginatedData.map(receiver => (
             <div
               key={receiver.id}
               className={`bg-white rounded-lg p-4 border shadow-sm ${
                 selectedRows.has(receiver.id) ? "border-blue-500 bg-blue-50" : "border-gray-200"
               }`}
-              data-testid={`mobile-card-${receiver.id}`}
             >
               <div className="flex items-start justify-between mb-3">
                 <label className="flex items-center">
@@ -366,63 +454,60 @@ export default function ReceiversTable() {
                     className="w-4 h-4 text-[#004d7f] border-gray-300 rounded focus:ring-[#004d7f]"
                     checked={selectedRows.has(receiver.id)}
                     onChange={() => handleRowSelect(receiver.id)}
-                    data-testid={`mobile-checkbox-${receiver.id}`}
                   />
                 </label>
                 <div className="flex items-center space-x-2">
                   <Switch
                     checked={receiver.status}
-                    onCheckedChange={() => handleToggleStatusRequest(receiver.id, receiver.name, receiver.status)}
-                    data-testid={`mobile-status-${receiver.id}`}
+                    onCheckedChange={() =>
+                      handleToggleStatusRequest(receiver.id, receiver.receiverFullName, receiver.status)
+                    }
                   />
                   <Button
                     variant="ghost"
                     size="sm"
                     className="text-red-500 hover:text-red-700 p-1"
-                    onClick={() => handleDelete(receiver.id, receiver.name)}
-                    data-testid={`mobile-delete-${receiver.id}`}
+                    onClick={() => handleDelete(receiver.id, receiver.receiverFullName)}
                   >
                     <Trash2 className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-orange-500 hover:text-orange-700 p-1"
-                    data-testid={`mobile-view-${receiver.id}`}
-                  >
-                    <Eye className="h-4 w-4" />
                   </Button>
                   <div className="relative">
                     <Button
                       variant="ghost"
                       size="sm"
                       className="p-1 text-gray-600 hover:text-gray-800"
-                      onClick={(e) => {
+                      onClick={e => {
                         e.preventDefault()
                         e.stopPropagation()
-                        console.log("Three dot clicked for:", receiver.id)
                         setActiveStaffInfo(activeStaffInfo === receiver.id ? null : receiver.id)
                       }}
-                      data-testid={`mobile-more-${receiver.id}`}
                     >
                       <MoreVertical className="h-4 w-4" />
                     </Button>
                     {activeStaffInfo === receiver.id && (
-                      <div
-                        className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg z-20 border"
-                        data-testid={`staff-info-${receiver.id}`}
-                      >
+                      <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg z-20 border">
                         <div className="p-3">
                           <div className="flex items-center space-x-2 mb-2">
                             <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                              <span className="text-white text-sm font-medium">
-                                {receiver.createdBy?.charAt(receiver.createdBy.length - 1)}
-                              </span>
+                              <span className="text-white text-sm font-medium">S</span>
                             </div>
                             <div>
-                              <div className="font-medium text-sm">{receiver.createdBy}</div>
-                              <div className="text-xs text-gray-500">{receiver.createdAt}</div>
+                              <div className="font-medium text-sm">Staff</div>
+                              <div className="text-xs text-gray-500">
+                                {new Date(receiver.createdAt).toLocaleDateString()}
+                              </div>
                             </div>
+                          </div>
+                          <div className="border-t mt-2 pt-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="w-full text-left flex items-center space-x-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                              onClick={() => handleEditReceiver(receiver.id)}
+                            >
+                              <PenSquare className="h-4 w-4" />
+                              <span>Edit Receiver</span>
+                            </Button>
                           </div>
                         </div>
                       </div>
@@ -430,22 +515,22 @@ export default function ReceiversTable() {
                   </div>
                 </div>
               </div>
-              <div className="space-y-2">                
+              <div className="space-y-2">
                 <div>
                   <span className="text-xs text-gray-500 uppercase tracking-wide font-jakarta">ID</span>
                   <p className="font-bold text-gray-900">{receiver.id}</p>
                 </div>
                 <div>
                   <span className="text-xs text-gray-500 uppercase tracking-wide font-jakarta">Name</span>
-                  <p className="font-bold text-gray-900">{receiver.name}</p>
+                  <p className="font-bold text-gray-900">{receiver.receiverFullName}</p>
                 </div>
                 <div>
                   <span className="text-xs text-gray-500 uppercase tracking-wide font-jakarta">Country</span>
-                  <p className="text-gray-600">{receiver.country}</p>
+                  <p className="text-gray-600">{receiver.receiverCountry}</p>
                 </div>
                 <div>
                   <span className="text-xs text-gray-500 uppercase tracking-wide font-jakarta">Account No.</span>
-                  <p className="font-bold text-gray-900">{receiver.accountNo}</p>
+                  <p className="font-bold text-gray-900">{receiver.receiverAccount}</p>
                 </div>
               </div>
             </div>
@@ -453,7 +538,7 @@ export default function ReceiversTable() {
         </div>
 
         {/* Desktop Table */}
-        <div className="hidden lg:block overflow-x-auto bg-white mx-4 rounded-lg shadow-sm" data-testid="desktop-view">
+        <div className="hidden lg:block overflow-x-auto bg-white mx-4 rounded-lg shadow-sm">
           <Table className="min-w-full">
             <TableHeader className="sticky top-0 bg-white z-10">
               <TableRow className="bg-white border-b">
@@ -462,127 +547,90 @@ export default function ReceiversTable() {
                     type="checkbox"
                     className="w-4 h-4 text-[#004d7f] border-gray-300 rounded focus:ring-[#004d7f]"
                     checked={selectedRows.size === paginatedData.length && paginatedData.length > 0}
-                    onChange={(e) => handleSelectAll(e.target.checked)}
-                    data-testid="select-all-checkbox"
+                    onChange={e => handleSelectAll(e.target.checked)}
                   />
                 </TableHead>
                 <TableHead
                   className="cursor-pointer select-none hover:bg-blue-50 transition-colors duration-150 min-w-[120px]"
                   onClick={() => handleSort("id")}
-                  data-testid="sort-header-id"
                 >
-                  <div  
-                    className="flex items-center font-medium font-jakarta text-gray-700 text-xs uppercase cursor-pointer"
-                    onClick={() => handleSort("id")}
-                    data-testid="sort-header-id-inner">
+                  <div className="flex items-center font-medium font-jakarta text-gray-700 text-xs uppercase cursor-pointer">
                     Receiver ID
                     <SortIcon field="id" />
                   </div>
                 </TableHead>
                 <TableHead
                   className="cursor-pointer select-none hover:bg-blue-50 transition-colors duration-150 min-w-[180px]"
-                  onClick={() => handleSort("name")}
-                  data-testid="sort-header-name"
+                  onClick={() => handleSort("receiverFullName")}
                 >
-                  <div 
-                    className="flex items-center font-medium font-jakarta text-gray-700 text-xs uppercase cursor-pointer"
-                    onClick={() => handleSort("name")}
-                    data-testid="sort-header-name-inner">
+                  <div className="flex items-center font-medium font-jakarta text-gray-700 text-xs uppercase cursor-pointer">
                     Name
-                    <SortIcon field="name" />
+                    <SortIcon field="receiverFullName" />
                   </div>
                 </TableHead>
                 <TableHead
                   className="cursor-pointer select-none hover:bg-blue-50 transition-colors duration-150 min-w-[100px]"
-                  onClick={() => handleSort("country")}
-                  data-testid="sort-header-country"
+                  onClick={() => handleSort("receiverCountry")}
                 >
-                  <div 
-                    className="flex items-center font-medium font-jakarta text-gray-700 text-xs uppercase cursor-pointer"
-                    onClick={() => handleSort("country")}
-                    data-testid="sort-header-country-inner"
-                    >
+                  <div className="flex items-center font-medium font-jakarta text-gray-700 text-xs uppercase cursor-pointer">
                     Country
-                    <SortIcon field="country" />
+                    <SortIcon field="receiverCountry" />
                   </div>
                 </TableHead>
                 <TableHead
                   className="cursor-pointer select-none hover:bg-blue-50 transition-colors duration-150 min-w-[200px]"
                   onClick={() => handleSort("address")}
-                  data-testid="sort-header-address"
                 >
-                  <div 
-                    className="flex items-center font-medium font-jakarta text-gray-700 text-xs uppercase cursor-pointer"
-                    onClick={() => handleSort("address")}
-                    data-testid="sort-header-address-inner">
+                  <div className="flex items-center font-medium font-jakarta text-gray-700 text-xs uppercase cursor-pointer">
                     Address
                     <SortIcon field="address" />
                   </div>
                 </TableHead>
                 <TableHead
                   className="cursor-pointer select-none hover:bg-blue-50 transition-colors duration-150 min-w-[150px]"
-                  onClick={() => handleSort("bankName")}
-                  data-testid="sort-header-bankName"
+                  onClick={() => handleSort("receiverBank")}
                 >
-                  <div 
-                    className="flex items-center font-medium font-jakarta text-gray-700 text-xs uppercase cursor-pointer"
-                    onClick={() => handleSort("bankName")}
-                    data-testid="sort-header-bankName-inner"
-                    >
+                  <div className="flex items-center font-medium font-jakarta text-gray-700 text-xs uppercase cursor-pointer">
                     Bank name
-                    <SortIcon field="bankName" />
+                    <SortIcon field="receiverBank" />
                   </div>
                 </TableHead>
                 <TableHead
                   className="cursor-pointer select-none hover:bg-blue-50 transition-colors duration-150 min-w-[120px]"
-                  onClick={() => handleSort("bankCountry")}
-                  data-testid="sort-header-bankCountry"
+                  onClick={() => handleSort("receiverBankCountry")}
                 >
-                  <div
-                    className="flex items-center font-medium text-gray-700 font-jakarta text-xs uppercase cursor-pointer"
-                    onClick={() => handleSort("bankCountry")}
-                    data-testid="sort-header-bankCountry-inner"
-                    >
+                  <div className="flex items-center font-medium text-gray-700 font-jakarta text-xs uppercase cursor-pointer">
                     Bank country
-                    <SortIcon field="bankCountry" />
-                    </div>
+                    <SortIcon field="receiverBankCountry" />
+                  </div>
                 </TableHead>
                 <TableHead
                   className="cursor-pointer select-none hover:bg-blue-50 transition-colors duration-150 min-w-[140px]"
-                  onClick={() => handleSort("accountNo")}
-                  data-testid="sort-header-accountNo"
+                  onClick={() => handleSort("receiverAccount")}
                 >
-                    <div
-                    className="flex items-center font-medium font-jakarta text-gray-700 text-xs uppercase cursor-pointer"
-                    onClick={() => handleSort("accountNo")}
-                    data-testid="sort-header-accountNo-inner"
-                    >
+                  <div className="flex items-center font-medium font-jakarta text-gray-700 text-xs uppercase cursor-pointer">
                     Account No.
-                    <SortIcon field="accountNo" />
-                    </div>
+                    <SortIcon field="receiverAccount" />
+                  </div>
                 </TableHead>
                 <TableHead
                   className="cursor-pointer select-none hover:bg-blue-50 transition-colors duration-150 min-w-[80px]"
                   onClick={() => handleSort("status")}
-                  data-testid="sort-header-status"
                 >
                   <div className="flex items-center font-medium font-jakarta text-gray-700 text-xs uppercase">
                     Status
                   </div>
                 </TableHead>
                 <TableHead>
-                  <div className="font-medium text-gray-700 text-xs font-jakarta min-w-[120px] uppercase">
-                    Action
-                  </div>
-                  </TableHead>
+                  <div className="font-medium text-gray-700 text-xs font-jakarta min-w-[120px] uppercase">Action</div>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedData.map((receiver) => (
+              {paginatedData.map(receiver => (
                 <TableRow
                   key={receiver.id}
                   className={`${selectedRows.has(receiver.id) ? "bg-dark-blue" : "bg-[#f5f8fa]"} border-b-4 border-white hover:bg-gray-50`}
-                  data-testid={`table-row-${receiver.id}`}
                 >
                   <TableCell>
                     <input
@@ -590,41 +638,35 @@ export default function ReceiversTable() {
                       className="w-4 h-4 text-[#004d7f] border-gray-300 rounded focus:ring-[#004d7f]"
                       checked={selectedRows.has(receiver.id)}
                       onChange={() => handleRowSelect(receiver.id)}
-                      data-testid={`checkbox-${receiver.id}`}
                     />
                   </TableCell>
-                  <TableCell className="font-medium" data-testid={`cell-id-${receiver.id}`}>
-                    <div className="text-gray-900 font-semibold">
-                      {receiver.id}
-                    </div>
+                  <TableCell className="font-medium">
+                    <div className="text-gray-900 font-semibold">{receiver.id}</div>
                   </TableCell>
-                  <TableCell className="font-medium" data-testid={`cell-name-${receiver.id}`}>
-                    <div className="text-gray-900 font-semibold">
-                      {receiver.name}
-                    </div>
+                  <TableCell className="font-medium">
+                    <div className="text-gray-900 font-semibold">{receiver.receiverFullName}</div>
                   </TableCell>
-                  <TableCell className="text-gray-600" data-testid={`cell-country-${receiver.id}`}>
-                    {receiver.country}
+                  <TableCell className="text-gray-600">
+                    {receiver.receiverCountry}
                   </TableCell>
-                  <TableCell className="text-gray-600" data-testid={`cell-address-${receiver.id}`}>
+                  <TableCell className="text-gray-600">
                     {receiver.address}
                   </TableCell>
-                  <TableCell className="text-gray-600" data-testid={`cell-bankName-${receiver.id}`}>
-                    {receiver.bankName}
+                  <TableCell className="text-gray-600">
+                    {receiver.receiverBank}
                   </TableCell>
-                  <TableCell className="text-gray-600" data-testid={`cell-bankCountry-${receiver.id}`}>
-                    {receiver.bankCountry}
+                  <TableCell className="text-gray-600">
+                    {receiver.receiverBankCountry}
                   </TableCell>
-                  <TableCell className="font-medium" data-testid={`cell-accountNo-${receiver.id}`}>
-                    <div className="text-gray-900 font-semibold">
-                      {receiver.accountNo}
-                    </div>
+                  <TableCell className="font-medium">
+                    <div className="text-gray-900 font-semibold">{receiver.receiverAccount}</div>
                   </TableCell>
                   <TableCell>
                     <Switch
                       checked={receiver.status}
-                      onCheckedChange={() => handleToggleStatusRequest(receiver.id, receiver.name, receiver.status)}
-                      data-testid={`status-switch-${receiver.id}`}
+                      onCheckedChange={() =>
+                        handleToggleStatusRequest(receiver.id, receiver.receiverFullName, receiver.status)
+                      }
                     />
                   </TableCell>
                   <TableCell>
@@ -633,49 +675,35 @@ export default function ReceiversTable() {
                         variant="ghost"
                         size="sm"
                         className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2"
-                        onClick={() => handleDelete(receiver.id, receiver.name)}
-                        data-testid={`delete-button-${receiver.id}`}
+                        onClick={() => handleDelete(receiver.id, receiver.receiverFullName)}
                       >
                         <Trash2 className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-orange-500 hover:text-orange-700 hover:bg-orange-50 p-2"
-                        onClick={() => console.log(`View details for ${receiver.id}`)}
-                        data-testid={`view-button-${receiver.id}`}
-                      >
-                        <Eye className="h-4 w-4" />
                       </Button>
                       <div className="relative">
                         <Button
                           variant="ghost"
                           size="sm"
                           className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50"
-                          onClick={(e) => {
+                          onClick={e => {
                             e.preventDefault()
                             e.stopPropagation()
-                            console.log("Three dot clicked for:", receiver.id)
                             setActiveStaffInfo(activeStaffInfo === receiver.id ? null : receiver.id)
                           }}
-                          data-testid={`more-button-${receiver.id}`}
                         >
                           <MoreVertical className="h-4 w-4" />
                         </Button>
                         {activeStaffInfo === receiver.id && (
-                          <div
-                            className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg z-20 border"
-                            data-testid={`staff-dropdown-${receiver.id}`}
-                          >
-                            <div className="p-3">                              <div className="flex items-center space-x-2 mb-2">
+                          <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg z-20 border">
+                            <div className="p-3">
+                              <div className="flex items-center space-x-2 mb-2">
                                 <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                                  <span className="text-white text-sm font-medium">
-                                    {receiver.createdBy?.charAt(receiver.createdBy.length - 1)}
-                                  </span>
+                                  <span className="text-white text-sm font-medium">S</span>
                                 </div>
                                 <div>
-                                  <div className="font-medium text-sm">{receiver.createdBy}</div>
-                                  <div className="text-xs text-gray-500">{receiver.createdAt}</div>
+                                  <div className="font-medium text-sm">Staff</div>
+                                  <div className="text-xs text-gray-500">
+                                    {new Date(receiver.createdAt).toLocaleDateString()}
+                                  </div>
                                 </div>
                               </div>
                               <div className="border-t mt-2 pt-2">
@@ -683,7 +711,7 @@ export default function ReceiversTable() {
                                   variant="ghost"
                                   size="sm"
                                   className="w-full text-left flex items-center space-x-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                  onClick={() => console.log(`Edit ${receiver.id}`)}
+                                  onClick={() => handleEditReceiver(receiver.id)}
                                 >
                                   <PenSquare className="h-4 w-4" />
                                   <span>Edit Receiver</span>
@@ -703,15 +731,14 @@ export default function ReceiversTable() {
       </div>
 
       {/* Fixed Pagination Footer */}
-      <div className="sticky bottom-0 bg-white border-t p-4 shadow-sm" data-testid="pagination">
+      <div className="sticky bottom-0 bg-white border-t p-4 shadow-sm">
         <div className="flex items-center justify-center gap-1">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
             disabled={currentPage === 1}
             className="px-3 py-1 text-sm border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            data-testid="prev-button"
           >
             Prev
           </Button>
@@ -732,20 +759,18 @@ export default function ReceiversTable() {
                     ? "bg-[#004d7f] hover:bg-[#003b61] text-white border-[#004d7f]"
                     : "border-gray-300 hover:bg-gray-50"
                 }`}
-                data-testid={`page-button-${page}`}
               >
                 {page}
               </Button>
-            ),
+            )
           )}
 
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
             disabled={currentPage === totalPages || totalPages === 0}
             className="px-3 py-1 text-sm border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            data-testid="next-button"
           >
             Next
           </Button>

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
 import {
   Dialog,
   DialogContent,
@@ -14,11 +15,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { User, UserType } from "@/lib/types"
-import { ChevronDown, ChevronUp, Search, Pencil, Trash2 } from "lucide-react"
+import { ChevronDown, ChevronUp, Search, Pencil, Trash2, CheckCircle } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { z } from "zod"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -26,20 +31,29 @@ function cn(...inputs: ClassValue[]) {
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
   })
 }
 
 type SortField = "date" | "userType" | "name" | "email"
 type SortDirection = "asc" | "desc"
 
+const editUserSchema = z.object({
+  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
+  email: z.string().email({ message: "Please enter a valid email address" }),
+  userType: z.enum(["Admin", "Staff"]),
+})
+
+type EditUserFormData = z.infer<typeof editUserSchema>
+
 interface UserTableProps {
   users: User[]
   onToggleStatus: (id: string) => void
   onDeleteUser: (id: string) => void
+  onEditUser: (id: string, userData: { name: string; email: string; userType: UserType }) => Promise<boolean>
   filteredUserType: UserType | "all"
   setFilteredUserType: (type: UserType | "all") => void
   searchQuery: string
@@ -50,6 +64,7 @@ export function UserTable({
   users,
   onToggleStatus,
   onDeleteUser,
+  onEditUser,
   filteredUserType,
   setFilteredUserType,
   searchQuery,
@@ -71,6 +86,31 @@ export function UserTable({
     open: false,
     userId: "",
     userName: "",
+  })
+  const [editDialog, setEditDialog] = useState<{
+    open: boolean
+    user: User | null
+  }>({
+    open: false,
+    user: null,
+  })
+  const [successDialog, setSuccessDialog] = useState<{
+    open: boolean
+    message: string
+  }>({
+    open: false,
+    message: "",
+  })
+  const [selectedUserType, setSelectedUserType] = useState<UserType>("Admin")
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = useForm<EditUserFormData>({
+    resolver: zodResolver(editUserSchema),
   })
 
   const itemsPerPage = 10
@@ -129,7 +169,6 @@ export function UserTable({
   const currentUsers = sortedUsers.slice(startIndex, endIndex)
   const totalPages = Math.ceil(sortedUsers.length / itemsPerPage)
 
-
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc")
@@ -137,7 +176,7 @@ export function UserTable({
       setSortField(field)
       setSortDirection("asc")
     }
-    setCurrentPage(1) // Reset to first page when sorting
+    setCurrentPage(1)
   }
 
   const getSortIcon = (field: SortField) => {
@@ -151,8 +190,6 @@ export function UserTable({
     )
   }
 
-
-
   const handleApplyFilters = () => {
     if (tempFilters.admin && tempFilters.staff) {
       setFilteredUserType("all")
@@ -161,11 +198,10 @@ export function UserTable({
     } else if (tempFilters.staff) {
       setFilteredUserType("Staff")
     } else {
-      // If neither is selected, show all
       setFilteredUserType("all")
     }
     setFilterOpen(false)
-    setCurrentPage(1) // Reset to first page when filtering
+    setCurrentPage(1)
   }
 
   const handleStatusToggle = (userId: string, userName: string) => {
@@ -181,6 +217,33 @@ export function UserTable({
     setStatusToggleDialog({ open: false, userId: "", userName: "" })
   }
 
+  const handleEditClick = (user: User) => {
+    setEditDialog({ open: true, user })
+    setSelectedUserType(user.userType)
+    setTimeout(() => {
+      reset({
+        name: user.name,
+        email: user.email,
+        userType: user.userType,
+      })
+    }, 0)
+  }
+
+  const onEditSubmit = async (data: EditUserFormData) => {
+    if (!editDialog.user) return
+
+    const success = await onEditUser(editDialog.user.id, data)
+
+    if (success) {
+      setEditDialog({ open: false, user: null })
+      setSuccessDialog({
+        open: true,
+        message: `User "${data.name}" has been updated successfully!`,
+      })
+      reset()
+    }
+  }
+
   const getPageNumbers = () => {
     const pages: (number | string)[] = []
     const maxVisiblePages = 5
@@ -190,15 +253,12 @@ export function UserTable({
         pages.push(i)
       }
     } else {
-      // Show first page
       pages.push(1)
 
-      // Show ellipsis if current page is far from start
       if (currentPage > 3) {
         pages.push("...")
       }
 
-      // Show pages around current page
       const start = Math.max(2, currentPage - 1)
       const end = Math.min(totalPages - 1, currentPage + 1)
 
@@ -208,12 +268,10 @@ export function UserTable({
         }
       }
 
-      // Show ellipsis if current page is far from end
       if (currentPage < totalPages - 2) {
         pages.push("...")
       }
 
-      // Show last page
       if (totalPages > 1) {
         pages.push(totalPages)
       }
@@ -259,11 +317,7 @@ export function UserTable({
                 </div>
               </div>
               <div className="flex justify-end">
-                <Button
-                  size="sm"
-                  onClick={handleApplyFilters}
-                  className="bg-[#004976] hover:bg-[#003a5e]"
-                >
+                <Button size="sm" onClick={handleApplyFilters} className="bg-[#004976] hover:bg-[#003a5e]">
                   Apply
                 </Button>
               </div>
@@ -336,14 +390,14 @@ export function UserTable({
               ) : (
                 currentUsers.map((user) => (
                   <TableRow key={user.id}>
-                    <TableCell className="whitespace-nowrap">
-                      {formatDate(user.date)}
-                    </TableCell>
+                    <TableCell className="whitespace-nowrap">{formatDate(user.date)}</TableCell>
                     <TableCell>
-                      <span className={cn(
-                        "px-2 py-1 rounded-full text-xs font-medium",
-                        user.userType === "Admin" ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800"
-                      )}>
+                      <span
+                        className={cn(
+                          "px-2 py-1 rounded-full text-xs font-medium",
+                          user.userType === "Admin" ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800",
+                        )}
+                      >
                         {user.userType}
                       </span>
                     </TableCell>
@@ -371,6 +425,7 @@ export function UserTable({
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 text-blue-500 hover:bg-blue-50"
+                          onClick={() => handleEditClick(user)}
                         >
                           <Pencil className="h-4 w-4" />
                           <span className="sr-only">Edit</span>
@@ -402,7 +457,6 @@ export function UserTable({
                 onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
                 className="text-sm px-3 py-1"
-                data-cy="prev-page"
               >
                 Prev
               </Button>
@@ -420,7 +474,6 @@ export function UserTable({
                         "text-sm px-3 py-1 min-w-[36px]",
                         currentPage === page ? "bg-[#004976] hover:bg-[#003a5e] text-white" : "hover:bg-gray-50",
                       )}
-                      data-cy={`page-${page}`}
                     >
                       {page}
                     </Button>
@@ -434,7 +487,6 @@ export function UserTable({
                 onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages}
                 className="text-sm px-3 py-1"
-                data-cy="next-page"
               >
                 Next
               </Button>
@@ -448,7 +500,7 @@ export function UserTable({
         open={statusToggleDialog.open}
         onOpenChange={(open) => setStatusToggleDialog({ open, userId: "", userName: "" })}
       >
-        <DialogContent data-cy="status-toggle-dialog" className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Confirm Status Change</DialogTitle>
             <DialogDescription>
@@ -459,17 +511,110 @@ export function UserTable({
             <Button
               variant="outline"
               onClick={() => setStatusToggleDialog({ open: false, userId: "", userName: "" })}
-              data-cy="cancel-status-toggle"
               className="w-full sm:w-auto"
             >
               Cancel
             </Button>
-            <Button
-              onClick={confirmStatusToggle}
-              className="bg-[#004976] hover:bg-[#003a5e] w-full sm:w-auto"
-              data-cy="confirm-status-toggle"
-            >
+            <Button onClick={confirmStatusToggle} className="bg-[#004976] hover:bg-[#003a5e] w-full sm:w-auto">
               Confirm
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit User Dialog */}
+      <Dialog
+        open={editDialog.open}
+        onOpenChange={(open) => {
+          setEditDialog({ open, user: null })
+          if (!open) {
+            reset()
+            setSelectedUserType("Admin")
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md z-50">
+          <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+            <DialogDescription>Update the user information below.</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit(onEditSubmit)} className="space-y-4 relative z-10">
+            <div className="space-y-2">
+              <Label htmlFor="edit-userType">User Type</Label>
+              <Select
+                value={selectedUserType}
+                onValueChange={(value: UserType) => {
+                  setSelectedUserType(value)
+                  setValue("userType", value)
+                }}
+              >
+                <SelectTrigger id="edit-userType" className="z-10">
+                  <SelectValue placeholder="Select user type" />
+                </SelectTrigger>
+                <SelectContent className="z-[60]">
+                  <SelectItem value="Admin">Admin</SelectItem>
+                  <SelectItem value="Staff">Staff</SelectItem>
+                </SelectContent>
+              </Select>
+              {errors.userType && <p className="text-red-500 text-xs">{errors.userType.message}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Name</Label>
+              <Input id="edit-name" placeholder="Enter user name" {...register("name")} />
+              {errors.name && <p className="text-red-500 text-xs">{errors.name.message}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-email">Email</Label>
+              <Input id="edit-email" type="email" placeholder="Enter email address" {...register("email")} />
+              {errors.email && <p className="text-red-500 text-xs">{errors.email.message}</p>}
+            </div>
+
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setEditDialog({ open: false, user: null })
+                  reset()
+                }}
+                className="w-full sm:w-auto"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="bg-[#004976] hover:bg-[#003a5e] w-full sm:w-auto"
+              >
+                {isSubmitting ? "Updating..." : "Update User"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Success Dialog */}
+      <Dialog open={successDialog.open} onOpenChange={(open) => setSuccessDialog({ open, message: "" })}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="flex-shrink-0">
+                <CheckCircle className="h-8 w-8 text-green-500" />
+              </div>
+              <div>
+                <DialogTitle className="text-green-800">Success!</DialogTitle>
+                <DialogDescription className="text-green-600">{successDialog.message}</DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              onClick={() => setSuccessDialog({ open: false, message: "" })}
+              className="bg-[#004976] hover:bg-[#003a5e] w-full"
+            >
+              OK
             </Button>
           </DialogFooter>
         </DialogContent>

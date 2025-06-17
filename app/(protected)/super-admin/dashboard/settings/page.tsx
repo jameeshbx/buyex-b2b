@@ -1,11 +1,10 @@
-import LoginPage from '@/components/landing-content/signin-section'
-
+import Settings from '@/components/landing-content/Settings'
 import React from 'react'
 
 function page() {
   return (
     <div>
-        <LoginPage/>
+        <Settings/>
     </div>
   )
 }
