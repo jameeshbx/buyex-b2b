@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { ChevronDown, ChevronRight, Upload, Search, Filter } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -8,15 +8,42 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
 import React from "react"
-import { type Order, initialOrders, statusOptions, nonChangeableStatuses } from "@/data/admin-dashboard"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import Image from "next/image"
 import { Input } from "@/components/ui/input"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
+type Order = {
+  id: string
+  purpose: string
+  studentName: string
+  currency: string
+  amount: number
+  fxRate: number
+  fxRateUpdated?: boolean
+  status: string
+  createdAt: string
+  receiverBankCountry?: string
+  forexPartner?: string
+  receiverAccount?: string
+  // Add other fields as needed
+}
+
+const statusOptions = [
+  "Received",
+  "Quote downloaded",
+  "Authorized",
+  "Documents placed",
+  "Verified",
+  "Pending",
+  "Rejected",
+  "Completed",
+]
+const nonChangeableStatuses = ["Quote downloaded", "Documents placed", "Verified", "Rejected", "Completed"]
+
 export default function Dashboard() {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
-  const [orders, setOrders] = useState<Order[]>(initialOrders)
+  const [orders, setOrders] = useState<Order[]>([])
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [showRateModal, setShowRateModal] = useState(false)
   const [expandedAuthorize, setExpandedAuthorize] = useState<Record<string, boolean>>({})
@@ -27,6 +54,27 @@ export default function Dashboard() {
   const [visibleRows, setVisibleRows] = useState(5)
   const [selectedPurpose, setSelectedPurpose] = useState<string>("all")
   const [searchTerm, setSearchTerm] = useState<string>("")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // Fetch orders from API
+  useEffect(() => {
+    const fetchOrders = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const res = await fetch("/api/orders")
+        if (!res.ok) throw new Error("Failed to fetch orders")
+        const data = await res.json()
+        setOrders(data)
+      } catch (err: any) {
+        setError(err.message || "Error fetching orders")
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchOrders()
+  }, [])
 
   const toggleRowExpansion = (orderId: string) => {
     const newExpanded = new Set(expandedRows)
@@ -38,31 +86,57 @@ export default function Dashboard() {
     setExpandedRows(newExpanded)
   }
 
-  const handleStatusChange = (orderId: string, newStatus: string) => {
-    setOrders((prevOrders) =>
-      prevOrders.map((order) => (order.id === orderId ? { ...order, status: newStatus } : order)),
-    )
+  const handleStatusChange = async (orderId: string, newStatus: string) => {
+    try {
+      setLoading(true)
+      const res = await fetch(`/api/orders/${orderId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      })
+      if (!res.ok) throw new Error("Failed to update status")
+      const updatedOrder = await res.json()
+      setOrders((prevOrders) =>
+        prevOrders.map((order) => (order.id === orderId ? updatedOrder : order)),
+      )
+    } catch (err: any) {
+      setError(err.message || "Error updating status")
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleUpdateRateClick = (order: Order) => {
     setSelectedOrder(order)
+    setIbrRate(order.fxRate?.toString() || "")
+    setCustomerRate(order.fxRate?.toString() || "")
+    setSettlementRate("")
     setShowRateModal(true)
   }
 
-  const handleRateUpdate = (orderId: string, newRate: number) => {
-    setOrders((prevOrders) =>
-      prevOrders.map((order) => (order.id === orderId ? { ...order, fxRateUpdated: true, fxRate: newRate } : order)),
-    )
-    setShowRateModal(false)
+  const handleRateUpdate = async (orderId: string, newRate: number) => {
+    try {
+      setLoading(true)
+      const res = await fetch(`/api/orders/${orderId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fxRate: newRate }),
+      })
+      if (!res.ok) throw new Error("Failed to update FX rate")
+      const updatedOrder = await res.json()
+      setOrders((prevOrders) =>
+        prevOrders.map((order) => (order.id === orderId ? updatedOrder : order)),
+      )
+      setShowRateModal(false)
+    } catch (err: any) {
+      setError(err.message || "Error updating FX rate")
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleSeeMoreClick = () => {
-    setVisibleRows((prev) => prev + 5) // Increase visible rows by 5
-  }
-
-  const handleSeeLessClick = () => {
-    setVisibleRows(5) // Reset to initial 5 rows
-  }
+  const handleSeeMoreClick = () => setVisibleRows((prev) => prev + 5)
+  const handleSeeLessClick = () => setVisibleRows(5)
 
   const getStatusBadgeColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -134,25 +208,25 @@ export default function Dashboard() {
     "GIC Canada fee deposite",
   ]
 
-  // Remove this line:
-  // const uniquePurposes = Array.from(new Set(orders.map((order) => order.purpose)))
-
   // Filter orders based on purpose and search term
   const filteredOrders = orders.filter((order) => {
     const matchesPurpose = selectedPurpose === "all" || order.purpose === selectedPurpose
     const matchesSearch =
       searchTerm === "" ||
       order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.studentName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.purpose.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.currency.toLowerCase().includes(searchTerm.toLowerCase())
 
     return matchesPurpose && matchesSearch
   })
 
+  if (loading) return <div className="p-8 text-center">Loading...</div>
+  if (error) return <div className="p-8 text-center text-red-500">{error}</div>
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen  bg-gray-50">
+      <div className="max-w-7xl mx-auto  py-8">
         {/* Header */}
         <div className="mb-8 pt-6">
           <h1 className="text-2xl sm:text-3xl font-bold font-jakarta text-gray-900 mb-2">Dashboard</h1>
@@ -266,11 +340,11 @@ export default function Dashboard() {
                         )}
                         <span className="font-semibold text-sm font-jakarta text-gray-900">{order.id}</span>
                       </div>
-                      <div className="text-gray-600 text-sm font-jakarta">{order.date}</div>
+                      <div className="text-gray-600 text-sm font-jakarta">{new Date(order.createdAt).toLocaleDateString()}</div>
                       <div className="text-gray-600 text-sm font-jakarta">{order.purpose}</div>
-                      <div className="text-gray-600 text-sm font-jakarta">{order.name}</div>
+                      <div className="text-gray-600 text-sm font-jakarta">{order.studentName}</div>
                       <div className="text-gray-600 text-sm font-jakarta">{order.currency}</div>
-                      <div className="font-semibold text-sm font-jakarta text-gray-900">{order.fcyAmt}</div>
+                      <div className="font-semibold text-sm font-jakarta text-gray-900">{order.amount}</div>
                       <div>
                         <button
                           className={`w-24 h-7 rounded-sm text-xs font-medium border ${
@@ -309,12 +383,11 @@ export default function Dashboard() {
                           )}
                           <div>
                             <div className="font-medium font-jakarta text-gray-900">#{order.id}</div>
-                            <div className="text-xs sm:text-sm font-jakarta text-gray-600">{order.date}</div>
                           </div>
                         </div>
                         <div className="text-right">
                           <div className="font-medium font-jakarta text-gray-900">
-                            {order.fcyAmt} {order.currency}
+                            {new Date(order.createdAt).toLocaleDateString()}
                           </div>
                           <div className="text-xs sm:text-sm font-jakarta text-gray-600">{order.purpose}</div>
                         </div>
@@ -324,7 +397,7 @@ export default function Dashboard() {
                         <div>
                           <span className="text-xs sm:text-sm text-gray-600 font-jakarta">Name:</span>
                           <div className="font-medium font-jakarta text-gray-900 text-sm sm:text-base">
-                            {order.name}
+                            {order.studentName}
                           </div>
                         </div>
                         <div className="text-right">
@@ -352,7 +425,7 @@ export default function Dashboard() {
                         <div onClick={(e) => e.stopPropagation()}>
                           <Button size="sm" className="bg-dark-blue text-white h-7 px-3">
                             <Upload className="h-3 w-3 mr-1" />
-                            <span className="text-xs">Uploads</span>
+                            Uploads
                           </Button>
                         </div>
                       </div>
@@ -378,7 +451,7 @@ export default function Dashboard() {
                               Receiver&apos;s full name
                             </h4>
                             <p className="text-gray-600 text-sm sm:text-base font-jakarta bg-gray-50 p-2 sm:p-3 rounded-sm">
-                              {order.name}
+                              {order.studentName}
                             </p>
                           </div>
                           <div>
@@ -386,7 +459,7 @@ export default function Dashboard() {
                               Receiver&apos;s account
                             </h4>
                             <p className="text-gray-600 text-xs sm:text-sm font-jakarta break-all bg-gray-50 p-2 sm:p-3 rounded-sm">
-                              {order.receiverAccount}
+                              {order.receiverAccount || "-"}
                             </p>
                           </div>
                           <div>
@@ -394,7 +467,7 @@ export default function Dashboard() {
                               Receiver Country
                             </h4>
                             <p className="text-gray-600 text-sm sm:text-base font-jakarta bg-gray-50 p-2 sm:p-3 rounded-sm">
-                              {order.receiverCountry}
+                              {order.receiverBankCountry || "-"}
                             </p>
                           </div>
                           <div>
@@ -402,11 +475,11 @@ export default function Dashboard() {
                               Forex Partner
                             </h4>
                             <p className="text-gray-600 text-sm sm:text-base font-jakarta bg-gray-50 p-2 sm:p-3 rounded-sm">
-                              {order.forexPartner}
+                              {order.forexPartner || "-"}
                             </p>
                           </div>
                         </div>
-
+                        
                         {/* Authorization Section */}
                         {order.status !== "Authorized" && (
                           <div className="mt-4 sm:mt-6">
