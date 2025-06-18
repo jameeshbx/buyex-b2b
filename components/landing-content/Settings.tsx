@@ -1,89 +1,39 @@
-"use client";
+"use client"
 
-import type React from "react";
+import type React from "react"
 
-import { useEffect, useState } from "react";
-import Head from "next/head";
-import Link from "next/link";
-import Image from "next/image";
+import { useState } from "react"
+import Head from "next/head"
+import Link from "next/link"
+import Image from "next/image"
 
 interface FormData {
-  fullName: string;
-  username: string;
-  bio: string;
-  email: string;
-  phoneNumber: string;
+  fullName: string
+  username: string
+  bio: string
+  email: string
+  phoneNumber: string
 }
 
 export default function Settings() {
-  const [activeTab, setActiveTab] = useState("profile");
+  const [activeTab, setActiveTab] = useState("profile")
   const [formData, setFormData] = useState<FormData>({
     fullName: "",
     username: "",
     bio: "",
     email: "",
     phoneNumber: "",
-  });
+  })
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await fetch("/api/users/me");
-        const data = await response.json();
-        setFormData({
-          fullName: data.name || "",
-          username: data.name.split(" ").join("").toLowerCase() || "",
-          bio: data.bio || "",
-          email: data.email || "",
-          phoneNumber: data.phoneNumber || "",
-        });
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-      }
-    };
-
-    fetchUser();
-  }, []);
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-    }));
-  };
+    }))
+  }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const response = await fetch("/api/users/me", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: formData.fullName,
-          email: formData.email,
-          bio: formData.bio,
-          phoneNumber: formData.phoneNumber,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update profile");
-      }
-
-      // Show success message or handle successful update
-      alert("Profile updated successfully!");
-    } catch (error) {
-      console.error("Error updating profile:", error);
-      alert("Failed to update profile. Please try again.");
-    }
-  };
-
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -97,16 +47,15 @@ export default function Settings() {
           <nav className="-mb-px flex space-x-8">
             <button
               onClick={() => setActiveTab("profile")}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === "profile"
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === "profile"
                   ? "border-blue-500 text-blue-600"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              }`}
+                }`}
             >
               Profile
             </button>
             <Link
-              href="/staff/pages/changepassword"
+              href="/super-admin/dashboard/change-password"
               className="py-2 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium text-sm"
             >
               Change password
@@ -118,9 +67,7 @@ export default function Settings() {
           <div className="space-y-8">
             {/* Profile Picture Section */}
             <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
-                Your Profile Picture
-              </h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Your Profile Picture</h3>
               <div className="flex flex-col space-y-4">
                 <label
                   htmlFor="profile-upload"
@@ -130,23 +77,18 @@ export default function Settings() {
                     <Image
                       src={URL.createObjectURL(imageFile)}
                       alt="Profile"
-                      width={5}
-                      height={5}
-                      className="h-full w-full object-cover"
+                      className="h-full w-full object-cover" width={10} height={10}
                     />
                   ) : (
                     <div className="flex flex-col items-center space-y-2">
-                      <Image
-                        src="/gallery-add.png"
-                        alt="Upload icon"
-                        width={48} // Intrinsic dimensions
-                        height={48}
-                        className="w-8 h-8" // Displayed size
-                      />
-                      <span className="text-sm font-medium text-gray-700">
-                        Upload your photo
-                      </span>
-                    </div>
+  <Image 
+    src="/gallery-add.png" 
+    alt="Upload photo" 
+    width={40}  // Add appropriate width
+    height={50} // Add appropriate height
+  />
+  <span className="text-sm font-medium text-gray-700">Upload your photo</span>
+</div>
                   )}
                 </label>
                 <input
@@ -174,10 +116,7 @@ export default function Settings() {
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label
-                    htmlFor="fullName"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
+                  <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-2">
                     Full name
                   </label>
                   <input
@@ -192,10 +131,7 @@ export default function Settings() {
                 </div>
 
                 <div>
-                  <label
-                    htmlFor="email"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                     Email
                   </label>
                   <input
@@ -212,10 +148,7 @@ export default function Settings() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label
-                    htmlFor="username"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
+                  <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
                     Username
                   </label>
                   <input
@@ -230,10 +163,7 @@ export default function Settings() {
                 </div>
 
                 <div>
-                  <label
-                    htmlFor="phoneNumber"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
+                  <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-2">
                     Phone number
                   </label>
                   <div className="flex rounded-md shadow-sm">
@@ -254,10 +184,7 @@ export default function Settings() {
               </div>
 
               <div>
-                <label
-                  htmlFor="bio"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
+                <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-2">
                   Bio
                 </label>
                 <textarea
@@ -276,22 +203,12 @@ export default function Settings() {
             <div className="flex justify-end space-x-3 pt-6">
               <button
                 type="button"
-                onClick={() =>
-                  setFormData({
-                    fullName: "",
-                    username: "",
-                    bio: "",
-                    email: "",
-                    phoneNumber: "",
-                  })
-                }
                 className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 Reset
               </button>
               <button
                 type="button"
-                onClick={handleSubmit}
                 className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-dark-blue hover:bg-dark-blue focus:outline-none focus:ring-2 focus:ring-dark-blue"
               >
                 Update Profile
@@ -299,7 +216,8 @@ export default function Settings() {
             </div>
           </div>
         )}
+
       </div>
     </div>
-  );
+  )
 }
