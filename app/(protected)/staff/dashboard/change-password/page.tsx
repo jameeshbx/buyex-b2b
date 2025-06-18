@@ -1,13 +1,10 @@
+import ChangePassword from '@/components/landing-content/Change-password'
 import React from 'react'
-
-
-import Settings from '@/app/(protected)/admin/pages/settings/settings'
 
 function page() {
   return (
     <div>
-        
-       <Settings/>
+        <ChangePassword/>
     </div>
   )
 }

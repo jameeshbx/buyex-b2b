@@ -3,8 +3,8 @@ import { useForm, type SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import Image from "next/image"
 import axios from "axios"
-import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { useState, useEffect } from "react"
 import { toast } from "react-hot-toast"
 import {
   countries,
@@ -18,13 +18,18 @@ import { pagesData } from "@/data/navigation"
 
 export default function AddReceiversPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const editId = searchParams.get("edit")
+  const isEditMode = Boolean(editId)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
   const {
     register,
     handleSubmit,
     watch,
     setValue,
+    reset,
     formState: { errors },
   } = useForm<ReceiverFormValues>({
     resolver: zodResolver(receiverFormSchema),
@@ -36,27 +41,106 @@ export default function AddReceiversPage() {
   const receiverBankCountry = watch("receiverBankCountry")
   const anyIntermediaryBank = watch("anyIntermediaryBank")
 
+  // Fetch receiver data for editing
+  useEffect(() => {
+    if (isEditMode && editId) {
+      const fetchReceiverData = async () => {
+        try {
+          setIsLoading(true)
+          const response = await axios.get(`/api/beneficiaries/${editId}`)
+          const receiverData = response.data
+
+          // Reset form with fetched data
+          reset({
+            receiverFullName: receiverData.receiverFullName || "",
+            receiverCountry: receiverData.receiverCountry || "United States",
+            address: receiverData.address || "",
+            receiverBank: receiverData.receiverBank || "",
+            receiverBankAddress: receiverData.receiverBankAddress || "",
+            receiverBankCountry: receiverData.receiverBankCountry || "United States",
+            receiverAccount: receiverData.receiverAccount || "",
+            receiverBankSwiftCode: receiverData.receiverBankSwiftCode || "",
+            iban: receiverData.iban || "",
+            sortCode: receiverData.sortCode || "",
+            transitNumber: receiverData.transitNumber || "",
+            bsbCode: receiverData.bsbCode || "",
+            routingNumber: receiverData.routingNumber || "",
+            anyIntermediaryBank: (receiverData.anyIntermediaryBank as "YES" | "NO") || "NO",
+            intermediaryBankName: receiverData.intermediaryBankName || "",
+            intermediaryBankAccountNo: receiverData.intermediaryBankAccountNo || "",
+            intermediaryBankIBAN: receiverData.intermediaryBankIBAN || "",
+            intermediaryBankSwiftCode: receiverData.intermediaryBankSwiftCode || "",
+            status: receiverData.status !== undefined ? receiverData.status : true,
+          })
+
+          toast.success("Receiver data loaded successfully")
+        } catch (error) {
+          console.error("Failed to fetch receiver data:", error)
+
+          if (axios.isAxiosError(error)) {
+            const errorMessage =
+              error.response?.data?.message || error.response?.data?.error || "Failed to load receiver data"
+            toast.error(errorMessage)
+          } else {
+            toast.error("Failed to load receiver data")
+          }
+
+          // Redirect back to list if receiver not found
+          router.push("/staff/dashboard/manage-receivers/list-receivers")
+        } finally {
+          setIsLoading(false)
+        }
+      }
+
+      fetchReceiverData()
+    }
+  }, [isEditMode, editId, reset, router])
+
   const onSubmit: SubmitHandler<ReceiverFormValues> = async (data) => {
     try {
       setIsSubmitting(true)
-      await axios.post("/api/beneficiaries", {
-        ...data,
-        iban: data.iban || undefined,
-        totalRemittance: "0", // Add required field
-        field70: "", // Add required field
-      })
 
-      toast.success("Receiver added successfully!")
-      router.push("/staff/dashboard/document-upload")
+      if (isEditMode && editId) {
+        // Update existing receiver
+        await axios.put(`/api/beneficiaries/${editId}`, {
+          ...data,
+          iban: data.iban || "",
+          sortCode: data.sortCode || "",
+          transitNumber: data.transitNumber || "",
+          bsbCode: data.bsbCode || "",
+          routingNumber: data.routingNumber || "",
+          intermediaryBankName: data.intermediaryBankName || "",
+          intermediaryBankAccountNo: data.intermediaryBankAccountNo || "",
+          intermediaryBankIBAN: data.intermediaryBankIBAN || "",
+          intermediaryBankSwiftCode: data.intermediaryBankSwiftCode || "",
+          totalRemittance: "0", // Required field
+          field70: "", // Required field
+        })
+        toast.success("Receiver updated successfully!")
+      } else {
+        // Create new receiver
+        await axios.post("/api/beneficiaries", {
+          ...data,
+          iban: data.iban || undefined,
+          totalRemittance: "0", // Add required field for new receivers
+          field70: "", // Add required field for new receivers
+        })
+        toast.success("Receiver added successfully!")
+      }
+
+      router.push("/staff/dashboard/manage-receivers/list-receivers")
     } catch (error: unknown) {
       console.error("Error submitting form:", error)
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : axios.isAxiosError(error) && error.response?.data?.error
-            ? error.response.data.error
-            : "Failed to add receiver. Please try again."
-      toast.error(errorMessage)
+
+      if (axios.isAxiosError(error)) {
+        const errorMessage =
+          error.response?.data?.message ||
+          error.response?.data?.error ||
+          `Failed to ${isEditMode ? "update" : "add"} receiver. Please try again.`
+        toast.error(errorMessage)
+      } else {
+        toast.error(`Failed to ${isEditMode ? "update" : "add"} receiver. Please try again.`)
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -69,6 +153,22 @@ export default function AddReceiversPage() {
     return fieldsToShow ? fieldsToShow[1].includes(fieldName) : false
   }
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="sticky top-0 z-40">
+          <Topbar pageData={pagesData.addReceivers} />
+        </div>
+        <div className="flex-1 flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading receiver data...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Fixed Topbar */}
@@ -79,6 +179,11 @@ export default function AddReceiversPage() {
       {/* Main Content */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 pt-8">
         <div className="bg-white shadow-sm p-6">
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-gray-800">{isEditMode ? "Edit Receiver" : "Add New Receiver"}</h1>
+            {isEditMode && <p className="text-gray-600 mt-2">Update the receiver information below</p>}
+          </div>
+
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               {/* Receiver's full Name */}
@@ -444,19 +549,28 @@ export default function AddReceiversPage() {
                 </>
               )}
             </div>
+
             {/* Submit button */}
-            <div className="flex justify-center mt-8">
+            <div className="flex justify-center mt-8 gap-4">
+              <button
+                type="button"
+                onClick={() => router.push("/staff/dashboard/manage-receivers/list-receivers")}
+                className="bg-gray-500 text-white font-jakarta px-6 sm:px-8 py-3 rounded-md text-sm sm:text-base hover:bg-gray-600 transition-colors"
+                disabled={isSubmitting}
+              >
+                Cancel
+              </button>
               <button
                 type="submit"
-                className="bg-dark-blue text-white font-jakarta px-6 sm:px-8 py-3 rounded-md flex items-center justify-center text-sm sm:text-base"
+                className="bg-dark-blue text-white font-jakarta px-6 sm:px-8 py-3 rounded-md flex items-center justify-center text-sm sm:text-base hover:bg-blue-700 transition-colors"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
-                  "Adding..."
+                  `${isEditMode ? "Updating..." : "Adding..."}`
                 ) : (
                   <>
                     <Image src="/addreceivers.png" alt="Continue" className="mr-2 h-6 w-6" width={30} height={30} />
-                    Add receiver
+                    {isEditMode ? "Update receiver" : "Add receiver"}
                   </>
                 )}
               </button>
