@@ -166,6 +166,7 @@ async function generateQuotePDF(
 export default function OrderDetailsForm() {
   const [showCalculation, setShowCalculation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isQuoteDownloaded, setIsQuoteDownloaded] = useState(false);
   const { data: session, status } = useSession();
   const router = useRouter();
   const [calculatedValues, setCalculatedValues] = useState<CalculatedValues>({
@@ -216,39 +217,8 @@ export default function OrderDetailsForm() {
     Uzbekistan: "USD",
   };
 
-  async function onSubmit(data: OrderDetailsFormValues) {
-    try {
-      setIsSubmitting(true);
-
-      const formData = {
-        ...data,
-        foreignBankCharges: data.foreignBankCharges === "OUR" ? 0 : 1,
-        margin: parseFloat(data.margin),
-        ibrRate: parseFloat(data.ibrRate),
-        amount: parseFloat(data.amount),
-        totalAmount: data.totalAmount
-          ? parseFloat(data.totalAmount.replace(/,/g, ""))
-          : 0,
-        customerRate: data.customerRate ? parseFloat(data.customerRate) : 0,
-      };
-
-      const response = await axios.post("/api/orders", formData);
-
-      if (response.status === 200) {
-        if (typeof window !== "undefined") {
-          // Save to localStorage
-          localStorage.setItem("selectedPayer", data.payer);
-          localStorage.setItem("educationLoan", data.educationLoan || "no"); // Save education loan selection
-          localStorage.setItem("fromPlaceOrder", "true");
-        }
-        // Redirect to sender details page
-        router.push("/staff/dashboard/sender-details");
-      }
-    } catch (error) {
-      console.error("Form submission error:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
+  function onSubmit() {
+    router.push("/staff/dashboard/sender-details");
   }
   function resetForm() {
     form.reset();
@@ -341,51 +311,58 @@ export default function OrderDetailsForm() {
     formData: OrderDetailsFormValues,
     calculatedValues: CalculatedValues
   ) => {
+    setIsSubmitting(true);
     if (!session?.user?.name) {
       console.error("User session not available");
       return;
     }
 
-    // Ensure we have the latest form values including currency
-    const currentFormData = form.getValues();
-    const currentCalculatedValues = calculatedValues;
+    try {
+      // First generate the PDF
+      const pdfUrl = await generateQuotePDF(formData, calculatedValues);
 
-    const pdfUrl = await generateQuotePDF(
-      currentFormData,
-      currentCalculatedValues
-    );
-
-    const order = await axios.post("/api/orders", {
-      purpose: currentFormData.purpose,
-      foreignBankCharges: currentFormData.foreignBankCharges,
-      payer: currentFormData.payer,
-      forexPartner: currentFormData.forexPartner,
-      margin: currentFormData.margin,
-      receiverBankCountry: currentFormData.receiverBankCountry,
-      studentName: currentFormData.studentName,
-      consultancy: currentFormData.consultancy,
-      ibrRate: currentFormData.ibrRate,
-      amount: currentFormData.amount,
-      currency: currentFormData.currency,
-      totalAmount: currentFormData.totalAmount,
-      customerRate: currentFormData.customerRate,
-      status: "QuoteDownloaded",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      createdBy: session.user.name,
-      quote: {
-        ...currentFormData,
-        currency:
-          currentFormData.currency ||
-          COUNTRY_CURRENCY_MAP[
-            currentFormData.receiverBankCountry as keyof typeof COUNTRY_CURRENCY_MAP
-          ] ||
-          "",
-      },
-      calculations: currentCalculatedValues,
-      generatedPDF: pdfUrl,
-    });
-    console.log("Downloaded quote:", order.data);
+      // Then make the POST request with the generated PDF URL
+      const order = await axios.post("/api/orders", {
+        purpose: formData.purpose,
+        foreignBankCharges: formData.foreignBankCharges,
+        payer: formData.payer,
+        forexPartner: formData.forexPartner,
+        margin: formData.margin,
+        receiverBankCountry: formData.receiverBankCountry,
+        studentName: formData.studentName,
+        consultancy: formData.consultancy,
+        ibrRate: formData.ibrRate,
+        amount: formData.amount,
+        currency: formData.currency,
+        totalAmount: formData.totalAmount,
+        customerRate: formData.customerRate,
+        status: "QuoteDownloaded",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        createdBy: session.user.name,
+        quote: {
+          ...formData,
+          currency:
+            formData.currency ||
+            COUNTRY_CURRENCY_MAP[
+              formData.receiverBankCountry as keyof typeof COUNTRY_CURRENCY_MAP
+            ] ||
+            "",
+        },
+        calculations: calculatedValues,
+        generatedPDF: pdfUrl,
+      });
+      setIsQuoteDownloaded(true);
+      if (typeof window !== "undefined") {
+        // Save to localStorage
+        localStorage.setItem("selectedPayer", order.data.payer);
+        localStorage.setItem("educationLoan", order.data.educationLoan || "no"); // Save education loan selection
+        localStorage.setItem("fromPlaceOrder", "true");
+      }
+      setIsSubmitting(false);
+    } catch (error) {
+      console.error("Error generating quote:", error);
+    }
   };
 
   // Add loading state handling
@@ -1042,6 +1019,7 @@ export default function OrderDetailsForm() {
             style={{
               background: "linear-gradient(to right, #614385, #516395)",
             }}
+            disabled={isSubmitting || isQuoteDownloaded}
           >
             <Download className="h-5 w-5" />
             <span>Download Quote</span>
@@ -1053,7 +1031,7 @@ export default function OrderDetailsForm() {
           <Button
             type="submit"
             className="bg-dark-blue hover:bg-medium-blue text-white flex items-center gap-2 h-12 rounded-md px-6 border-none"
-            disabled={isSubmitting}
+            disabled={isSubmitting || !isQuoteDownloaded}
           >
             {isSubmitting ? (
               <Loader2 className="h-4 w-4 animate-spin" />

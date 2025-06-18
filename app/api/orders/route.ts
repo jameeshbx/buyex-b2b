@@ -49,7 +49,6 @@ export async function POST(req: Request) {
       !studentName ||
       !consultancy ||
       !amount ||
-      !currency ||
       !totalAmount ||
       !createdBy ||
       !quote ||
@@ -71,7 +70,7 @@ export async function POST(req: Request) {
         consultancy,
         ibrRate: parseFloat(ibrRate) || 0,
         amount: parseFloat(amount),
-        currency,
+        currency: currency || "USD",
         totalAmount: parseFloat(totalAmount),
         customerRate: parseFloat(customerRate) || 0,
         status: "Pending",
