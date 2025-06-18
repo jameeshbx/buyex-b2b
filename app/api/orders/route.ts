@@ -35,6 +35,10 @@ export async function POST(req: Request) {
       currency,
       totalAmount,
       customerRate,
+      createdBy,
+      quote,
+      calculations,
+      generatedPDF,
     } = body;
 
     if (
@@ -46,7 +50,11 @@ export async function POST(req: Request) {
       !consultancy ||
       !amount ||
       !currency ||
-      !totalAmount
+      !totalAmount ||
+      !createdBy ||
+      !quote ||
+      !calculations ||
+      !generatedPDF
     ) {
       return new NextResponse("Missing required fields", { status: 400 });
     }
@@ -67,6 +75,10 @@ export async function POST(req: Request) {
         totalAmount: parseFloat(totalAmount),
         customerRate: parseFloat(customerRate) || 0,
         status: "Pending",
+        createdBy: "system",
+        quote: quote,
+        calculations: calculations,
+        generatedPDF: generatedPDF,
       },
     });
 
