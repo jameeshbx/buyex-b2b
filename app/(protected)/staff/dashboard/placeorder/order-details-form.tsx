@@ -338,33 +338,55 @@ export default function OrderDetailsForm() {
   }, []);
 
   const handleDownloadQuote = async (
-  formData: OrderDetailsFormValues,
-  calculatedValues: CalculatedValues
-) => {
-  if (!session?.user?.name) {
-    console.error("User session not available");
-    return;
-  }
+    formData: OrderDetailsFormValues,
+    calculatedValues: CalculatedValues
+  ) => {
+    if (!session?.user?.name) {
+      console.error("User session not available");
+      return;
+    }
 
-  // Ensure we have the latest form values including currency
-  const currentFormData = form.getValues();
-  const currentCalculatedValues = calculatedValues;
+    // Ensure we have the latest form values including currency
+    const currentFormData = form.getValues();
+    const currentCalculatedValues = calculatedValues;
 
-  const pdfUrl = await generateQuotePDF(currentFormData, currentCalculatedValues);
-  const response = await axios.post("/api/downloaded-quotes", {
-    username: currentFormData.studentName,
-    createdBy: session.user.name,
-    generatedPDF: pdfUrl,
-    quote: {
-      ...currentFormData,
-      currency: currentFormData.currency || 
-               COUNTRY_CURRENCY_MAP[currentFormData.receiverBankCountry as keyof typeof COUNTRY_CURRENCY_MAP] || 
-               "",
-    },
-    calculations: currentCalculatedValues,
-  });
-  console.log("Downloaded quote:", response.data);
-};
+    const pdfUrl = await generateQuotePDF(
+      currentFormData,
+      currentCalculatedValues
+    );
+
+    const order = await axios.post("/api/orders", {
+      purpose: currentFormData.purpose,
+      foreignBankCharges: currentFormData.foreignBankCharges,
+      payer: currentFormData.payer,
+      forexPartner: currentFormData.forexPartner,
+      margin: currentFormData.margin,
+      receiverBankCountry: currentFormData.receiverBankCountry,
+      studentName: currentFormData.studentName,
+      consultancy: currentFormData.consultancy,
+      ibrRate: currentFormData.ibrRate,
+      amount: currentFormData.amount,
+      currency: currentFormData.currency,
+      totalAmount: currentFormData.totalAmount,
+      customerRate: currentFormData.customerRate,
+      status: "QuoteDownloaded",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      createdBy: session.user.name,
+      quote: {
+        ...currentFormData,
+        currency:
+          currentFormData.currency ||
+          COUNTRY_CURRENCY_MAP[
+            currentFormData.receiverBankCountry as keyof typeof COUNTRY_CURRENCY_MAP
+          ] ||
+          "",
+      },
+      calculations: currentCalculatedValues,
+      generatedPDF: pdfUrl,
+    });
+    console.log("Downloaded quote:", order.data);
+  };
 
   // Add loading state handling
   if (status === "loading") {
@@ -408,9 +430,13 @@ export default function OrderDetailsForm() {
                       } else {
                         form.setValue("receiverBankCountry", "");
                         // Set currency based on country if available, else empty
-                        const selectedCountry = form.getValues("receiverBankCountry");
+                        const selectedCountry = form.getValues(
+                          "receiverBankCountry"
+                        );
                         const countryCurrency =
-                          COUNTRY_CURRENCY_MAP[selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP] || "";
+                          COUNTRY_CURRENCY_MAP[
+                            selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP
+                          ] || "";
                         form.setValue("currency", countryCurrency);
                       }
                     }}
@@ -661,9 +687,11 @@ export default function OrderDetailsForm() {
                       // Automatically set currency based on selected country
                       const currency =
                         COUNTRY_CURRENCY_MAP[
-                        value as keyof typeof COUNTRY_CURRENCY_MAP
+                          value as keyof typeof COUNTRY_CURRENCY_MAP
                         ] || "";
-                      form.setValue("currency", currency, { shouldValidate: true }); // Add shouldValidate
+                      form.setValue("currency", currency, {
+                        shouldValidate: true,
+                      }); // Add shouldValidate
                     }}
                     value={field.value}
                     disabled={
@@ -701,10 +729,10 @@ export default function OrderDetailsForm() {
                   </Select>
                   {(form.watch("purpose") === "Blocked account transfer" ||
                     form.watch("purpose") === "GIC Canada fee deposite") && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        Country automatically set based on purpose selection
-                      </p>
-                    )}
+                    <p className="text-xs text-gray-500 mt-1">
+                      Country automatically set based on purpose selection
+                    </p>
+                  )}
                 </FormItem>
               )}
             />
@@ -817,8 +845,8 @@ export default function OrderDetailsForm() {
                     const selectedCountry = form.watch("receiverBankCountry");
                     const countryCurrency = selectedCountry
                       ? COUNTRY_CURRENCY_MAP[
-                      selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP
-                      ]
+                          selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP
+                        ]
                       : "";
 
                     // Countries that already use USD
