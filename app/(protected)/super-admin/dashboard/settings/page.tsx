@@ -1,12 +1,13 @@
-import Settings from '@/components/landing-content/Settings'
-import React from 'react'
 
-function page() {
+import SettingsContent from "@/components/landing-content/Settings";
+import SessionProvider from "@/components/session-provider";
+
+export default function Settings() {
   return (
-    <div>
-        <Settings/>
-    </div>
+    <SessionProvider>
+      <SettingsContent />
+    </SessionProvider>
   )
 }
 
-export default page
+

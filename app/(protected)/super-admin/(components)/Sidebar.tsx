@@ -91,7 +91,7 @@ export function Sidebar({
       href: "/super-admin/dashboard/settings",
       icon: <Image src="/Icon-1.svg" alt="Settings" width={24} height={24} className="w-6 h-6" />,
       label: "Settings",
-      active: pathname === "/super-admin/dashboard/settings",
+      active: pathname === "/settings",
     },
     {
       href: "/support",
