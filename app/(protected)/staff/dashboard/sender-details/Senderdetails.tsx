@@ -123,37 +123,36 @@ function Senderdetails() {
     <div>
       {/* Simplified Status Popup Dialog - Only Submit Button */}
       <Dialog open={showStatusPopup} onOpenChange={handleOpenChange}>
-        <DialogContent className="w-[90vw] max-w-[425px] md:w-full">
-          <DialogHeader className="px-4 sm:px-6">
-            <DialogTitle className="text-lg sm:text-xl">Block Rate status</DialogTitle>
-            <DialogDescription className="mt-2 sm:mt-3 text-sm sm:text-base">
-              Rate block status
-            </DialogDescription>
-          </DialogHeader>
-          <div className="px-4 sm:px-6 py-2 sm:py-4">
-            <Select
-              value={selectedStatus}
-              onValueChange={(value) => setSelectedStatus(value)}
-            >
-              <SelectTrigger className="w-full h-10 sm:h-12 text-sm sm:text-base">
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent className="text-sm sm:text-base z-50">
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="blocked">Blocked</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <DialogFooter className="px-4 sm:px-6 pb-4 sm:pb-6">
-            <Button
-              onClick={handleStatusConfirm}
-              className="w-full h-10 sm:h-12 text-sm sm:text-base bg-dark-blue hover:bg-dark-blue"
-            >
-              Submit
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+  <DialogContent className="w-[90vw] max-w-[425px] md:w-full">
+    <DialogHeader className="px-4 sm:px-6">
+      <DialogTitle className="text-lg sm:text-xl">Rate Status</DialogTitle>
+      <DialogDescription className="mt-2 sm:mt-3 text-sm sm:text-base">
+        Update rate status
+      </DialogDescription>
+    </DialogHeader>
+    <div className="px-4 sm:px-6 py-2 sm:py-4">
+      <Select
+        value={selectedStatus}
+        onValueChange={(value) => setSelectedStatus(value)}
+      >
+        <SelectTrigger className="w-full h-10 sm:h-12 text-sm sm:text-base">
+          <SelectValue placeholder="Select status" />
+        </SelectTrigger>
+        <SelectContent className="text-sm sm:text-base z-50">
+          <SelectItem value="pending">Blocked</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+    <DialogFooter className="px-4 sm:px-6 pb-4 sm:pb-6">
+      <Button
+        onClick={handleStatusConfirm}
+        className="w-full h-10 sm:h-12 text-sm sm:text-base bg-dark-blue hover:bg-dark-blue"
+      >
+        Submit
+      </Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
       <div className="max-w-7xl mx-auto -mt-10 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         <Tabs defaultValue="sender" className="w-full">
           <TabsContent value="sender">
