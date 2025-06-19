@@ -59,6 +59,13 @@ export async function POST(request: Request) {
       data: body,
     });
 
+    if (json.orderId) {
+      await db.order.update({
+        where: { id: json.orderId },
+        data: { senderId: sender.id },
+      });
+    }
+
     return NextResponse.json(sender);
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {

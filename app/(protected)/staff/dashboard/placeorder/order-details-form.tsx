@@ -168,6 +168,7 @@ export default function OrderDetailsForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isQuoteDownloaded, setIsQuoteDownloaded] = useState(false);
   const { data: session, status } = useSession();
+  const [orderId, setOrderId] = useState<string | null>(null);
   const router = useRouter();
   const [calculatedValues, setCalculatedValues] = useState<CalculatedValues>({
     inrAmount: "0",
@@ -218,9 +219,8 @@ export default function OrderDetailsForm() {
   };
 
   function onSubmit() {
-    router.push("/staff/dashboard/sender-details");
+    router.push(`/staff/dashboard/sender-details?orderId=${orderId}`);
   }
-
 
   function resetForm() {
     form.reset();
@@ -295,32 +295,20 @@ export default function OrderDetailsForm() {
     form.setValue("totalAmount", calculatedValues.totalPayable.toString());
   }, [calculatedValues.totalPayable, form]);
 
-  useEffect(() => {
-    async function fetchOrders() {
-      try {
-        const response = await axios.get("/api/orders");
-        // You can use the orders data if needed
-        console.log("Fetched orders:", response.data);
-      } catch (error) {
-        console.error("Error fetching orders:", error);
-      }
-    }
-
-    fetchOrders();
-  }, []);
-
   // At the top level of your component
-useEffect(() => {
-  const selectedCountry = form.watch("receiverBankCountry");
-  const currencyValue = form.watch("currency");
-  const countryCurrency = selectedCountry
-    ? COUNTRY_CURRENCY_MAP[selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP]
-    : "USD";
+  useEffect(() => {
+    const selectedCountry = form.watch("receiverBankCountry");
+    const currencyValue = form.watch("currency");
+    const countryCurrency = selectedCountry
+      ? COUNTRY_CURRENCY_MAP[
+          selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP
+        ]
+      : "USD";
 
-  if (selectedCountry && currencyValue !== "USD") {
-    form.setValue("currency", countryCurrency, { shouldValidate: true });
-  }
-}, [form.watch("receiverBankCountry")]);
+    if (selectedCountry && currencyValue !== "USD") {
+      form.setValue("currency", countryCurrency, { shouldValidate: true });
+    }
+  }, [form.watch("receiverBankCountry")]);
 
   const handleDownloadQuote = async (
     formData: OrderDetailsFormValues,
@@ -369,6 +357,7 @@ useEffect(() => {
       });
       setIsQuoteDownloaded(true);
       if (typeof window !== "undefined") {
+        setOrderId(order.data.id);
         // Save to localStorage
         localStorage.setItem("selectedPayer", order.data.payer);
         localStorage.setItem("educationLoan", order.data.educationLoan || "no"); // Save education loan selection
@@ -695,9 +684,11 @@ useEffect(() => {
                       // Automatically set currency based on selected country
                       const currency =
                         COUNTRY_CURRENCY_MAP[
-                        value as keyof typeof COUNTRY_CURRENCY_MAP
+                          value as keyof typeof COUNTRY_CURRENCY_MAP
                         ] || "USD";
-                      form.setValue("currency", currency, { shouldValidate: true }); // Add shouldValidate
+                      form.setValue("currency", currency, {
+                        shouldValidate: true,
+                      }); // Add shouldValidate
                     }}
                     value={field.value}
                     disabled={
@@ -850,12 +841,18 @@ useEffect(() => {
                   render={({ field }) => {
                     const selectedCountry = form.watch("receiverBankCountry");
                     const countryCurrency = selectedCountry
-                      ? COUNTRY_CURRENCY_MAP[selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP]
+                      ? COUNTRY_CURRENCY_MAP[
+                          selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP
+                        ]
                       : "USD";
 
                     // Countries where USD is already the primary currency
-                    const usdPrimaryCountries = ["United States of America", "Uzbekistan"];
-                    const showUsdOption = selectedCountry &&
+                    const usdPrimaryCountries = [
+                      "United States of America",
+                      "Uzbekistan",
+                    ];
+                    const showUsdOption =
+                      selectedCountry &&
                       !usdPrimaryCountries.includes(selectedCountry);
 
                     return (
@@ -870,7 +867,9 @@ useEffect(() => {
                         >
                           <FormControl>
                             <SelectTrigger className="w-full h-12 bg-dark-blue text-white hover:text-white hover:bg-medium-blue border-blue-800">
-                              <SelectValue placeholder={field.value || countryCurrency} />
+                              <SelectValue
+                                placeholder={field.value || countryCurrency}
+                              />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -878,7 +877,9 @@ useEffect(() => {
                               {countryCurrency} {!showUsdOption && "(Default)"}
                             </SelectItem>
                             {showUsdOption && (
-                              <SelectItem value="USD">USD (Alternative)</SelectItem>
+                              <SelectItem value="USD">
+                                USD (Alternative)
+                              </SelectItem>
                             )}
                           </SelectContent>
                         </Select>
