@@ -190,10 +190,10 @@ export default function OrderDetailsForm() {
       consultancy: "",
       ibrRate: "",
       amount: "",
-      currency: "INR",
+      currency: "USD",
       totalAmount: "",
       customerRate: "",
-      educationLoan: undefined, // Set to undefined to match type
+      educationLoan: "no", // Changed from undefined to "no"
     },
   });
 
@@ -217,39 +217,41 @@ export default function OrderDetailsForm() {
   };
 
   async function onSubmit(data: OrderDetailsFormValues) {
+    console.log("onSubmit called with data:", data) // Debug log
+
     try {
-      setIsSubmitting(true);
+      setIsSubmitting(true)
 
       const formData = {
         ...data,
         foreignBankCharges: data.foreignBankCharges === "OUR" ? 0 : 1,
-        margin: parseFloat(data.margin),
-        ibrRate: parseFloat(data.ibrRate),
-        amount: parseFloat(data.amount),
-        totalAmount: data.totalAmount
-          ? parseFloat(data.totalAmount.replace(/,/g, ""))
-          : 0,
-        customerRate: data.customerRate ? parseFloat(data.customerRate) : 0,
-      };
+        margin: Number.parseFloat(data.margin),
+        ibrRate: Number.parseFloat(data.ibrRate),
+        amount: Number.parseFloat(data.amount),
+        totalAmount: data.totalAmount ? Number.parseFloat(data.totalAmount.replace(/,/g, "")) : 0,
+        customerRate: data.customerRate ? Number.parseFloat(data.customerRate) : 0,
+      }
 
-      const response = await axios.post("/api/orders", formData);
+      console.log("Sending to API:", formData) // Debug log
+
+      const response = await axios.post("/api/orders", formData)
 
       if (response.status === 200) {
         if (typeof window !== "undefined") {
-          // Save to localStorage
-          localStorage.setItem("selectedPayer", data.payer);
-          localStorage.setItem("educationLoan", data.educationLoan || "no"); // Save education loan selection
-          localStorage.setItem("fromPlaceOrder", "true");
+          localStorage.setItem("selectedPayer", data.payer)
+          localStorage.setItem("educationLoan", data.educationLoan || "no")
+          localStorage.setItem("fromPlaceOrder", "true")
         }
-        // Redirect to sender details page
-        router.push("/staff/dashboard/sender-details");
+        router.push("/staff/dashboard/sender-details")
       }
     } catch (error) {
-      console.error("Form submission error:", error);
+      console.error("Form submission error:", error)
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
   }
+
+
   function resetForm() {
     form.reset();
     setShowCalculation(false);
@@ -337,34 +339,47 @@ export default function OrderDetailsForm() {
     fetchOrders();
   }, []);
 
-  const handleDownloadQuote = async (
-  formData: OrderDetailsFormValues,
-  calculatedValues: CalculatedValues
-) => {
-  if (!session?.user?.name) {
-    console.error("User session not available");
-    return;
+  // At the top level of your component
+useEffect(() => {
+  const selectedCountry = form.watch("receiverBankCountry");
+  const currencyValue = form.watch("currency");
+  const countryCurrency = selectedCountry
+    ? COUNTRY_CURRENCY_MAP[selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP]
+    : "USD";
+
+  if (selectedCountry && currencyValue !== "USD") {
+    form.setValue("currency", countryCurrency, { shouldValidate: true });
   }
+}, [form.watch("receiverBankCountry")]);
 
-  // Ensure we have the latest form values including currency
-  const currentFormData = form.getValues();
-  const currentCalculatedValues = calculatedValues;
+  const handleDownloadQuote = async (
+    formData: OrderDetailsFormValues,
+    calculatedValues: CalculatedValues
+  ) => {
+    if (!session?.user?.name) {
+      console.error("User session not available");
+      return;
+    }
 
-  const pdfUrl = await generateQuotePDF(currentFormData, currentCalculatedValues);
-  const response = await axios.post("/api/downloaded-quotes", {
-    username: currentFormData.studentName,
-    createdBy: session.user.name,
-    generatedPDF: pdfUrl,
-    quote: {
-      ...currentFormData,
-      currency: currentFormData.currency || 
-               COUNTRY_CURRENCY_MAP[currentFormData.receiverBankCountry as keyof typeof COUNTRY_CURRENCY_MAP] || 
-               "",
-    },
-    calculations: currentCalculatedValues,
-  });
-  console.log("Downloaded quote:", response.data);
-};
+    // Ensure we have the latest form values including currency
+    const currentFormData = form.getValues();
+    const currentCalculatedValues = calculatedValues;
+
+    const pdfUrl = await generateQuotePDF(currentFormData, currentCalculatedValues);
+    const response = await axios.post("/api/downloaded-quotes", {
+      username: currentFormData.studentName,
+      createdBy: session.user.name,
+      generatedPDF: pdfUrl,
+      quote: {
+        ...currentFormData,
+        currency: currentFormData.currency ||
+          COUNTRY_CURRENCY_MAP[currentFormData.receiverBankCountry as keyof typeof COUNTRY_CURRENCY_MAP] ||
+          "",
+      },
+      calculations: currentCalculatedValues,
+    });
+    console.log("Downloaded quote:", response.data);
+  };
 
   // Add loading state handling
   if (status === "loading") {
@@ -383,7 +398,23 @@ export default function OrderDetailsForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form
+        onSubmit={(e) => {
+          console.log("Form submit triggered");
+          form.handleSubmit(onSubmit)(e);
+        }}
+        className="space-y-6"
+      >
+        {Object.keys(form.formState.errors).length > 0 && (
+          <div className="text-red-500 p-4 border border-red-200 rounded-md bg-red-50">
+            Please fix the following errors:
+            <ul className="list-disc pl-5">
+              {Object.entries(form.formState.errors).map(([key, error]) => (
+                <li key={key}>{error.message}</li>
+              ))}
+            </ul>
+          </div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Left Column */}
           <div className="space-y-6">
@@ -662,7 +693,7 @@ export default function OrderDetailsForm() {
                       const currency =
                         COUNTRY_CURRENCY_MAP[
                         value as keyof typeof COUNTRY_CURRENCY_MAP
-                        ] || "";
+                        ] || "USD";
                       form.setValue("currency", currency, { shouldValidate: true }); // Add shouldValidate
                     }}
                     value={field.value}
@@ -816,49 +847,43 @@ export default function OrderDetailsForm() {
                   render={({ field }) => {
                     const selectedCountry = form.watch("receiverBankCountry");
                     const countryCurrency = selectedCountry
-                      ? COUNTRY_CURRENCY_MAP[
-                      selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP
-                      ]
-                      : "";
+                      ? COUNTRY_CURRENCY_MAP[selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP]
+                      : "USD";
 
-                    // Countries that already use USD
-                    const usdCountries = [
-                      "United States of America",
-                      "Uzbekistan",
-                    ];
-
-                    // Only show USD option if the country doesn't already use USD
-                    const showUsdOption =
-                      selectedCountry &&
-                      !usdCountries.includes(selectedCountry);
+                    // Countries where USD is already the primary currency
+                    const usdPrimaryCountries = ["United States of America", "Uzbekistan"];
+                    const showUsdOption = selectedCountry &&
+                      !usdPrimaryCountries.includes(selectedCountry);
 
                     return (
                       <FormItem>
                         <FormLabel className="font-normal">&nbsp;</FormLabel>
                         <Select
-                          onValueChange={field.onChange}
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            form.trigger("currency"); // Trigger validation after change
+                          }}
                           value={field.value || countryCurrency}
                         >
                           <FormControl>
                             <SelectTrigger className="w-full h-12 bg-dark-blue text-white hover:text-white hover:bg-medium-blue border-blue-800">
-                              <SelectValue
-                                placeholder={field.value || countryCurrency}
-                              />
+                              <SelectValue placeholder={field.value || countryCurrency} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {/* Always show the country's currency as the first option */}
-                            {countryCurrency && (
-                              <SelectItem value={countryCurrency}>
-                                {countryCurrency}
-                              </SelectItem>
-                            )}
-                            {/* Show USD option only if country doesn't already use USD */}
+                            <SelectItem value={countryCurrency}>
+                              {countryCurrency} {!showUsdOption && "(Default)"}
+                            </SelectItem>
                             {showUsdOption && (
-                              <SelectItem value="USD">USD</SelectItem>
+                              <SelectItem value="USD">USD (Alternative)</SelectItem>
                             )}
                           </SelectContent>
                         </Select>
+                        {field.value === "USD" && countryCurrency !== "USD" && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            Using USD instead of {countryCurrency}
+                          </p>
+                        )}
                       </FormItem>
                     );
                   }}
