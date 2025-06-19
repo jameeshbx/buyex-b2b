@@ -57,6 +57,15 @@ export async function POST(request: Request) {
       data: validatedData,
     });
 
+    console.log(body);
+
+    if (body.orderId) {
+      await db.order.update({
+        where: { id: body.orderId },
+        data: { beneficiaryId: beneficiary.id },
+      });
+    }
+
     return NextResponse.json(beneficiary, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {
