@@ -218,6 +218,10 @@ model Order {
   status              OrderStatus
   createdAt           DateTime    @default(now())
   updatedAt           DateTime    @updatedAt
+  createdBy           String
+  quote               Json
+  calculations        Json
+  generatedPDF        String
 
   @@map("orders")
 }
