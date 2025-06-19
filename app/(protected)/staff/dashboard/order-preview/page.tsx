@@ -18,7 +18,9 @@ function Page() {
       <div className="sticky top-0 z-10 bg-gray-50">
         <Topbar pageData={pagesData.orderPreview} />    
       </div>    
-      <TransactionDetails onCreateOrder={handleCreateOrder} />
+      <TransactionDetails onCreateOrder={handleCreateOrder} orderId={''} onBack={function (): void {
+        throw new Error('Function not implemented.')
+      } } />
       {showSuccessModal && <SuccessModal onClose={() => setShowSuccessModal(false)} />}
     </div>
   )
