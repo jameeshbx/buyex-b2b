@@ -62,7 +62,7 @@ const createInvitationEmail = (name: string, email: string, password: string) =>
         <p><strong>Email:</strong> ${email}</p>
         <p><strong>Temporary Password:</strong> ${password}</p>
         <div style="text-align: center;">
-            <a href="${process.env.NEXT_PUBLIC_APP_URL}/login" class="button">Login Now</a>
+            <a href="${process.env.NEXT_PUBLIC_APP_URL}/reset-password" class="button">Reset password</a>
         </div>
         <p>For security reasons, please change your password after your first login.</p>
         <div class="footer">
