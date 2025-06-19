@@ -191,10 +191,10 @@ export default function OrderDetailsForm() {
       consultancy: "",
       ibrRate: "",
       amount: "",
-      currency: "INR",
+      currency: "USD",
       totalAmount: "",
       customerRate: "",
-      educationLoan: undefined, // Set to undefined to match type
+      educationLoan: "no", // Changed from undefined to "no"
     },
   });
 
@@ -220,6 +220,8 @@ export default function OrderDetailsForm() {
   function onSubmit() {
     router.push("/staff/dashboard/sender-details");
   }
+
+
   function resetForm() {
     form.reset();
     setShowCalculation(false);
@@ -307,6 +309,19 @@ export default function OrderDetailsForm() {
     fetchOrders();
   }, []);
 
+  // At the top level of your component
+useEffect(() => {
+  const selectedCountry = form.watch("receiverBankCountry");
+  const currencyValue = form.watch("currency");
+  const countryCurrency = selectedCountry
+    ? COUNTRY_CURRENCY_MAP[selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP]
+    : "USD";
+
+  if (selectedCountry && currencyValue !== "USD") {
+    form.setValue("currency", countryCurrency, { shouldValidate: true });
+  }
+}, [form.watch("receiverBankCountry")]);
+
   const handleDownloadQuote = async (
     formData: OrderDetailsFormValues,
     calculatedValues: CalculatedValues
@@ -382,7 +397,23 @@ export default function OrderDetailsForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form
+        onSubmit={(e) => {
+          console.log("Form submit triggered");
+          form.handleSubmit(onSubmit)(e);
+        }}
+        className="space-y-6"
+      >
+        {Object.keys(form.formState.errors).length > 0 && (
+          <div className="text-red-500 p-4 border border-red-200 rounded-md bg-red-50">
+            Please fix the following errors:
+            <ul className="list-disc pl-5">
+              {Object.entries(form.formState.errors).map(([key, error]) => (
+                <li key={key}>{error.message}</li>
+              ))}
+            </ul>
+          </div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Left Column */}
           <div className="space-y-6">
@@ -664,11 +695,9 @@ export default function OrderDetailsForm() {
                       // Automatically set currency based on selected country
                       const currency =
                         COUNTRY_CURRENCY_MAP[
-                          value as keyof typeof COUNTRY_CURRENCY_MAP
-                        ] || "";
-                      form.setValue("currency", currency, {
-                        shouldValidate: true,
-                      }); // Add shouldValidate
+                        value as keyof typeof COUNTRY_CURRENCY_MAP
+                        ] || "USD";
+                      form.setValue("currency", currency, { shouldValidate: true }); // Add shouldValidate
                     }}
                     value={field.value}
                     disabled={
@@ -821,49 +850,43 @@ export default function OrderDetailsForm() {
                   render={({ field }) => {
                     const selectedCountry = form.watch("receiverBankCountry");
                     const countryCurrency = selectedCountry
-                      ? COUNTRY_CURRENCY_MAP[
-                          selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP
-                        ]
-                      : "";
+                      ? COUNTRY_CURRENCY_MAP[selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP]
+                      : "USD";
 
-                    // Countries that already use USD
-                    const usdCountries = [
-                      "United States of America",
-                      "Uzbekistan",
-                    ];
-
-                    // Only show USD option if the country doesn't already use USD
-                    const showUsdOption =
-                      selectedCountry &&
-                      !usdCountries.includes(selectedCountry);
+                    // Countries where USD is already the primary currency
+                    const usdPrimaryCountries = ["United States of America", "Uzbekistan"];
+                    const showUsdOption = selectedCountry &&
+                      !usdPrimaryCountries.includes(selectedCountry);
 
                     return (
                       <FormItem>
                         <FormLabel className="font-normal">&nbsp;</FormLabel>
                         <Select
-                          onValueChange={field.onChange}
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            form.trigger("currency"); // Trigger validation after change
+                          }}
                           value={field.value || countryCurrency}
                         >
                           <FormControl>
                             <SelectTrigger className="w-full h-12 bg-dark-blue text-white hover:text-white hover:bg-medium-blue border-blue-800">
-                              <SelectValue
-                                placeholder={field.value || countryCurrency}
-                              />
+                              <SelectValue placeholder={field.value || countryCurrency} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {/* Always show the country's currency as the first option */}
-                            {countryCurrency && (
-                              <SelectItem value={countryCurrency}>
-                                {countryCurrency}
-                              </SelectItem>
-                            )}
-                            {/* Show USD option only if country doesn't already use USD */}
+                            <SelectItem value={countryCurrency}>
+                              {countryCurrency} {!showUsdOption && "(Default)"}
+                            </SelectItem>
                             {showUsdOption && (
-                              <SelectItem value="USD">USD</SelectItem>
+                              <SelectItem value="USD">USD (Alternative)</SelectItem>
                             )}
                           </SelectContent>
                         </Select>
+                        {field.value === "USD" && countryCurrency !== "USD" && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            Using USD instead of {countryCurrency}
+                          </p>
+                        )}
                       </FormItem>
                     );
                   }}

@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useEffect, useState } from "react"
-import { FileUploader } from "./file-uploader"
+import { FileUploader } from "./File-Uploader"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
 import { toast } from "sonner"
@@ -266,7 +266,7 @@ export default function DocumentUploadForm() {
       formData.append('payerType', payer || '')
       formData.append('hasEducationLoan', educationLoan || 'no')
 
-      const response = await fetch('/api/upload/document', {
+      const response = await fetch('/api/documents', {
       method: 'POST',
       body: formData,
       headers: {
