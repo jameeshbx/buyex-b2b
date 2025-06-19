@@ -19,6 +19,9 @@ type Order = {
   studentName: string
   currency: string
   amount: number
+  totalAmount: number
+  ibrRate?: number
+  customerRate?: number
   fxRate: number
   fxRateUpdated?: boolean
   status: string
@@ -26,7 +29,14 @@ type Order = {
   receiverBankCountry?: string
   forexPartner?: string
   receiverAccount?: string
-  // Add other fields as needed
+  payer?: string
+  consultancy?: string
+  margin?: number
+  foreignBankCharges?: number
+  createdBy?: string
+  quote?: Record<string, unknown> // Replaced any with Record<string, unknown>
+  calculations?: Record<string, unknown> // Replaced any with Record<string, unknown>
+  generatedPDF?: Record<string, unknown> // Replaced any with Record<string, unknown>
 }
 
 const statusOptions = [
@@ -57,28 +67,46 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const [showIbrModal, setShowIbrModal] = useState(false)
+  const [selectedOrderForIbr, setSelectedOrderForIbr] = useState<Order | null>(null)
+  const [ibrModalRate, setIbrModalRate] = useState<string>("")
+
+  const [formValidation, setFormValidation] = useState<
+    Record<
+      string,
+      {
+        currency?: string
+        fcyAmt?: string
+        purpose?: string
+        receiverAccount?: string
+        isValid?: boolean
+      }
+    >
+  >({})
+  const [authorizedOrders, setAuthorizedOrders] = useState<Set<string>>(new Set())
+
   // Fetch orders from API
   useEffect(() => {
-  const fetchOrders = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/orders");
-      if (!res.ok) throw new Error("Failed to fetch orders");
-      const data = await res.json();
-      setOrders(data);
-    } catch (err: unknown) {
-      let errorMessage = "Error fetching orders";
-      if (err instanceof Error) {
-        errorMessage = err.message;
+    const fetchOrders = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const res = await fetch("/api/orders")
+        if (!res.ok) throw new Error("Failed to fetch orders")
+        const data = await res.json()
+        setOrders(data)
+      } catch (err: unknown) {
+        let errorMessage = "Error fetching orders"
+        if (err instanceof Error) {
+          errorMessage = err.message
+        }
+        setError(errorMessage)
+      } finally {
+        setLoading(false)
       }
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
     }
-  };
-  fetchOrders();
-}, []);
+    fetchOrders()
+  }, [])
 
   const toggleRowExpansion = (orderId: string) => {
     const newExpanded = new Set(expandedRows)
@@ -91,61 +119,68 @@ export default function Dashboard() {
   }
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
-  try {
-    setLoading(true);
-    const res = await fetch(`/api/orders/${orderId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: newStatus }),
-    });
-    if (!res.ok) throw new Error("Failed to update status");
-    const updatedOrder = await res.json();
-    setOrders((prevOrders) =>
-      prevOrders.map((order) => (order.id === orderId ? updatedOrder : order))
-    );
-  } catch (err: unknown) {
-    let errorMessage = "Error updating status";
-    if (err instanceof Error) {
-      errorMessage = err.message;
+    // If clicking on Pending status, navigate to sender details
+    if (newStatus === "Pending") {
+      window.location.href = `/staff/dashboard/sender-details?orderId=${orderId}`
+      return
     }
-    setError(errorMessage);
-  } finally {
-    setLoading(false);
+
+    try {
+      setLoading(true)
+      const res = await fetch(`/api/orders/${orderId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      })
+      if (!res.ok) throw new Error("Failed to update status")
+      const updatedOrder = await res.json()
+      setOrders((prevOrders) => prevOrders.map((order) => (order.id === orderId ? updatedOrder : order)))
+    } catch (err: unknown) {
+      let errorMessage = "Error updating status"
+      if (err instanceof Error) {
+        errorMessage = err.message
+      }
+      setError(errorMessage)
+    } finally {
+      setLoading(false)
+    }
   }
-};
 
   const handleUpdateRateClick = (order: Order) => {
     setSelectedOrder(order)
-    setIbrRate(order.fxRate?.toString() || "")
-    setCustomerRate(order.fxRate?.toString() || "")
+    setIbrRate(order.ibrRate?.toString() || "")
+    setCustomerRate(order.customerRate?.toString() || order.fxRate?.toString() || "")
     setSettlementRate("")
     setShowRateModal(true)
   }
 
-  const handleRateUpdate = async (orderId: string, newRate: number) => {
-  try {
-    setLoading(true);
-    const res = await fetch(`/api/orders/${orderId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fxRate: newRate }),
-    });
-    if (!res.ok) throw new Error("Failed to update FX rate");
-    const updatedOrder = await res.json();
-    setOrders((prevOrders) =>
-      prevOrders.map((order) => (order.id === orderId ? updatedOrder : order))
-    );
-    setShowRateModal(false);
-  } catch (err: unknown) {
-    let errorMessage = "Error updating FX rate";
-    if (err instanceof Error) {
-      errorMessage = err.message;
+  const handleRateUpdate = async (orderId: string, ibrRateValue: number, customerRateValue: number) => {
+    try {
+      setLoading(true)
+      const res = await fetch(`/api/orders/${orderId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ibrRate: ibrRateValue,
+          customerRate: customerRateValue,
+          fxRate: customerRateValue,
+          fxRateUpdated: true, // Add this line
+        }),
+      })
+      if (!res.ok) throw new Error("Failed to update rates")
+      const updatedOrder = await res.json()
+      setOrders((prevOrders) => prevOrders.map((order) => (order.id === orderId ? updatedOrder : order)))
+      setShowRateModal(false)
+    } catch (err: unknown) {
+      let errorMessage = "Error updating rates"
+      if (err instanceof Error) {
+        errorMessage = err.message
+      }
+      setError(errorMessage)
+    } finally {
+      setLoading(false)
     }
-    setError(errorMessage);
-  } finally {
-    setLoading(false);
   }
-};
 
   const handleSeeMoreClick = () => setVisibleRows((prev) => prev + 5)
   const handleSeeLessClick = () => setVisibleRows(5)
@@ -179,7 +214,10 @@ export default function Dashboard() {
     if (nonChangeableStatuses.includes(currentStatus)) {
       if (currentStatus === "Quote downloaded" || currentStatus === "Documents placed") {
         return (
-          <Link href="/staff/dashboard/sender-details" className="text-dark-blue hover:text-blue-800 underline text-sm">
+          <Link
+            href={`/staff/dashboard/sender-details?orderId=${order.id}`}
+            className="text-dark-blue hover:text-blue-800 underline text-sm"
+          >
             {currentStatus}
           </Link>
         )
@@ -232,6 +270,64 @@ export default function Dashboard() {
 
     return matchesPurpose && matchesSearch
   })
+
+  // Fixed IBR submit function to prevent page refresh
+ const handleIbrSubmit = async (e?: React.FormEvent) => {
+    // Prevent default form submission behavior
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+
+    if (!selectedOrderForIbr || !ibrModalRate.trim()) return
+
+    try {
+      setLoading(true)
+      const res = await fetch(`/api/orders/${selectedOrderForIbr.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ibrRate: Number.parseFloat(ibrModalRate) }),
+      })
+
+      if (!res.ok) {
+        throw new Error("Failed to update IBR rate")
+      }
+
+      const updatedOrder = await res.json()
+
+      // Update the orders state without causing a page refresh
+      setOrders((prevOrders) => prevOrders.map((order) => (order.id === selectedOrderForIbr.id ? updatedOrder : order)))
+
+      // Close modal and reset state
+      setShowIbrModal(false)
+      setIbrModalRate("")
+      setSelectedOrderForIbr(null)
+    } catch (err: unknown) {
+      let errorMessage = "Failed to update IBR rate";
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+      setError(errorMessage);
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const validateOrderForm = (order: Order, formData: {
+  currency?: string;
+  fcyAmt?: string;
+  purpose?: string;
+  receiverAccount?: string;
+}) => {
+  if (!formData) return false;
+
+  const currencyValid = !formData.currency || formData.currency === order.currency;
+  const amountValid = !formData.fcyAmt || Number.parseFloat(formData.fcyAmt) === order.amount;
+  const purposeValid = !formData.purpose || formData.purpose === order.purpose;
+  const accountValid = !formData.receiverAccount || formData.receiverAccount === order.receiverAccount;
+
+  return currencyValid && amountValid && purposeValid && accountValid;
+}
 
   if (loading) return <div className="p-8 text-center">Loading...</div>
   if (error) return <div className="p-8 text-center text-red-500">{error}</div>
@@ -352,7 +448,9 @@ export default function Dashboard() {
                         )}
                         <span className="font-semibold text-sm font-jakarta text-gray-900">{order.id}</span>
                       </div>
-                      <div className="text-gray-600 text-sm font-jakarta">{new Date(order.createdAt).toLocaleDateString()}</div>
+                      <div className="text-gray-600 text-sm font-jakarta">
+                        {new Date(order.createdAt).toLocaleDateString()}
+                      </div>
                       <div className="text-gray-600 text-sm font-jakarta">{order.purpose}</div>
                       <div className="text-gray-600 text-sm font-jakarta">{order.studentName}</div>
                       <div className="text-gray-600 text-sm font-jakarta">{order.currency}</div>
@@ -361,7 +459,7 @@ export default function Dashboard() {
                         <button
                           className={`w-24 h-7 rounded-sm text-xs font-medium border ${
                             order.fxRateUpdated
-                              ? "bg-white border-black text-black font-bold "
+                              ? "bg-white border-gray-800 text-gray-800 font-bold cursor-default"
                               : "bg-white text-red-600 border-red-600 font-bold hover:bg-red-50 cursor-pointer"
                           }`}
                           onClick={(e) => {
@@ -424,8 +522,8 @@ export default function Dashboard() {
                         <button
                           className={`w-24 sm:w-28 h-7 rounded-sm text-xs font-medium border ${
                             order.fxRateUpdated
-                              ? "bg-white border-black text-black font-bold"
-                              : "bg-white text-red-600 border-red-600 font-bold"
+                              ? "bg-white border-gray-800 text-gray-800 font-bold cursor-default"
+                              : "bg-white text-red-600 border-red-600 font-bold hover:bg-red-50 cursor-pointer"
                           }`}
                           onClick={(e) => {
                             e.stopPropagation()
@@ -491,7 +589,7 @@ export default function Dashboard() {
                             </p>
                           </div>
                         </div>
-                        
+
                         {/* Authorization Section */}
                         {order.status !== "Authorized" && (
                           <div className="mt-4 sm:mt-6">
@@ -528,14 +626,50 @@ export default function Dashboard() {
                                     <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
                                       Foreign currency
                                     </h4>
-                                    <div className="bg-white p-2 sm:p-3 rounded-sm border border-gray-200">
-                                      <input
-                                        type="text"
-                                        name="currency"
-                                        className="w-full font-medium text-sm sm:text-base text-black focus:outline-none bg-transparent"
-                                        placeholder="Enter currency"
-                                      />
-                                    </div>
+                                    <Select
+                                      value={formValidation[order.id]?.currency || ""}
+                                      onValueChange={(value) => {
+                                        setFormValidation((prev) => ({
+                                          ...prev,
+                                          [order.id]: {
+                                            ...prev[order.id],
+                                            currency: value,
+                                            isValid: validateOrderForm(order, { ...prev[order.id], currency: value }),
+                                          },
+                                        }))
+                                      }}
+                                    >
+                                      <SelectTrigger
+                                        className={`bg-white border h-10 sm:h-12 ${
+                                          formValidation[order.id]?.currency &&
+                                          formValidation[order.id]?.currency !== order.currency
+                                            ? "border-red-500"
+                                            : "border-gray-200"
+                                        }`}
+                                      >
+                                        <SelectValue placeholder="Select currency" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="USD">USD</SelectItem>
+                                        <SelectItem value="EUR">EUR</SelectItem>
+                                        <SelectItem value="GBP">GBP</SelectItem>
+                                        <SelectItem value="CAD">CAD</SelectItem>
+                                        <SelectItem value="AUD">AUD</SelectItem>
+                                        <SelectItem value="CHF">CHF</SelectItem>
+                                        <SelectItem value="AED">AED</SelectItem>
+                                        <SelectItem value="NZD">NZD</SelectItem>
+                                        <SelectItem value="SEK">SEK</SelectItem>
+                                        <SelectItem value="GEL">GEL</SelectItem>
+                                        <SelectItem value="BGN">BGN</SelectItem>
+                                        <SelectItem value="UZS">UZS</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                    {formValidation[order.id]?.currency &&
+                                      formValidation[order.id]?.currency !== order.currency && (
+                                        <p className="text-red-500 text-xs mt-1">
+                                          Currency must match order currency: {order.currency}
+                                        </p>
+                                      )}
                                   </div>
 
                                   {/* FC Volume */}
@@ -543,14 +677,41 @@ export default function Dashboard() {
                                     <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
                                       FC Volume
                                     </h4>
-                                    <div className="bg-white p-2 sm:p-3 rounded-sm border border-gray-200">
+                                    <div
+                                      className={`bg-white p-2 sm:p-3 rounded-sm border ${
+                                        formValidation[order.id]?.fcyAmt &&
+                                        Number.parseFloat(formValidation[order.id]?.fcyAmt || "0") !== order.amount
+                                          ? "border-red-500"
+                                          : "border-gray-200"
+                                      }`}
+                                    >
                                       <input
                                         type="text"
                                         name="fcyAmt"
+                                        value={formValidation[order.id]?.fcyAmt || ""}
+                                        onChange={(e) => {
+                                          setFormValidation((prev) => ({
+                                            ...prev,
+                                            [order.id]: {
+                                              ...prev[order.id],
+                                              fcyAmt: e.target.value,
+                                              isValid: validateOrderForm(order, {
+                                                ...prev[order.id],
+                                                fcyAmt: e.target.value,
+                                              }),
+                                            },
+                                          }))
+                                        }}
                                         className="w-full font-medium text-sm sm:text-base text-black focus:outline-none bg-transparent"
                                         placeholder="Enter amount"
                                       />
                                     </div>
+                                    {formValidation[order.id]?.fcyAmt &&
+                                      Number.parseFloat(formValidation[order.id]?.fcyAmt || "0") !== order.amount && (
+                                        <p className="text-red-500 text-xs mt-1">
+                                          Amount must match order amount: {order.amount}
+                                        </p>
+                                      )}
                                   </div>
 
                                   {/* Purpose */}
@@ -558,14 +719,57 @@ export default function Dashboard() {
                                     <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
                                       Purpose
                                     </h4>
-                                    <div className="bg-white p-2 sm:p-3 rounded-sm border border-gray-200">
-                                      <input
-                                        type="text"
-                                        name="purpose"
-                                        className="w-full font-medium text-sm sm:text-base text-black focus:outline-none bg-transparent"
-                                        placeholder="Enter purpose"
-                                      />
-                                    </div>
+                                    <Select
+                                      value={formValidation[order.id]?.purpose || ""}
+                                      onValueChange={(value) => {
+                                        setFormValidation((prev) => ({
+                                          ...prev,
+                                          [order.id]: {
+                                            ...prev[order.id],
+                                            purpose: value,
+                                            isValid: validateOrderForm(order, { ...prev[order.id], purpose: value }),
+                                          },
+                                        }))
+                                      }}
+                                    >
+                                      <SelectTrigger
+                                        className={`bg-white border h-10 sm:h-12 ${
+                                          formValidation[order.id]?.purpose &&
+                                          formValidation[order.id]?.purpose !== order.purpose
+                                            ? "border-red-500"
+                                            : "border-gray-200"
+                                        }`}
+                                      >
+                                        <SelectValue placeholder="Select purpose" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="University fee transfer">University fee transfer</SelectItem>
+                                        <SelectItem value="Student Living expenses transfer">
+                                          Student Living expenses transfer
+                                        </SelectItem>
+                                        <SelectItem value="Student Visa fee payment">
+                                          Student Visa fee payment
+                                        </SelectItem>
+                                        <SelectItem value="Convera registered payment">
+                                          Convera registered payment
+                                        </SelectItem>
+                                        <SelectItem value="Flywire registered payment">
+                                          Flywire registered payment
+                                        </SelectItem>
+                                        <SelectItem value="Blocked account transfer">
+                                          Blocked account transfer
+                                        </SelectItem>
+                                        <SelectItem value="Application fee">Application fee</SelectItem>
+                                        <SelectItem value="Accomodation fee">Accomodation fee</SelectItem>
+                                        <SelectItem value="GIC Canada fee deposite">GIC Canada fee deposite</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                    {formValidation[order.id]?.purpose &&
+                                      formValidation[order.id]?.purpose !== order.purpose && (
+                                        <p className="text-red-500 text-xs mt-1">
+                                          Purpose must match order purpose: {order.purpose}
+                                        </p>
+                                      )}
                                   </div>
 
                                   {/* Account Number */}
@@ -573,14 +777,41 @@ export default function Dashboard() {
                                     <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
                                       Account no.
                                     </h4>
-                                    <div className="bg-white p-2 sm:p-3 rounded-sm border border-gray-200">
+                                    <div
+                                      className={`bg-white p-2 sm:p-3 rounded-sm border ${
+                                        formValidation[order.id]?.receiverAccount &&
+                                        formValidation[order.id]?.receiverAccount !== order.receiverAccount
+                                          ? "border-red-500"
+                                          : "border-gray-200"
+                                      }`}
+                                    >
                                       <input
                                         type="text"
                                         name="receiverAccount"
+                                        value={formValidation[order.id]?.receiverAccount || ""}
+                                        onChange={(e) => {
+                                          setFormValidation((prev) => ({
+                                            ...prev,
+                                            [order.id]: {
+                                              ...prev[order.id],
+                                              receiverAccount: e.target.value,
+                                              isValid: validateOrderForm(order, {
+                                                ...prev[order.id],
+                                                receiverAccount: e.target.value,
+                                              }),
+                                            },
+                                          }))
+                                        }}
                                         className="w-full font-medium text-sm sm:text-base text-black focus:outline-none bg-transparent"
                                         placeholder="Enter account number"
                                       />
                                     </div>
+                                    {formValidation[order.id]?.receiverAccount &&
+                                      formValidation[order.id]?.receiverAccount !== order.receiverAccount && (
+                                        <p className="text-red-500 text-xs mt-1">
+                                          Account number must match order account: {order.receiverAccount}
+                                        </p>
+                                      )}
                                   </div>
 
                                   {/* Rate Block Status */}
@@ -591,9 +822,14 @@ export default function Dashboard() {
                                     <div className="flex flex-col sm:flex-row gap-4">
                                       <Select
                                         value={statusSelections[order.id] || ""}
-                                        onValueChange={(value) =>
+                                        onValueChange={(value) => {
                                           setStatusSelections((prev) => ({ ...prev, [order.id]: value }))
-                                        }
+                                          if (value === "blocked") {
+                                            setSelectedOrderForIbr(order)
+                                            setIbrModalRate("")
+                                            setShowIbrModal(true)
+                                          }
+                                        }}
                                       >
                                         <SelectTrigger className="bg-gray-50 h-10 sm:h-12">
                                           <SelectValue placeholder="Select status" />
@@ -605,15 +841,32 @@ export default function Dashboard() {
                                       </Select>
 
                                       <Button
-                                        className="bg-dark-blue hover:bg-dark-blue text-white h-10 sm:h-12 px-4 sm:px-6"
+                                        className={`h-10 sm:h-12 px-4 sm:px-6 ${
+                                          !formValidation[order.id]?.isValid && statusSelections[order.id] === "blocked"
+                                            ? "bg-gray-400 cursor-not-allowed"
+                                            : "bg-dark-blue hover:bg-dark-blue"
+                                        } text-white`}
+                                        disabled={
+                                          !formValidation[order.id]?.isValid && statusSelections[order.id] === "blocked"
+                                        }
                                         onClick={() => {
-                                          const selected = statusSelections[order.id]
-                                          const statusToSet = selected === "blocked" ? "Authorized" : "Pending"
-                                          handleStatusChange(order.id, statusToSet)
-                                          setExpandedAuthorize((prev) => ({
-                                            ...prev,
-                                            [order.id]: false,
-                                          }))
+                                          if (
+                                            statusSelections[order.id] === "blocked" &&
+                                            formValidation[order.id]?.isValid
+                                          ) {
+                                            setAuthorizedOrders((prev) => new Set([...(Array.from(prev)), order.id]))
+                                            handleStatusChange(order.id, "Authorized")
+                                            setExpandedAuthorize((prev) => ({
+                                              ...prev,
+                                              [order.id]: false,
+                                            }))
+                                          } else if (statusSelections[order.id] !== "blocked") {
+                                            handleStatusChange(order.id, "Authorized")
+                                            setExpandedAuthorize((prev) => ({
+                                              ...prev,
+                                              [order.id]: false,
+                                            }))
+                                          }
                                         }}
                                       >
                                         Submit
@@ -622,16 +875,23 @@ export default function Dashboard() {
                                   </div>
                                 </div>
 
-                                {/* Green Authorize Button */}
+                                {/* Authorize Button - Changes color based on status */}
                                 <div className="flex justify-center sm:justify-end sm:absolute sm:top-[-87px] sm:right-[275px] mt-4 sm:mt-0">
                                   <Button
-                                    className="text-white flex items-center gap-2 h-10 sm:h-12 rounded-md px-4 sm:px-6"
+                                    className={`text-white flex items-center gap-2 h-10 sm:h-12 rounded-md px-4 sm:px-6 ${
+                                      authorizedOrders.has(order.id) ? "cursor-default" : "cursor-pointer"
+                                    }`}
                                     onClick={() => {
-                                      handleStatusChange(order.id, "Authorized")
-                                      setExpandedAuthorize((prev) => ({ ...prev, [order.id]: false }))
+                                      if (!authorizedOrders.has(order.id)) {
+                                        handleStatusChange(order.id, "Authorized")
+                                        setExpandedAuthorize((prev) => ({ ...prev, [order.id]: false }))
+                                      }
                                     }}
                                     style={{
-                                      background: "linear-gradient(to right, #61C454, #414143)",
+                                      background:
+                                        authorizedOrders.has(order.id) || order.status === "Authorized"
+                                          ? "linear-gradient(to right, #61C454, #414143)"
+                                          : "linear-gradient(to right, #614385, #516395)",
                                     }}
                                   >
                                     <Image
@@ -641,7 +901,11 @@ export default function Dashboard() {
                                       height={20}
                                       className="w-5 h-5 sm:w-6 sm:h-6"
                                     />
-                                    <span className="text-sm sm:text-base">Authorize</span>
+                                    <span className="text-sm sm:text-base">
+                                      {authorizedOrders.has(order.id) || order.status === "Authorized"
+                                        ? "Authorized"
+                                        : "Authorize"}
+                                    </span>
                                     <div className="flex ml-1">
                                       <span className="text-white font-bold animate-bounce-slower">&gt;&gt;&gt;</span>
                                     </div>
@@ -710,13 +974,74 @@ export default function Dashboard() {
             <button
               className="bg-dark-blue hover:bg-dark-blue text-white px-14 py-2 rounded-sm text-sm flex items-center"
               onClick={() => {
-                handleRateUpdate(selectedOrder?.id || "", Number.parseFloat(customerRate) || selectedOrder?.fxRate || 0)
+                const ibrValue = Number.parseFloat(ibrRate) || 0
+                const customerValue = Number.parseFloat(customerRate) || selectedOrder?.fxRate || 0
+                handleRateUpdate(selectedOrder?.id || "", ibrValue, customerValue)
               }}
             >
               <Image src="/bolt.png" alt="" width={20} height={20} className="mr-2" />
               Update rates
             </button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* IBR Rate Modal - Fixed to prevent page refresh */}
+      <Dialog open={showIbrModal} onOpenChange={setShowIbrModal}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="text-lg sm:text-xl">Set IBR Rate</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleIbrSubmit}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center">
+                <span className="text-sm font-medium">Order ID:</span>
+                <span className="col-span-2 text-sm -ml-7">#{selectedOrderForIbr?.id}</span>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">IBR Rate</label>
+                <input
+                  type="text"
+                  className="w-full bg-gray-50 rounded p-3 text-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={ibrModalRate}
+                  onChange={(e) => setIbrModalRate(e.target.value)}
+                  placeholder="Enter IBR rate"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault()
+                      handleIbrSubmit()
+                    }
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setShowIbrModal(false)
+                  setIbrModalRate("")
+                  setSelectedOrderForIbr(null)
+                }}
+                className="px-6"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                className="bg-dark-blue hover:bg-dark-blue text-white px-6"
+                onClick={(e) => {
+                  e.preventDefault()
+                  handleIbrSubmit()
+                }}
+              >
+                Submit
+              </Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
     </div>
