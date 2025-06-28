@@ -19,10 +19,10 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { role, userId, type, imageUrl } = body;
+    const { role, userId, type, imageUrl, orderId } = body;
 
     // Validate required fields
-    if (!role || !userId || !type || !imageUrl) {
+    if (!role || !userId || !type || !imageUrl || !orderId) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -35,6 +35,9 @@ export async function POST(request: Request) {
         userId,
         type: type as DocumentType,
         imageUrl,
+        order: {
+          connect: { id: orderId }
+        }
       },
     });
 
