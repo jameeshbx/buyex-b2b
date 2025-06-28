@@ -1,7 +1,8 @@
-import DocumentUploadForm from "@/app/(protected)/staff/(components)/document-upload-form"
-import { Topbar } from '../../(components)/Topbar'
-import { pagesData } from "@/data/navigation"
-import Menubar from "../../(components)/Menubar"
+import DocumentUploadForm from "@/app/(protected)/staff/(components)/document-upload-form";
+import { Topbar } from "../../(components)/Topbar";
+import { pagesData } from "@/data/navigation";
+import Menubar from "../../(components)/Menubar";
+import { Suspense } from "react";
 
 export default function Home() {
   return (
@@ -9,8 +10,10 @@ export default function Home() {
       <Topbar pageData={pagesData.documentUpload} />
       <Menubar />
       <div className="p-4 bg-white">
-        <DocumentUploadForm />
+        <Suspense fallback={<div>Loading...</div>}>
+          <DocumentUploadForm />
+        </Suspense>
       </div>
     </main>
-  )
+  );
 }

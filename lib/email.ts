@@ -7,6 +7,14 @@ interface EmailOptions {
   html: string;
 }
 
+interface EmailWithAttachmentOptions extends EmailOptions {
+  attachments?: Array<{
+    filename: string;
+    content: Buffer;
+    contentType?: string;
+  }>;
+}
+
 const createResetPasswordEmail = (resetUrl: string, userName: string) => `
 <!DOCTYPE html>
 <html>
@@ -90,6 +98,44 @@ export async function sendEmail({ to, cc, subject, html }: EmailOptions) {
   } catch (error) {
     console.error("Error sending email:", error);
     throw new Error("Failed to send email");
+  }
+}
+
+export async function sendEmailWithAttachment({ 
+  to, 
+  cc, 
+  subject, 
+  html, 
+  attachments 
+}: EmailWithAttachmentOptions) {
+  try {
+    // Create a transporter using SMTP
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASSWORD,
+      },
+    });
+
+    // Verify transporter configuration
+    await transporter.verify();
+
+    // Send the email with attachments
+    const info = await transporter.sendMail({
+      from: `"Buy Exchange" <${process.env.SMTP_FROM}>`,
+      to,
+      cc,
+      subject,
+      html,
+      attachments,
+    });
+
+    console.log("Email with attachment sent successfully:", info.messageId);
+    return true;
+  } catch (error) {
+    console.error("Error sending email with attachment:", error);
+    throw new Error("Failed to send email with attachment");
   }
 }
 

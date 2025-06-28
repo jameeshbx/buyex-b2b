@@ -1,22 +1,36 @@
-"use client"
+"use client";
 
-import React, { use } from "react"
-import { useState, useRef, useCallback } from "react"
-import Image from "next/image"
-import { Upload, Download, Edit, Trash2, Paperclip, Send, X } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { useToast } from "@/hooks/use-toast"
-import { z } from "zod"
-import { fileUploadSchema, editFileSchema } from "@/schema/uploadfiles"
-import { Topbar } from "../../../(components)/Topbar"
-import { pagesData } from "@/data/navigation"
+import React, { use } from "react";
+import { useState, useRef, useCallback } from "react";
+import Image from "next/image";
+import {
+  Upload,
+  Download,
+  Edit,
+  Trash2,
+  Paperclip,
+  Send,
+  X,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { z } from "zod";
+import { fileUploadSchema, editFileSchema } from "@/schema/uploadfiles";
+import { Topbar } from "../../../(components)/Topbar";
+import { pagesData } from "@/data/navigation";
 import {
   type UploadedFile,
   type Message,
@@ -26,209 +40,244 @@ import {
   fileUploadConstants,
   getFileIcon,
   formatFileSize,
-} from "@/data/fileUploads"
+} from "@/data/fileUploads";
 
-export default function UploadsPage({ params }: { params: Promise<{ orderId: string }> }) {
-  const { orderId } = use(params)
-  console.log(orderId)
-  const { toast } = useToast()
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const [selectedFileForShare, setSelectedFileForShare] = useState<string | null>(null)
+export default function UploadsPage({
+  params,
+}: {
+  params: Promise<{ orderId: string }>;
+}) {
+  const { orderId } = use(params);
+  console.log(orderId);
+  const { toast } = useToast();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [selectedFileForShare, setSelectedFileForShare] = useState<
+    string | null
+  >(null);
 
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>(initialUploadedFiles)
-  const [selectedFiles, setSelectedFiles] = useState<SelectedFile[]>([])
-  const [comment, setComment] = useState("")
-  const [dragActive, setDragActive] = useState(false)
-  const [editingFile, setEditingFile] = useState<UploadedFile | null>(null)
-  const [editFileName, setEditFileName] = useState("")
-  const [editComment, setEditComment] = useState("")
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [validationErrors, setValidationErrors] = useState<string[]>([])
+  const [uploadedFiles, setUploadedFiles] =
+    useState<UploadedFile[]>(initialUploadedFiles);
+  const [selectedFiles, setSelectedFiles] = useState<SelectedFile[]>([]);
+  const [comment, setComment] = useState("");
+  const [dragActive, setDragActive] = useState(false);
+  const [editingFile, setEditingFile] = useState<UploadedFile | null>(null);
+  const [editFileName, setEditFileName] = useState("");
+  const [editComment, setEditComment] = useState("");
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
-  const [messages, setMessages] = useState<Message[]>(initialMessages)
-  const [newMessage, setNewMessage] = useState("")
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [newMessage, setNewMessage] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Share dialog state
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+  const [studentEmail, setStudentEmail] = useState("");
+  const [studentName, setStudentName] = useState("");
+  const [isSharing, setIsSharing] = useState(false);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   React.useEffect(() => {
-    scrollToBottom()
-  }, [messages])
+    scrollToBottom();
+  }, [messages]);
 
-const handleDrag = useCallback((e: React.DragEvent) => {
-  e.preventDefault()
-  e.stopPropagation()
-  if (e.type === "dragenter" || e.type === "dragover") {
-    setDragActive(true)
-  } else if (e.type === "dragleave") {
-    setDragActive(false)
-  }
-}, [])
-
-const handleFileSelection = useCallback(async (fileList: FileList) => {
-  const newFiles: SelectedFile[] = []
-
-  for (let i = 0; i < fileList.length; i++) {
-    const file = fileList[i]
-
-    try {
-      // Validate against our schema rules
-      fileUploadSchema.pick({ files: true }).parse({ files: [file] })
-
-      let preview = undefined
-      if (file.type.startsWith("image/")) {
-        preview = URL.createObjectURL(file)
-      }
-
-      newFiles.push({ file, preview })
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        toast.error(error.errors[0].message)
-      }
+  const handleDrag = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
     }
-  }
+  }, []);
 
-  setSelectedFiles((prev) => [...prev, ...newFiles])
-}, [toast]) // Empty dependency array since we don't use any external values
+  const handleFileSelection = useCallback(
+    async (fileList: FileList) => {
+      const newFiles: SelectedFile[] = [];
 
-const handleDrop = useCallback((e: React.DragEvent) => {
-  e.preventDefault()
-  e.stopPropagation()
-  setDragActive(false)
+      for (let i = 0; i < fileList.length; i++) {
+        const file = fileList[i];
 
-  if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-    handleFileSelection(e.dataTransfer.files)
-  }
-}, [handleFileSelection]) // Now handleFileSelection is stable
+        try {
+          // Validate against our schema rules
+          fileUploadSchema.pick({ files: true }).parse({ files: [file] });
 
-const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-  if (e.target.files) {
-    handleFileSelection(e.target.files)
-  }
-}, [handleFileSelection]) // Also memoize this handler since it uses handleFileSelection
+          let preview = undefined;
+          if (file.type.startsWith("image/")) {
+            preview = URL.createObjectURL(file);
+          }
+
+          newFiles.push({ file, preview });
+        } catch (error) {
+          if (error instanceof z.ZodError) {
+            toast.error(error.errors[0].message);
+          }
+        }
+      }
+
+      setSelectedFiles((prev) => [...prev, ...newFiles]);
+    },
+    [toast]
+  ); // Empty dependency array since we don't use any external values
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setDragActive(false);
+
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        handleFileSelection(e.dataTransfer.files);
+      }
+    },
+    [handleFileSelection]
+  ); // Now handleFileSelection is stable
+
+  const handleFileInput = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files) {
+        handleFileSelection(e.target.files);
+      }
+    },
+    [handleFileSelection]
+  ); // Also memoize this handler since it uses handleFileSelection
 
   const removeSelectedFile = (index: number) => {
     setSelectedFiles((prev) => {
-      const newFiles = [...prev]
+      const newFiles = [...prev];
       if (newFiles[index].preview) {
-        URL.revokeObjectURL(newFiles[index].preview!)
+        URL.revokeObjectURL(newFiles[index].preview!);
       }
-      newFiles.splice(index, 1)
-      return newFiles
-    })
-  }
+      newFiles.splice(index, 1);
+      return newFiles;
+    });
+  };
 
   const handleUpload = () => {
-    setValidationErrors([])
+    setValidationErrors([]);
 
     try {
       const validation = fileUploadSchema.parse({
         files: selectedFiles.map((sf) => sf.file),
         comment: comment.trim(),
-      })
+      });
       console.log(validation.files);
       console.log(validation.comment);
 
       // Process upload
-      const newUploadedFiles: UploadedFile[] = selectedFiles.map((selectedFile) => ({
-        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-        name: selectedFile.file.name,
-        type: selectedFile.file.type,
-        size: selectedFile.file.size,
-        comment: comment.trim(),
-        uploadedBy: fileUploadConstants.currentUser,
-        uploadedAt: new Date().toLocaleString(),
-        file: selectedFile.file,
-        url: selectedFile.preview,
-      }))
+      const newUploadedFiles: UploadedFile[] = selectedFiles.map(
+        (selectedFile) => ({
+          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+          name: selectedFile.file.name,
+          type: selectedFile.file.type,
+          size: selectedFile.file.size,
+          comment: comment.trim(),
+          uploadedBy: fileUploadConstants.currentUser,
+          uploadedAt: new Date().toLocaleString(),
+          file: selectedFile.file,
+          url: selectedFile.preview,
+        })
+      );
 
-      setUploadedFiles((prev) => [...newUploadedFiles, ...prev])
+      setUploadedFiles((prev) => [...newUploadedFiles, ...prev]);
 
       // Clear selected files and comment
       selectedFiles.forEach((sf) => {
-        if (sf.preview) URL.revokeObjectURL(sf.preview)
-      })
-      setSelectedFiles([])
-      setComment("")
+        if (sf.preview) URL.revokeObjectURL(sf.preview);
+      });
+      setSelectedFiles([]);
+      setComment("");
 
-      toast(`Files uploaded successfully: ${newUploadedFiles.length} file(s) uploaded`)
+      toast(
+        `Files uploaded successfully: ${newUploadedFiles.length} file(s) uploaded`
+      );
     } catch (error) {
       if (error instanceof z.ZodError) {
-        setValidationErrors(error.errors.map((err) => err.message))
+        setValidationErrors(error.errors.map((err) => err.message));
       }
     }
-  }
+  };
 
   const handleDownload = (file: UploadedFile) => {
     if (file.file) {
       // For newly uploaded files
-      const url = URL.createObjectURL(file.file)
-      const a = document.createElement("a")
-      a.href = url
-      a.download = file.name
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
+      const url = URL.createObjectURL(file.file);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = file.name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     } else {
       // For existing files (simulate download)
-      toast(`Download started: Downloading ${file.name}`)
+      toast(`Download started: Downloading ${file.name}`);
     }
-  }
+  };
 
   const handleEdit = (file: UploadedFile) => {
-    setEditingFile(file)
-    setEditFileName(file.name)
-    setEditComment(file.comment)
-    setIsEditDialogOpen(true)
-  }
+    setEditingFile(file);
+    setEditFileName(file.name);
+    setEditComment(file.comment);
+    setIsEditDialogOpen(true);
+  };
 
   const handleSaveEdit = () => {
-    if (!editingFile) return
+    if (!editingFile) return;
 
     try {
       const validation = editFileSchema.parse({
         fileName: editFileName.trim(),
         comment: editComment.trim(),
-      })
+      });
 
       console.log(validation.comment);
 
       setUploadedFiles((prev) =>
         prev.map((file) =>
-          file.id === editingFile.id ? { ...file, name: editFileName.trim(), comment: editComment.trim() } : file,
-        ),
-      )
+          file.id === editingFile.id
+            ? {
+                ...file,
+                name: editFileName.trim(),
+                comment: editComment.trim(),
+              }
+            : file
+        )
+      );
 
-      setIsEditDialogOpen(false)
-      setEditingFile(null)
+      setIsEditDialogOpen(false);
+      setEditingFile(null);
 
-      toast(`File updated successfully: ${editFileName} has been updated`)
+      toast(`File updated successfully: ${editFileName} has been updated`);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        toast.error(error.errors[0].message)
+        toast.error(error.errors[0].message);
       }
     }
-  }
+  };
 
   const handleDelete = (fileId: string) => {
-    setUploadedFiles((prev) => prev.filter((file) => file.id !== fileId))
-    toast("File deleted. File has been removed successfully.")
-  }
+    setUploadedFiles((prev) => prev.filter((file) => file.id !== fileId));
+    toast("File deleted. File has been removed successfully.");
+  };
 
   const handleShareToStudent = () => {
     if (selectedFileForShare) {
-      const fileToShare = uploadedFiles.find((file) => file.id === selectedFileForShare)
+      const fileToShare = uploadedFiles.find(
+        (file) => file.id === selectedFileForShare
+      );
       if (fileToShare) {
-        toast(`${fileToShare.name} has been shared with the student`)
-        setSelectedFileForShare(null)
+        setIsShareDialogOpen(true);
       }
     } else {
-      toast.error("No file selected. Please select a file to share with the student.")
+      toast.error(
+        "No file selected. Please select a file to share with the student."
+      );
     }
-  }
+  };
 
   const handleSendMessage = () => {
     if (newMessage.trim()) {
@@ -236,13 +285,77 @@ const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => 
         id: Date.now().toString(),
         text: newMessage,
         sender: "Current User",
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) + " PM",
+        timestamp:
+          new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }) + " PM",
         isStaff: true,
-      }
-      setMessages((prev) => [...prev, message])
-      setNewMessage("")
+      };
+      setMessages((prev) => [...prev, message]);
+      setNewMessage("");
     }
-  }
+  };
+
+  const handleSendShareEmail = async () => {
+    if (!selectedFileForShare || !studentEmail.trim()) {
+      toast.error("Please select a file and enter student email.");
+      return;
+    }
+
+    const fileToShare = uploadedFiles.find(
+      (file) => file.id === selectedFileForShare
+    );
+    if (!fileToShare) {
+      toast.error("Selected file not found.");
+      return;
+    }
+
+    setIsSharing(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("studentEmail", studentEmail.trim());
+      formData.append("studentName", studentName.trim() || "Student");
+      formData.append("fileName", fileToShare.name);
+      formData.append("fileComment", fileToShare.comment);
+      formData.append("uploadedBy", fileToShare.uploadedBy);
+      formData.append("uploadedAt", fileToShare.uploadedAt);
+
+      // Add the file as attachment
+      if (fileToShare.file) {
+        formData.append("file", fileToShare.file);
+      } else {
+        // If file is not available (e.g., from existing data), create a placeholder
+        const placeholderFile = new File([""], fileToShare.name, {
+          type: fileToShare.type,
+        });
+        formData.append("file", placeholderFile);
+      }
+
+      const response = await fetch("/api/email/share-file", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        toast.success(result.message);
+        setIsShareDialogOpen(false);
+        setStudentEmail("");
+        setStudentName("");
+        setSelectedFileForShare(null);
+      } else {
+        toast.error(result.error || "Failed to send email");
+      }
+    } catch (error) {
+      console.error("Error sharing file:", error);
+      toast.error("Failed to send email. Please try again.");
+    } finally {
+      setIsSharing(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 sm:p-4 md:p-6">
@@ -267,8 +380,11 @@ const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => 
             <CardContent className="flex-1 flex flex-col p-4 md:p-6">
               {/* Drag and Drop Area */}
               <div
-                className={`border-2 border-dashed rounded-lg p-4 text-center flex-1 flex flex-col justify-center transition-colors mb-4 cursor-pointer ${dragActive ? "border-blue-500 bg-blue-50" : "border-gray-300 bg-gray-50"
-                  }`}
+                className={`border-2 border-dashed rounded-lg p-4 text-center flex-1 flex flex-col justify-center transition-colors mb-4 cursor-pointer ${
+                  dragActive
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-300 bg-gray-50"
+                }`}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
                 onDragOver={handleDrag}
@@ -277,15 +393,24 @@ const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => 
               >
                 {selectedFiles.length === 0 ? (
                   <div className="text-gray-500">
-                    <p className="text-sm">{fileUploadConstants.dragDropText.browse}</p>
-                    <p className="text-sm">{fileUploadConstants.dragDropText.dragDrop}</p>
-                    <p className="text-xs mt-2">{fileUploadConstants.dragDropText.allowedTypes}</p>
+                    <p className="text-sm">
+                      {fileUploadConstants.dragDropText.browse}
+                    </p>
+                    <p className="text-sm">
+                      {fileUploadConstants.dragDropText.dragDrop}
+                    </p>
+                    <p className="text-xs mt-2">
+                      {fileUploadConstants.dragDropText.allowedTypes}
+                    </p>
                   </div>
                 ) : (
                   <ScrollArea className="w-full h-full">
                     <div className="space-y-2">
                       {selectedFiles.map((selectedFile, index) => (
-                        <div key={index} className="flex items-center justify-between bg-white p-2 rounded border">
+                        <div
+                          key={index}
+                          className="flex items-center justify-between bg-white p-2 rounded border"
+                        >
                           <div className="flex items-center gap-2">
                             {selectedFile.preview ? (
                               <Image
@@ -294,11 +419,18 @@ const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => 
                                 className="w-8 h-8 object-cover rounded"
                               />
                             ) : (
-                              getFileIcon(selectedFile.file.type, selectedFile.file.name)
+                              getFileIcon(
+                                selectedFile.file.type,
+                                selectedFile.file.name
+                              )
                             )}
                             <div className="text-left">
-                              <p className="text-xs font-medium truncate max-w-[150px]">{selectedFile.file.name}</p>
-                              <p className="text-xs text-gray-500">{formatFileSize(selectedFile.file.size)}</p>
+                              <p className="text-xs font-medium truncate max-w-[150px]">
+                                {selectedFile.file.name}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {formatFileSize(selectedFile.file.size)}
+                              </p>
                             </div>
                           </div>
                           <Button
@@ -306,8 +438,8 @@ const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => 
                             size="sm"
                             className="h-6 w-6 p-0"
                             onClick={(e) => {
-                              e.stopPropagation()
-                              removeSelectedFile(index)
+                              e.stopPropagation();
+                              removeSelectedFile(index);
                             }}
                           >
                             <X className="h-3 w-3" />
@@ -368,11 +500,23 @@ const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => 
                 <ScrollArea className="h-[400px] p-4">
                   <div className="space-y-4">
                     {messages.map((message) => (
-                      <div key={message.id} className={`flex ${message.isStaff ? "justify-end" : "justify-start"}`}>
-                        <div className={`max-w-[80%] ${message.isStaff ? "order-2" : "order-1"}`}>
+                      <div
+                        key={message.id}
+                        className={`flex ${
+                          message.isStaff ? "justify-end" : "justify-start"
+                        }`}
+                      >
+                        <div
+                          className={`max-w-[80%] ${
+                            message.isStaff ? "order-2" : "order-1"
+                          }`}
+                        >
                           <div
-                            className={`rounded-lg p-3 ${message.isStaff ? "bg-gray-100 text-gray-900" : "bg-blue-500 text-white"
-                              }`}
+                            className={`rounded-lg p-3 ${
+                              message.isStaff
+                                ? "bg-gray-100 text-gray-900"
+                                : "bg-blue-500 text-white"
+                            }`}
                           >
                             <p className="text-sm">{message.text}</p>
                           </div>
@@ -382,7 +526,9 @@ const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => 
                                 {message.sender.charAt(0)}
                               </AvatarFallback>
                             </Avatar>
-                            <span className="text-xs text-gray-500">{message.timestamp}</span>
+                            <span className="text-xs text-gray-500">
+                              {message.timestamp}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -405,7 +551,12 @@ const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => 
                     onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
                     className="flex-1"
                   />
-                  <Button variant="ghost" size="sm" className="p-1" onClick={handleSendMessage}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="p-1"
+                    onClick={handleSendMessage}
+                  >
                     <Send className="h-4 w-4" />
                   </Button>
                 </div>
@@ -419,6 +570,7 @@ const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => 
           <Button
             className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 my-4"
             onClick={handleShareToStudent}
+            disabled={!selectedFileForShare}
           >
             {fileUploadConstants.shareButtonText}
           </Button>
@@ -431,17 +583,27 @@ const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => 
               <table className="w-full">
                 <thead className="bg-gray-50 border-b">
                   <tr>
-                    <th className="text-left p-2 md:p-4 font-medium text-gray-600">Files</th>
-                    <th className="text-left p-2 md:p-4 font-medium text-gray-600">Comment</th>
-                    <th className="text-left p-2 md:p-4 font-medium text-gray-600 hidden sm:table-cell">Uploaded by</th>
-                    <th className="text-left p-2 md:p-4 font-medium text-gray-600">Actions</th>
+                    <th className="text-left p-2 md:p-4 font-medium text-gray-600">
+                      Files
+                    </th>
+                    <th className="text-left p-2 md:p-4 font-medium text-gray-600">
+                      Comment
+                    </th>
+                    <th className="text-left p-2 md:p-4 font-medium text-gray-600 hidden sm:table-cell">
+                      Uploaded by
+                    </th>
+                    <th className="text-left p-2 md:p-4 font-medium text-gray-600">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {uploadedFiles.map((file) => (
                     <tr
                       key={file.id}
-                      className={`border-b hover:bg-gray-50 ${selectedFileForShare === file.id ? "bg-blue-50" : ""}`}
+                      className={`border-b hover:bg-gray-50 ${
+                        selectedFileForShare === file.id ? "bg-blue-50" : ""
+                      }`}
                       onClick={() => setSelectedFileForShare(file.id)}
                     >
                       <td className="p-2 md:p-4">
@@ -450,14 +612,22 @@ const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => 
                             type="checkbox"
                             className="rounded"
                             checked={selectedFileForShare === file.id}
-                            onChange={() => setSelectedFileForShare(file.id === selectedFileForShare ? null : file.id)}
+                            onChange={() =>
+                              setSelectedFileForShare(
+                                file.id === selectedFileForShare
+                                  ? null
+                                  : file.id
+                              )
+                            }
                           />
                           {getFileIcon(file.type, file.name)}
                           <div>
                             <div className="font-medium text-gray-900 text-xs sm:text-sm truncate max-w-[100px] sm:max-w-[200px]">
                               {file.name}
                             </div>
-                            <div className="text-xs text-gray-500 hidden sm:block">{formatFileSize(file.size)}</div>
+                            <div className="text-xs text-gray-500 hidden sm:block">
+                              {formatFileSize(file.size)}
+                            </div>
                           </div>
                         </div>
                       </td>
@@ -474,8 +644,8 @@ const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => 
                             size="sm"
                             className="text-blue-600 hover:text-blue-800 p-1"
                             onClick={(e) => {
-                              e.stopPropagation()
-                              handleDownload(file)
+                              e.stopPropagation();
+                              handleDownload(file);
                             }}
                           >
                             <Download className="h-4 w-4" />
@@ -485,8 +655,8 @@ const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => 
                             size="sm"
                             className="text-blue-600 hover:text-blue-800 p-1"
                             onClick={(e) => {
-                              e.stopPropagation()
-                              handleEdit(file)
+                              e.stopPropagation();
+                              handleEdit(file);
                             }}
                           >
                             <Edit className="h-4 w-4" />
@@ -496,8 +666,8 @@ const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => 
                             size="sm"
                             className="text-red-600 hover:text-red-800 p-1"
                             onClick={(e) => {
-                              e.stopPropagation()
-                              handleDelete(file.id)
+                              e.stopPropagation();
+                              handleDelete(file.id);
                             }}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -541,7 +711,10 @@ const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => 
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setIsEditDialogOpen(false)}
+              >
                 Cancel
               </Button>
               <Button className="bg-dark-blue" onClick={handleSaveEdit}>
@@ -551,9 +724,72 @@ const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => 
           </DialogContent>
         </Dialog>
 
+        {/* Share File Dialog */}
+        <Dialog open={isShareDialogOpen} onOpenChange={setIsShareDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Share File with Student</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              {selectedFileForShare && (
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-sm font-medium text-gray-700">
+                    Selected File:
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    {
+                      uploadedFiles.find((f) => f.id === selectedFileForShare)
+                        ?.name
+                    }
+                  </p>
+                </div>
+              )}
+              <div>
+                <Label htmlFor="studentName">Student Name (Optional)</Label>
+                <Input
+                  className="bg-white mt-2"
+                  id="studentName"
+                  value={studentName}
+                  onChange={(e) => setStudentName(e.target.value)}
+                  placeholder="Enter student name"
+                />
+              </div>
+              <div>
+                <Label htmlFor="studentEmail">Student Email *</Label>
+                <Input
+                  className="bg-white mt-2"
+                  id="studentEmail"
+                  type="email"
+                  value={studentEmail}
+                  onChange={(e) => setStudentEmail(e.target.value)}
+                  placeholder="Enter student email address"
+                  required
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setIsShareDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="bg-blue-600 hover:bg-blue-700"
+                onClick={handleSendShareEmail}
+                disabled={!studentEmail.trim() || isSharing}
+              >
+                {isSharing ? "Sending..." : "Send Email"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         {/* Footer */}
-        <div className="mt-4 text-center text-xs text-gray-500">© 2025, Made by BuyExchange.</div>
+        <div className="mt-4 text-center text-xs text-gray-500">
+          © 2025, Made by BuyExchange.
+        </div>
       </div>
     </div>
-  )
+  );
 }
