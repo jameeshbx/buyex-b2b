@@ -228,7 +228,9 @@ model Order {
   senderId            String?
   beneficiary         Beneficiary? @relation(fields: [beneficiaryId], references: [id])
   beneficiaryId       String?
+  documents           Document[] 
 
+  
   @@map("orders")
 }
 
@@ -241,6 +243,8 @@ model Document {
   isVerified Boolean      @default(false)
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
+  order      Order @relation(fields: [orderId], references: [id])
+  orderId    String
 
   @@map("documents")
 }
