@@ -1,7 +1,6 @@
 "use client";
 
 import type React from "react";
-
 import { useState, useRef, useCallback } from "react";
 import Image from "next/image";
 import { Trash2, Upload, Check, Eye, Loader2 } from "lucide-react";
@@ -11,7 +10,7 @@ import { fileUploadSchema } from "@/schema/fileUpload";
 import { z } from "zod";
 import { toast } from "sonner";
 
-interface FileUploaderProps {
+interface CloudinaryFileUploaderProps {
   onFileUpload: (
     file: File | null,
     cloudinaryUrl?: string,
@@ -24,11 +23,10 @@ interface FileUploaderProps {
   maxSizeMB: number;
   required?: boolean;
   fieldName?: string;
-  useCloudinary?: boolean;
   folder?: string;
 }
 
-export function FileUploader({
+export function CloudinaryFileUploader({
   onFileUpload,
   currentFile,
   currentCloudinaryUrl,
@@ -36,9 +34,8 @@ export function FileUploader({
   acceptedFileTypes,
   maxSizeMB,
   fieldName = "File",
-  useCloudinary = false,
   folder = "buyex-documents",
-}: FileUploaderProps) {
+}: CloudinaryFileUploaderProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState<boolean>(false);
@@ -95,37 +92,27 @@ export function FileUploader({
     const file = e.target.files?.[0] || null;
     if (file) {
       if (validateFile(file)) {
-        if (useCloudinary) {
-          setIsUploading(true);
-          setError(null);
+        setIsUploading(true);
+        setError(null);
 
-          try {
-            const uploadResult = await uploadToCloudinary(file);
+        try {
+          const uploadResult = await uploadToCloudinary(file);
 
-            if (uploadResult.error) {
-              setError(uploadResult.error);
-              onFileUpload(null);
-              toast.error(
-                `Failed to upload ${fieldName}: ${uploadResult.error}`
-              );
-            } else {
-              onFileUpload(file, uploadResult.url, uploadResult.publicId);
-              toast.success(
-                `${fieldName} uploaded successfully to Cloudinary!`
-              );
-            }
-          } catch (error) {
-            setError("Upload failed");
+          if (uploadResult.error) {
+            setError(uploadResult.error);
             onFileUpload(null);
-            console.log(error);
-            toast.error(`Failed to upload ${fieldName}`);
-          } finally {
-            setIsUploading(false);
+            toast.error(`Failed to upload ${fieldName}: ${uploadResult.error}`);
+          } else {
+            onFileUpload(file, uploadResult.url, uploadResult.publicId);
+            toast.success(`${fieldName} uploaded successfully to Cloudinary!`);
           }
-        } else {
-          // Local file handling (original behavior)
-          onFileUpload(file);
-          toast.success(`${fieldName} uploaded successfully!`);
+        } catch (error) {
+          setError("Upload failed");
+          console.log(error);
+          onFileUpload(null);
+          toast.error(`Failed to upload ${fieldName}`);
+        } finally {
+          setIsUploading(false);
         }
       } else {
         onFileUpload(null);
@@ -154,51 +141,38 @@ export function FileUploader({
       const file = e.dataTransfer.files?.[0] || null;
       if (file) {
         if (validateFile(file)) {
-          if (useCloudinary) {
-            setIsUploading(true);
-            setError(null);
+          setIsUploading(true);
+          setError(null);
 
-            try {
-              const uploadResult = await uploadToCloudinary(file);
+          try {
+            const uploadResult = await uploadToCloudinary(file);
 
-              if (uploadResult.error) {
-                setError(uploadResult.error);
-                onFileUpload(null);
-                toast.error(
-                  `Failed to upload ${fieldName}: ${uploadResult.error}`
-                );
-              } else {
-                onFileUpload(file, uploadResult.url, uploadResult.publicId);
-                toast.success(
-                  `${fieldName} uploaded successfully to Cloudinary!`
-                );
-              }
-            } catch (error) {
-              setError("Upload failed");
-              console.log(error);
+            if (uploadResult.error) {
+              setError(uploadResult.error);
               onFileUpload(null);
-              toast.error(`Failed to upload ${fieldName}`);
-            } finally {
-              setIsUploading(false);
+              toast.error(
+                `Failed to upload ${fieldName}: ${uploadResult.error}`
+              );
+            } else {
+              onFileUpload(file, uploadResult.url, uploadResult.publicId);
+              toast.success(
+                `${fieldName} uploaded successfully to Cloudinary!`
+              );
             }
-          } else {
-            // Local file handling (original behavior)
-            onFileUpload(file);
-            toast.success(`${fieldName} uploaded successfully!`);
+          } catch (error) {
+            setError("Upload failed");
+            console.log(error);
+            onFileUpload(null);
+            toast.error(`Failed to upload ${fieldName}`);
+          } finally {
+            setIsUploading(false);
           }
         } else {
           toast.error(`Invalid file: ${error}`);
         }
       }
     },
-    [
-      onFileUpload,
-      error,
-      fieldName,
-      validateFile,
-      uploadToCloudinary,
-      useCloudinary,
-    ]
+    [onFileUpload, error, fieldName, validateFile, uploadToCloudinary]
   );
 
   const handleBrowseClick = () => {
@@ -207,7 +181,7 @@ export function FileUploader({
 
   const handleRemoveFile = async () => {
     // If there's a Cloudinary public ID, delete the file from Cloudinary first
-    if (useCloudinary && currentPublicId) {
+    if (currentPublicId) {
       try {
         const response = await fetch("/api/upload/cloudinary/delete", {
           method: "POST",
@@ -270,7 +244,7 @@ export function FileUploader({
           <span className="text-sm text-gray-600 truncate max-w-[200px]">
             {currentFile.name}
           </span>
-          {useCloudinary && currentCloudinaryUrl && (
+          {currentCloudinaryUrl && (
             <span className="text-xs text-green-600 ml-2">✓ Cloudinary</span>
           )}
           <div className="ml-auto flex items-center gap-2">
@@ -315,9 +289,9 @@ export function FileUploader({
           <div className="flex flex-col items-center">
             <div className="flex items-center mb-2">
               <span className="text-green-500 flex items-center text-xs">
-                {useCloudinary && currentCloudinaryUrl
+                {currentCloudinaryUrl
                   ? "Uploaded to Cloudinary"
-                  : "File ready"}{" "}
+                  : "Processing..."}{" "}
                 <Check className="h-3 w-3 ml-1" />
               </span>
             </div>
@@ -349,11 +323,9 @@ export function FileUploader({
             <p className="text-xs text-gray-400">
               Supported: {acceptedFileTypes.join(", ")} (Max {maxSizeMB}MB)
             </p>
-            {useCloudinary && (
-              <p className="text-xs text-blue-500 mt-1">
-                Files will be uploaded to Cloudinary
-              </p>
-            )}
+            <p className="text-xs text-blue-500 mt-1">
+              Files will be uploaded to Cloudinary
+            </p>
           </>
         )}
       </div>
@@ -364,7 +336,7 @@ export function FileUploader({
         file={currentFile}
         isOpen={showPreview}
         onClose={() => setShowPreview(false)}
-        cloudinaryUrl={useCloudinary ? currentCloudinaryUrl : undefined}
+        cloudinaryUrl={currentCloudinaryUrl}
       />
     </div>
   );
