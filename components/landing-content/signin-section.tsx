@@ -15,11 +15,13 @@ export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [errors, setErrors] = useState<Partial<LoginInput>>({})
+  const [authError, setAuthError] = useState("") // Add state for authentication errors
   const [isLoading, setIsLoading] = useState(false)
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setAuthError("") // Clear previous auth errors
 
     const result = loginSchema.safeParse({ email, password })
 
@@ -35,7 +37,7 @@ export default function LoginPage() {
       return
     }
 
-    setErrors({}) // Clear previous errors
+    setErrors({}) // Clear previous validation errors
 
     try {
       const res = await signIn("credentials", {
@@ -49,6 +51,7 @@ export default function LoginPage() {
         const session = await getSession()
 
         if (!session?.user?.role) {
+          setAuthError("User role not found")
           toast.error("User role not found")
           setIsLoading(false)
           return
@@ -79,22 +82,48 @@ export default function LoginPage() {
             router.push("/staff/dashboard") // Default fallback
         }
       } else {
-        // Handle specific error cases
+        // Handle specific error cases and set form errors
         if (res?.error === "CredentialsSignin") {
+          setAuthError("Invalid email or password. Please check your credentials and try again.")
           toast.error("Invalid email or password")
         } else if (res?.error === "AccessDenied") {
+          setAuthError("Your account has been disabled. Please contact support.")
           toast.error("Your account has been disabled. Please contact support.")
         } else if (res?.error === "EmailNotVerified") {
+          setAuthError("Please verify your email address before logging in.")
           toast.error("Please verify your email address before logging in")
         } else {
+          setAuthError("An error occurred during login. Please try again.")
           toast.error("An error occurred during login. Please try again.")
         }
       }
     } catch (error) {
       console.error("Login error:", error)
+      setAuthError("An unexpected error occurred. Please try again later.")
       toast.error("An unexpected error occurred. Please try again later.")
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  // Clear errors when user starts typing
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value)
+    if (errors.email) {
+      setErrors((prev) => ({ ...prev, email: undefined }))
+    }
+    if (authError) {
+      setAuthError("")
+    }
+  }
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value)
+    if (errors.password) {
+      setErrors((prev) => ({ ...prev, password: undefined }))
+    }
+    if (authError) {
+      setAuthError("")
     }
   }
 
@@ -127,13 +156,22 @@ export default function LoginPage() {
           </h2>
 
           <form onSubmit={handleLogin} className="space-y-6 px-0 sm:px-4 lg:p-[102px] lg:mt-[-119px]">
+            {/* Display general authentication error */}
+            {authError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
+                {authError}
+              </div>
+            )}
+
             <div>
               <input
                 type="email"
                 placeholder="Email"
-                className="w-full p-2 border-b border-gray-200 border-t-0 border-l-0 border-r-0 focus:border-t focus:border-gray-500 focus:ring-0"
+                className={`w-full p-2 border-b border-gray-200 border-t-0 border-l-0 border-r-0 focus:border-t focus:border-gray-500 focus:ring-0 ${
+                  errors.email ? "border-red-500" : ""
+                }`}
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={handleEmailChange}
                 disabled={isLoading}
               />
               {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
@@ -143,9 +181,11 @@ export default function LoginPage() {
               <input
                 type="password"
                 placeholder="Password"
-                className="w-full p-2 border-b border-gray-200 border-t-0 border-l-0 border-r-0 focus:border-t focus:border-gray-500 focus:ring-0"
+                className={`w-full p-2 border-b border-gray-200 border-t-0 border-l-0 border-r-0 focus:border-t focus:border-gray-500 focus:ring-0 ${
+                  errors.password ? "border-red-500" : ""
+                }`}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={handlePasswordChange}
                 disabled={isLoading}
               />
               {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}

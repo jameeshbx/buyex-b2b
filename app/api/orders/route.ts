@@ -39,6 +39,7 @@ export async function POST(req: Request) {
       quote,
       calculations,
       generatedPDF,
+      status
     } = body;
 
     if (
@@ -73,7 +74,7 @@ export async function POST(req: Request) {
         currency: currency || "USD",
         totalAmount: parseFloat(totalAmount),
         customerRate: parseFloat(customerRate) || 0,
-        status: "Pending",
+        status:status || "Pending",
         createdBy: "system",
         quote: quote,
         calculations: calculations,
