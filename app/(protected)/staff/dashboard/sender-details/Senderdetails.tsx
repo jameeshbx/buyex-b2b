@@ -46,16 +46,14 @@ type FormValues = OriginalFormValues & {
 
 function Senderdetails() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const orderId = searchParams.get("orderId"); // <-- Always get latest orderId
+
   const [payer, setPayer] = useState<string>("self");
   const [showStatusPopup, setShowStatusPopup] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState("pending");
   const [sameAddress, setSameAddress] = useState(false);
-  const searchParams = useSearchParams();
   const [senderDetails, setSenderDetails] = useState<Sender | null>(null);
-
-  const [orderId] = useState<string | null>(
-    searchParams.get("orderId") || null
-  );
 
   useEffect(() => {
     const storedPayer = localStorage.getItem("selectedPayer");
@@ -80,17 +78,15 @@ function Senderdetails() {
               sourceOfFunds: "salary",
             });
           }
-
-          // router.push(
-          //   `/staff/dashboard/beneficiary-details?orderId=${orderId}`
-          // );
         } else {
-          router.push(`/staff/dashboard/sender-details`);
+          // If no sender, you may want to clear the form or handle accordingly
+          setSenderDetails(null);
+          form.reset(); // Optionally reset the form
         }
       }
     };
     fetchOrder();
-  }, [orderId]);
+  }, [orderId]); // <-- Depend on orderId
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
