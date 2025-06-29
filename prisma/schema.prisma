@@ -1,57 +1,11 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["fullTextSearch"]
+  previewFeatures = ["fullTextSearchPostgres"]
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-}
-
-enum UserRole {
-  SUPER_ADMIN
-  ADMIN
-  USER
-  MANAGER
-  ORGANISATION_ADMIN
-  ORGANISATION_USER
-}
-
-enum DocumentType {
-  PAN
-  AADHAR_FRONT
-  AADHAR_BACK
-  PASSPORT_FRONT
-  PASSPORT_BACK
-  UNIVERSITY_FEE_RECEIPT
-  LOAN_SANCTION_LETTER
-  UNIVERSITY_OFFER_LETTER
-  OTHER
-}
-
-enum DocumentRole {
-  SENDER
-  BENEFICIARY
-  STUDENT
-  ORDER
-}
-
-enum OrderStatus {
-  Received
-  Verified
-  Pending
-  Rejected
-  Completed
-  QuoteDownloaded
-  Authorize
-  DocumentsPlaced
-  RateExpired
 }
 
 model User {
@@ -61,15 +15,15 @@ model User {
   emailVerified  DateTime?
   image          String?
   password       String?
-  status         Boolean              @default(true)
   role           UserRole             @default(ORGANISATION_USER)
   createdAt      DateTime             @default(now())
   updatedAt      DateTime             @updatedAt
-  accounts       Account[]
-  sessions       Session[]
-  resetTokens    PasswordResetToken[]
-  organisation   Organisation?        @relation(fields: [organisationId], references: [id])
   organisationId String?
+  status         Boolean              @default(true)
+  accounts       Account[]
+  resetTokens    PasswordResetToken[]
+  sessions       Session[]
+  organisation   Organisation?        @relation(fields: [organisationId], references: [id])
 
   @@map("users")
 }
@@ -80,15 +34,14 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
   @@map("accounts")
@@ -110,7 +63,7 @@ model PasswordResetToken {
   token     String   @unique
   expires   DateTime
   createdAt DateTime @default(now())
-  user      User     @relation(fields: [email], references: [email], onDelete: Restrict)
+  user      User     @relation(fields: [email], references: [email])
 
   @@map("password_reset_tokens")
 }
@@ -217,20 +170,19 @@ model Order {
   currency            String
   totalAmount         Float
   customerRate        Float
-  status              OrderStatus
   createdAt           DateTime     @default(now())
   updatedAt           DateTime     @updatedAt
-  createdBy           String
-  quote               Json
+  status              OrderStatus
   calculations        Json
+  createdBy           String
   generatedPDF        String
-  sender              Sender?      @relation(fields: [senderId], references: [id])
+  quote               Json
+  beneficiaryId       String?
   senderId            String?
   beneficiary         Beneficiary? @relation(fields: [beneficiaryId], references: [id])
-  beneficiaryId       String?
-  documents           Document[] 
+  sender              Sender?      @relation(fields: [senderId], references: [id])
+  documents           Document[]
 
-  
   @@map("orders")
 }
 
@@ -243,8 +195,8 @@ model Document {
   isVerified Boolean      @default(false)
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
-  order      Order @relation(fields: [orderId], references: [id])
-  orderId    String
+  order      Order?       @relation(fields: [orderId], references: [id])
+  orderId    String?
 
   @@map("documents")
 }
@@ -255,9 +207,49 @@ model DownloadedQuotes {
   createdBy    String
   quote        Json
   calculations Json
-  generatedPDF String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  generatedPDF String?
 
   @@map("downloaded_quotes")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  USER
+  MANAGER
+  ORGANISATION_ADMIN
+  ORGANISATION_USER
+}
+
+enum DocumentType {
+  PAN
+  AADHAR_FRONT
+  AADHAR_BACK
+  PASSPORT_FRONT
+  PASSPORT_BACK
+  UNIVERSITY_FEE_RECEIPT
+  LOAN_SANCTION_LETTER
+  UNIVERSITY_OFFER_LETTER
+  OTHER
+}
+
+enum DocumentRole {
+  SENDER
+  BENEFICIARY
+  STUDENT
+  ORDER
+}
+
+enum OrderStatus {
+  Received
+  Verified
+  Pending
+  Rejected
+  Completed
+  QuoteDownloaded
+  Authorize
+  DocumentsPlaced
+  RateExpired
 }
