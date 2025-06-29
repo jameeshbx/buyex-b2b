@@ -41,7 +41,7 @@ type Order = {
 
 const statusOptions = [
   "Received",
-  "Quote downloaded",
+  "QuoteDownloaded",
   "Authorized",
   "Documents placed",
   "Verified",
@@ -49,7 +49,7 @@ const statusOptions = [
   "Rejected",
   "Completed",
 ]
-const nonChangeableStatuses = ["Quote downloaded", "Documents placed", "Verified", "Rejected", "Completed"]
+const nonChangeableStatuses = ["QuoteDownloaded", "Documents placed", "Verified", "Rejected", "Completed"]
 
 export default function Dashboard() {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
@@ -189,7 +189,7 @@ export default function Dashboard() {
     switch (status.toLowerCase()) {
       case "received":
         return "bg-blue-100 text-blue-800 hover:bg-blue-200"
-      case "quote downloaded":
+      case "QuoteDownloaded":
         return "bg-green-100 text-green-800 hover:bg-green-200"
       case "authorized":
         return "bg-green-100 text-green-800 hover:bg-green-200"
@@ -212,7 +212,7 @@ export default function Dashboard() {
     const currentStatus = order.status
 
     if (nonChangeableStatuses.includes(currentStatus)) {
-      if (currentStatus === "Quote downloaded" || currentStatus === "Documents placed") {
+      if (currentStatus === "QuoteDownloaded" || currentStatus === "Documents placed") {
         return (
           <Link
             href={`/staff/dashboard/sender-details?orderId=${order.id}`}
