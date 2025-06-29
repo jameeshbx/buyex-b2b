@@ -224,7 +224,7 @@ function BeneficiaryDetailsContent() {
       }
 
       if (response.data) {
-        router.push("/staff/dashboard/document-upload");
+        router.push(`/staff/dashboard/document-upload?orderId=${orderId}`);
       }
     } catch (error) {
       setSubmitError(
