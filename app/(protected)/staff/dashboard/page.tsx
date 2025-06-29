@@ -84,7 +84,7 @@ export default function Dashboard() {
     switch (status.toLowerCase()) {
       case "received":
         return "bg-blue-100 text-blue-800 hover:bg-blue-200"
-      case "quote downloaded":
+      case "QuoteDownloaded":
         return "bg-green-100 text-green-800 hover:bg-green-200"
       case "authorize":
         return "bg-red-100 text-red-800 hover:bg-red-200"
