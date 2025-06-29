@@ -46,7 +46,7 @@ export const initialOrders: Order[] = [
     fcyAmt: 500,
     fxRate: 0.0,
     fxRateUpdated: false,
-    status: "Quote downloaded",
+    status: "QuoteDownloaded",
     receiverAccount: "0987654321",
     receiverCountry: "Germany",
     forexPartner: "Partner B",
@@ -185,7 +185,7 @@ export const initialOrders: Order[] = [
 
 export const statusOptions = [
   "Received",
-  "Quote downloaded",
+  "QuoteDownloaded",
   "Authorized",
   "Documents placed",
   "Verified",
@@ -195,7 +195,7 @@ export const statusOptions = [
 ]
 
 export const nonChangeableStatuses = [
-  "Quote downloaded",
+  "QuoteDownloaded",
   "Documents placed",
   "Authorized",
   "Verified",

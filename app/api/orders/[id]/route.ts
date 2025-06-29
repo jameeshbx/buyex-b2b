@@ -48,6 +48,7 @@ export async function PATCH(
       currency,
       totalAmount,
       customerRate,
+      senderId,
     } = body;
 
     const { id } = await params;
@@ -73,6 +74,7 @@ export async function PATCH(
         status,
         totalAmount: totalAmount ? parseFloat(totalAmount) : undefined,
         customerRate: customerRate ? parseFloat(customerRate) : undefined,
+        senderId,
       },
     });
 
