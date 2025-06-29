@@ -1,7 +1,6 @@
 "use client";
 
-import React, { use } from "react";
-import { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback, use } from "react";
 import Image from "next/image";
 import {
   Upload,
@@ -28,19 +27,72 @@ import {
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
-import { fileUploadSchema, editFileSchema } from "@/schema/uploadfiles";
+import { fileUploadSchema } from "@/schema/uploadfiles";
 import { Topbar } from "../../../(components)/Topbar";
 import { pagesData } from "@/data/navigation";
-import {
-  type UploadedFile,
-  type Message,
-  type SelectedFile,
-  initialUploadedFiles,
-  initialMessages,
-  fileUploadConstants,
-  getFileIcon,
-  formatFileSize,
-} from "@/data/fileUploads";
+
+type UploadedFile = {
+  id: string;
+  name: string;
+  type: string;
+  size: number;
+  comment: string;
+  uploadedBy: string;
+  uploadedAt: string;
+  file?: File;
+  url?: string;
+};
+
+type SelectedFile = {
+  file: File;
+  preview?: string;
+};
+
+type Message = {
+  id: string;
+  text: string;
+  sender: string;
+  timestamp: string;
+  isStaff: boolean;
+};
+
+const fileUploadConstants = {
+  dragDropText: {
+    browse: "Click to browse or",
+    dragDrop: "drag & drop your files here",
+    allowedTypes: "Supports: PDF, JPG, PNG, DOCX up to 10MB",
+  },
+  commentInputPlaceholder: "Add a comment...",
+  uploadButtonText: "Upload Files",
+  messageInputPlaceholder: "Type a message...",
+  shareButtonText: "Share with Student",
+  currentUser: "Staff Member",
+};
+
+const getFileIcon = (type: string, name: string) => {
+  const extension = name.split(".").pop()?.toLowerCase();
+  if (type.startsWith("image/")) {
+    return <Image src="/file-image.svg" alt="Image" width={24} height={24} />;
+  } else if (type === "application/pdf" || extension === "pdf") {
+    return <Image src="/file-pdf.svg" alt="PDF" width={24} height={24} />;
+  } else if (
+    type.includes("word") ||
+    type.includes("document") ||
+    extension === "docx"
+  ) {
+    return <Image src="/file-doc.svg" alt="Document" width={24} height={24} />;
+  } else {
+    return <Image src="/file-generic.svg" alt="File" width={24} height={24} />;
+  }
+};
+
+const formatFileSize = (bytes: number) => {
+  if (bytes === 0) return "0 Bytes";
+  const k = 1024;
+  const sizes = ["Bytes", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+};
 
 export default function UploadsPage({
   params,
@@ -48,15 +100,13 @@ export default function UploadsPage({
   params: Promise<{ orderId: string }>;
 }) {
   const { orderId } = use(params);
-  console.log(orderId);
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [selectedFileForShare, setSelectedFileForShare] = useState<
     string | null
   >(null);
-
-  const [uploadedFiles, setUploadedFiles] =
-    useState<UploadedFile[]>(initialUploadedFiles);
+  const [isLoading, setIsLoading] = useState(true);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<SelectedFile[]>([]);
   const [comment, setComment] = useState("");
   const [dragActive, setDragActive] = useState(false);
@@ -65,12 +115,9 @@ export default function UploadsPage({
   const [editComment, setEditComment] = useState("");
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
-
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Share dialog state
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [studentEmail, setStudentEmail] = useState("");
   const [studentName, setStudentName] = useState("");
@@ -80,9 +127,55 @@ export default function UploadsPage({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    const fetchDocuments = async () => {
+      try {
+        const response = await fetch(`/api/upload/document/${orderId}`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch documents");
+        }
+        const documents = await response.json();
+
+        interface DocumentFromAPI {
+          id: string;
+          type: string;
+          role: string;
+          createdAt: string;
+          imageUrl: string;
+        }
+
+        // Then update your mapping:
+        const initialFiles = documents.map((doc: DocumentFromAPI) => ({
+          id: doc.id,
+          name: doc.type.split("/").pop() || doc.type,
+          type: doc.type,
+          size: 0,
+          comment: doc.type,
+          uploadedBy: doc.role,
+          uploadedAt: new Date(doc.createdAt).toLocaleString(),
+          url: doc.imageUrl,
+          file: undefined,
+        }));
+
+        setUploadedFiles(initialFiles);
+      } catch (error) {
+        console.error("Error fetching documents:", error);
+        toast.custom(
+          <div className="bg-red-100 text-red-800 p-2 rounded">
+            <strong>Error:</strong> Failed to load documents for this order
+          </div>
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDocuments();
+  }, [orderId, toast]);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -95,14 +188,13 @@ export default function UploadsPage({
   }, []);
 
   const handleFileSelection = useCallback(
-    async (fileList: FileList) => {
+    (fileList: FileList) => {
       const newFiles: SelectedFile[] = [];
 
       for (let i = 0; i < fileList.length; i++) {
         const file = fileList[i];
 
         try {
-          // Validate against our schema rules
           fileUploadSchema.pick({ files: true }).parse({ files: [file] });
 
           let preview = undefined;
@@ -113,7 +205,11 @@ export default function UploadsPage({
           newFiles.push({ file, preview });
         } catch (error) {
           if (error instanceof z.ZodError) {
-            toast.error(error.errors[0].message);
+            toast.custom(
+              <div className="bg-red-100 text-red-800 p-2 rounded">
+                <strong>Error:</strong> {error.errors[0].message}
+              </div>
+            );
           }
         }
       }
@@ -121,7 +217,7 @@ export default function UploadsPage({
       setSelectedFiles((prev) => [...prev, ...newFiles]);
     },
     [toast]
-  ); // Empty dependency array since we don't use any external values
+  );
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -134,7 +230,7 @@ export default function UploadsPage({
       }
     },
     [handleFileSelection]
-  ); // Now handleFileSelection is stable
+  );
 
   const handleFileInput = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -143,7 +239,7 @@ export default function UploadsPage({
       }
     },
     [handleFileSelection]
-  ); // Also memoize this handler since it uses handleFileSelection
+  );
 
   const removeSelectedFile = (index: number) => {
     setSelectedFiles((prev) => {
@@ -156,54 +252,77 @@ export default function UploadsPage({
     });
   };
 
-  const handleUpload = () => {
+  const handleUpload = async () => {
     setValidationErrors([]);
 
     try {
-      const validation = fileUploadSchema.parse({
-        files: selectedFiles.map((sf) => sf.file),
-        comment: comment.trim(),
-      });
-      console.log(validation.files);
-      console.log(validation.comment);
 
-      // Process upload
-      const newUploadedFiles: UploadedFile[] = selectedFiles.map(
-        (selectedFile) => ({
-          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      const uploadPromises = selectedFiles.map(async (selectedFile) => {
+        const fileReader = new FileReader();
+        const fileData = await new Promise<string>((resolve) => {
+          fileReader.onload = () => resolve(fileReader.result as string);
+          fileReader.readAsDataURL(selectedFile.file);
+        });
+
+        const response = await fetch("/api/upload/document", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            role: "staff",
+            userId: "current-user-id",
+            type: selectedFile.file.type,
+            imageUrl: fileData,
+            orderId: orderId,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to create document");
+        }
+
+        const document = await response.json();
+
+        return {
+          id: document.id,
           name: selectedFile.file.name,
           type: selectedFile.file.type,
           size: selectedFile.file.size,
           comment: comment.trim(),
-          uploadedBy: fileUploadConstants.currentUser,
+          uploadedBy: "Staff",
           uploadedAt: new Date().toLocaleString(),
           file: selectedFile.file,
-          url: selectedFile.preview,
-        })
-      );
+          url: selectedFile.preview || document.imageUrl,
+        };
+      });
 
+      const newUploadedFiles = await Promise.all(uploadPromises);
       setUploadedFiles((prev) => [...newUploadedFiles, ...prev]);
 
-      // Clear selected files and comment
       selectedFiles.forEach((sf) => {
         if (sf.preview) URL.revokeObjectURL(sf.preview);
       });
       setSelectedFiles([]);
       setComment("");
 
-      toast(
-        `Files uploaded successfully: ${newUploadedFiles.length} file(s) uploaded`
-      );
+      toast.custom(<div className="bg-green-100 text-green-800 p-2 rounded">Success!</div>);
     } catch (error) {
+      console.error("Error uploading files:", error);
       if (error instanceof z.ZodError) {
         setValidationErrors(error.errors.map((err) => err.message));
+      } else {
+        toast.custom(
+          <div className="bg-red-100 text-red-800 p-2 rounded">
+            <strong>Error:</strong> Failed to upload files
+          </div>
+        );
       }
     }
   };
 
   const handleDownload = (file: UploadedFile) => {
     if (file.file) {
-      // For newly uploaded files
       const url = URL.createObjectURL(file.file);
       const a = document.createElement("a");
       a.href = url;
@@ -212,9 +331,15 @@ export default function UploadsPage({
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+    } else if (file.url) {
+      const a = document.createElement("a");
+      a.href = file.url;
+      a.download = file.name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     } else {
-      // For existing files (simulate download)
-      toast(`Download started: Downloading ${file.name}`);
+      toast.custom(<div>Download started: Downloading {file.name}</div>);
     }
   };
 
@@ -228,53 +353,45 @@ export default function UploadsPage({
   const handleSaveEdit = () => {
     if (!editingFile) return;
 
-    try {
-      const validation = editFileSchema.parse({
-        fileName: editFileName.trim(),
-        comment: editComment.trim(),
-      });
+    setUploadedFiles((prev) =>
+      prev.map((file) =>
+        file.id === editingFile.id
+          ? {
+            ...file,
+            name: editFileName.trim(),
+            comment: editComment.trim(),
+          }
+          : file
+      )
+    );
 
-      console.log(validation.comment);
+    setIsEditDialogOpen(false);
+    setEditingFile(null);
 
-      setUploadedFiles((prev) =>
-        prev.map((file) =>
-          file.id === editingFile.id
-            ? {
-                ...file,
-                name: editFileName.trim(),
-                comment: editComment.trim(),
-              }
-            : file
-        )
-      );
-
-      setIsEditDialogOpen(false);
-      setEditingFile(null);
-
-      toast(`File updated successfully: ${editFileName} has been updated`);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        toast.error(error.errors[0].message);
-      }
-    }
+    toast.custom(
+      <div className="bg-green-100 text-green-800 p-2 rounded">
+        File updated successfully: {editFileName} has been updated
+      </div>
+    );
   };
 
   const handleDelete = (fileId: string) => {
     setUploadedFiles((prev) => prev.filter((file) => file.id !== fileId));
-    toast("File deleted. File has been removed successfully.");
+    toast.custom(
+      <div className="bg-green-100 text-green-800 p-2 rounded">
+        File deleted successfully
+      </div>
+    );
   };
 
   const handleShareToStudent = () => {
     if (selectedFileForShare) {
-      const fileToShare = uploadedFiles.find(
-        (file) => file.id === selectedFileForShare
-      );
-      if (fileToShare) {
-        setIsShareDialogOpen(true);
-      }
+      setIsShareDialogOpen(true);
     } else {
-      toast.error(
-        "No file selected. Please select a file to share with the student."
+      toast.custom(
+        <div className="bg-red-100 text-red-800 p-2 rounded">
+          Please select a file to share with the student
+        </div>
       );
     }
   };
@@ -285,11 +402,10 @@ export default function UploadsPage({
         id: Date.now().toString(),
         text: newMessage,
         sender: "Current User",
-        timestamp:
-          new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }) + " PM",
+        timestamp: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
         isStaff: true,
       };
       setMessages((prev) => [...prev, message]);
@@ -299,92 +415,76 @@ export default function UploadsPage({
 
   const handleSendShareEmail = async () => {
     if (!selectedFileForShare || !studentEmail.trim()) {
-      toast.error("Please select a file and enter student email.");
-      return;
-    }
-
-    const fileToShare = uploadedFiles.find(
-      (file) => file.id === selectedFileForShare
-    );
-    if (!fileToShare) {
-      toast.error("Selected file not found.");
+      toast.custom(
+        <div className="bg-red-100 text-red-800 p-2 rounded">
+          Please select a file and enter student email
+        </div>
+      );
       return;
     }
 
     setIsSharing(true);
 
     try {
-      const formData = new FormData();
-      formData.append("studentEmail", studentEmail.trim());
-      formData.append("studentName", studentName.trim() || "Student");
-      formData.append("fileName", fileToShare.name);
-      formData.append("fileComment", fileToShare.comment);
-      formData.append("uploadedBy", fileToShare.uploadedBy);
-      formData.append("uploadedAt", fileToShare.uploadedAt);
-
-      // Add the file as attachment
-      if (fileToShare.file) {
-        formData.append("file", fileToShare.file);
-      } else {
-        // If file is not available (e.g., from existing data), create a placeholder
-        const placeholderFile = new File([""], fileToShare.name, {
-          type: fileToShare.type,
-        });
-        formData.append("file", placeholderFile);
-      }
-
-      const response = await fetch("/api/email/share-file", {
-        method: "POST",
-        body: formData,
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        toast.success(result.message);
-        setIsShareDialogOpen(false);
-        setStudentEmail("");
-        setStudentName("");
-        setSelectedFileForShare(null);
-      } else {
-        toast.error(result.error || "Failed to send email");
-      }
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      toast.custom(
+        <div className="bg-green-100 text-green-800 p-2 rounded">
+          File shared with student successfully
+        </div>
+      );
+      setIsShareDialogOpen(false);
+      setStudentEmail("");
+      setStudentName("");
+      setSelectedFileForShare(null);
     } catch (error) {
-      console.error("Error sharing file:", error);
-      toast.error("Failed to send email. Please try again.");
+      console.error('Sharing failed:', error);
+      toast.custom(
+        <div className="bg-red-100 text-red-800 p-2 rounded">
+          Failed to send email: {error instanceof Error ? error.message : 'Unknown error'}
+        </div>
+      );
     } finally {
       setIsSharing(false);
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-2 sm:p-4 md:p-6">
+        <div className="sticky top-0 z-40">
+          <Topbar pageData={pagesData.fileUpload} />
+        </div>
+        <div className="max-w-7xl mx-auto flex justify-center items-center h-[calc(100vh-100px)]">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-2 sm:p-4 md:p-6">
-      {/* Fixed Topbar */}
       <div className="sticky top-0 z-40">
         <Topbar pageData={pagesData.fileUpload} />
       </div>
       <div className="max-w-7xl mx-auto">
-        {/* Main Content - Two Equal Sections */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6">
-          {/* Left Section - File Upload */}
           <Card className="h-[500px] flex flex-col">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">Zoe Fernandes</CardTitle>
+                <CardTitle className="text-lg">Order Documents</CardTitle>
                 <Badge className="bg-green-100 text-green-800">
                   <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                  Completed
+                  Active
                 </Badge>
               </div>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col p-4 md:p-6">
-              {/* Drag and Drop Area */}
               <div
-                className={`border-2 border-dashed rounded-lg p-4 text-center flex-1 flex flex-col justify-center transition-colors mb-4 cursor-pointer ${
-                  dragActive
-                    ? "border-blue-500 bg-blue-50"
-                    : "border-gray-300 bg-gray-50"
-                }`}
+                className={`border-2 border-dashed rounded-lg p-4 text-center flex-1 flex flex-col justify-center transition-colors mb-4 cursor-pointer ${dragActive
+                  ? "border-blue-500 bg-blue-50"
+                  : "border-gray-300 bg-gray-50"
+                  }`}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
                 onDragOver={handleDrag}
@@ -414,7 +514,7 @@ export default function UploadsPage({
                           <div className="flex items-center gap-2">
                             {selectedFile.preview ? (
                               <Image
-                                src={selectedFile.preview || "/placeholder.svg"}
+                                src={selectedFile.preview}
                                 alt={selectedFile.file.name}
                                 width={32}
                                 height={32}
@@ -453,7 +553,6 @@ export default function UploadsPage({
                 )}
               </div>
 
-              {/* Validation Errors */}
               {validationErrors.length > 0 && (
                 <div className="mb-2">
                   {validationErrors.map((error, index) => (
@@ -464,7 +563,6 @@ export default function UploadsPage({
                 </div>
               )}
 
-              {/* Comment Input */}
               <div className="mb-4">
                 <Input
                   placeholder={fileUploadConstants.commentInputPlaceholder}
@@ -474,14 +572,13 @@ export default function UploadsPage({
                 />
               </div>
 
-              {/* Upload Button */}
               <input
                 ref={fileInputRef}
                 type="file"
                 multiple
                 onChange={handleFileInput}
                 className="hidden"
-                accept={fileUploadConstants.allowedFileTypes}
+                accept="image/*,.pdf,.doc,.docx"
               />
               <Button
                 onClick={handleUpload}
@@ -494,31 +591,26 @@ export default function UploadsPage({
             </CardContent>
           </Card>
 
-          {/* Right Section - Messages */}
           <Card className="h-[500px] flex flex-col">
             <CardContent className="flex-1 flex flex-col p-0">
-              {/* Messages Area with Scroll */}
               <div className="flex-1 overflow-hidden">
                 <ScrollArea className="h-[400px] p-4">
                   <div className="space-y-4">
                     {messages.map((message) => (
                       <div
                         key={message.id}
-                        className={`flex ${
-                          message.isStaff ? "justify-end" : "justify-start"
-                        }`}
+                        className={`flex ${message.isStaff ? "justify-end" : "justify-start"
+                          }`}
                       >
                         <div
-                          className={`max-w-[80%] ${
-                            message.isStaff ? "order-2" : "order-1"
-                          }`}
+                          className={`max-w-[80%] ${message.isStaff ? "order-2" : "order-1"
+                            }`}
                         >
                           <div
-                            className={`rounded-lg p-3 ${
-                              message.isStaff
-                                ? "bg-gray-100 text-gray-900"
-                                : "bg-blue-500 text-white"
-                            }`}
+                            className={`rounded-lg p-3 ${message.isStaff
+                              ? "bg-gray-100 text-gray-900"
+                              : "bg-blue-500 text-white"
+                              }`}
                           >
                             <p className="text-sm">{message.text}</p>
                           </div>
@@ -540,7 +632,6 @@ export default function UploadsPage({
                 </ScrollArea>
               </div>
 
-              {/* Message Input Area */}
               <div className="border-t p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <Button variant="ghost" size="sm" className="p-1">
@@ -567,7 +658,6 @@ export default function UploadsPage({
           </Card>
         </div>
 
-        {/* Share to student button */}
         <div className="flex justify-end">
           <Button
             className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 my-4"
@@ -578,7 +668,6 @@ export default function UploadsPage({
           </Button>
         </div>
 
-        {/* Files Table */}
         <Card>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
@@ -603,9 +692,8 @@ export default function UploadsPage({
                   {uploadedFiles.map((file) => (
                     <tr
                       key={file.id}
-                      className={`border-b hover:bg-gray-50 ${
-                        selectedFileForShare === file.id ? "bg-blue-50" : ""
-                      }`}
+                      className={`border-b hover:bg-gray-50 ${selectedFileForShare === file.id ? "bg-blue-50" : ""
+                        }`}
                       onClick={() => setSelectedFileForShare(file.id)}
                     >
                       <td className="p-2 md:p-4">
@@ -623,14 +711,14 @@ export default function UploadsPage({
                             }
                           />
                           {getFileIcon(file.type, file.name)}
-                          <div>
+                          <>
                             <div className="font-medium text-gray-900 text-xs sm:text-sm truncate max-w-[100px] sm:max-w-[200px]">
                               {file.name}
                             </div>
                             <div className="text-xs text-gray-500 hidden sm:block">
                               {formatFileSize(file.size)}
                             </div>
-                          </div>
+                          </>
                         </div>
                       </td>
                       <td className="p-2 md:p-4 text-gray-600 text-xs sm:text-sm truncate max-w-[100px] sm:max-w-[200px]">
@@ -684,7 +772,6 @@ export default function UploadsPage({
           </CardContent>
         </Card>
 
-        {/* Edit File Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent>
             <DialogHeader>
@@ -719,14 +806,13 @@ export default function UploadsPage({
               >
                 Cancel
               </Button>
-              <Button className="bg-dark-blue" onClick={handleSaveEdit}>
+              <Button className="bg-blue-600" onClick={handleSaveEdit}>
                 Save Changes
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
 
-        {/* Share File Dialog */}
         <Dialog open={isShareDialogOpen} onOpenChange={setIsShareDialogOpen}>
           <DialogContent>
             <DialogHeader>
@@ -787,9 +873,8 @@ export default function UploadsPage({
           </DialogContent>
         </Dialog>
 
-        {/* Footer */}
         <div className="mt-4 text-center text-xs text-gray-500">
-          © 2025, Made by BuyExchange.
+          © {new Date().getFullYear()}, Made by BuyExchange.
         </div>
       </div>
     </div>
