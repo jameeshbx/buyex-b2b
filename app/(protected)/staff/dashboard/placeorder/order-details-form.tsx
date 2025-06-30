@@ -195,7 +195,8 @@ export default function OrderDetailsForm() {
       currency: "USD",
       totalAmount: "",
       customerRate: "",
-      educationLoan: "no", // Changed from undefined to "no"
+      educationLoan: "no",
+       // Changed from undefined to "no"
     },
   });
 
