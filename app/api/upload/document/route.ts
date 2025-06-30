@@ -35,13 +35,11 @@ export async function POST(request: Request) {
         userId,
         type: type as DocumentType,
         imageUrl,
-        order: {
-          connect: { id: orderId }
-        }
+        orderId, // <-- just set orderId directly!
       },
     });
 
-    return NextResponse.json(document, { status: 201 });
+    return NextResponse.json(document, { status: 200 });
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to create document", details: error },
