@@ -29,14 +29,15 @@ type FormValues = OriginalFormValues & {
 }
 
 function Senderdetails() {
-  const router = useRouter()
-  const [payer, setPayer] = useState<string>("self")
-  const [showStatusPopup, setShowStatusPopup] = useState(false)
-  const [selectedStatus, setSelectedStatus] = useState("pending")
-  const [sameAddress, setSameAddress] = useState(false)
-  const searchParams = useSearchParams()
-  const [senderDetails, setSenderDetails] = useState<Sender | null>(null)
-  const [orderId] = useState<string | null>(searchParams.get("orderId") || null)
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const orderId = searchParams.get("orderId"); // <-- Always get latest orderId
+
+  const [payer, setPayer] = useState<string>("self");
+  const [showStatusPopup, setShowStatusPopup] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState("pending");
+  const [sameAddress, setSameAddress] = useState(false);
+  const [senderDetails, setSenderDetails] = useState<Sender | null>(null);
 
   useEffect(() => {
     const storedPayer = localStorage.getItem("selectedPayer")
@@ -64,14 +65,15 @@ function Senderdetails() {
           } else {
             router.push(`/staff/dashboard/sender-details`)
           }
-        } catch (error) {
-          console.error("Error fetching order:", error)
+        } catch  {
+          // If no sender, you may want to clear the form or handle accordingly
+          setSenderDetails(null);
+          form.reset(); // Optionally reset the form
         }
       }
-    }
-
-    fetchOrder()
-  }, [orderId])
+    };
+    fetchOrder();
+  }, [orderId]); // <-- Depend on orderId
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -916,4 +918,4 @@ if (orderId && response.data) {
   )
 }
 
-export default Senderdetails
+export default Senderdetails;
