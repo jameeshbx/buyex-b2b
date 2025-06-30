@@ -1,25 +1,16 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import Image from "next/image";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  formSchema,
-  FormValues as OriginalFormValues,
-} from "@/schema/senderdetails";
+import { useEffect, useState } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { Card, CardContent } from "@/components/ui/card"
+import { Tabs, TabsContent } from "@/components/ui/tabs"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import Image from "next/image"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { formSchema, type FormValues as OriginalFormValues } from "@/schema/senderdetails"
 import {
   Dialog,
   DialogContent,
@@ -27,22 +18,15 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { useRouter, useSearchParams } from "next/navigation";
-import axios from "axios";
-import { Sender } from "@prisma/client";
+} from "@/components/ui/dialog"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { useRouter, useSearchParams } from "next/navigation"
+import axios from "axios"
+import type { Sender } from "@prisma/client"
 
 type FormValues = OriginalFormValues & {
-  status?: string;
-};
+  status?: string
+}
 
 function Senderdetails() {
   const router = useRouter();
@@ -56,29 +40,32 @@ function Senderdetails() {
   const [senderDetails, setSenderDetails] = useState<Sender | null>(null);
 
   useEffect(() => {
-    const storedPayer = localStorage.getItem("selectedPayer");
+    const storedPayer = localStorage.getItem("selectedPayer")
     if (storedPayer) {
-      setPayer(storedPayer.toLowerCase());
+      setPayer(storedPayer.toLowerCase())
     }
-  }, []);
+  }, [])
 
   useEffect(() => {
     const fetchOrder = async () => {
       if (orderId) {
-        const order = await axios.get(`/api/orders/${orderId}`);
-
-        if (order.data.senderId) {
-          const sender = await axios.get(`/api/senders/${order.data.senderId}`);
-          if (sender.data) {
-            setSenderDetails(sender.data);
-            form.reset({
-              ...sender.data,
-              bankCharges: "resident",
-              occupationStatus: "employed",
-              sourceOfFunds: "salary",
-            });
+        try {
+          const order = await axios.get(`/api/orders/${orderId}`)
+          if (order.data.senderId) {
+            const sender = await axios.get(`/api/senders/${order.data.senderId}`)
+            if (sender.data) {
+              setSenderDetails(sender.data)
+              form.reset({
+                ...sender.data,
+                bankCharges: "resident",
+                occupationStatus: "employed",
+                sourceOfFunds: "salary",
+              })
+            }
+          } else {
+            router.push(`/staff/dashboard/sender-details`)
           }
-        } else {
+        } catch  {
           // If no sender, you may want to clear the form or handle accordingly
           setSenderDetails(null);
           form.reset(); // Optionally reset the form
@@ -100,47 +87,19 @@ function Senderdetails() {
       state: senderDetails?.state || "",
       postalCode: senderDetails?.postalCode || "",
       nationality:
-        (senderDetails?.nationality as
-          | "indian"
-          | "american"
-          | "british"
-          | "canadian"
-          | "australian") || "indian",
-      relationship: payer as
-        | "self"
-        | "parent"
-        | "brother"
-        | "sister"
-        | "spouse"
-        | "other"
-        | undefined,
+        (senderDetails?.nationality as "indian" | "american" | "british" | "canadian" | "australian") || "indian",
+      relationship: payer as "self" | "parent" | "brother" | "sister" | "spouse" | "other" | undefined,
       senderName: senderDetails?.senderName || "",
-      bankCharges:
-        (senderDetails?.bankCharges as "resident" | "nri" | "pio") ||
-        "resident",
+      bankCharges: (senderDetails?.bankCharges as "resident" | "nri" | "pio") || "resident",
       mothersName: senderDetails?.mothersName || "",
       dob: senderDetails?.dob || "",
       senderNationality:
-        (senderDetails?.nationality as
-          | "indian"
-          | "american"
-          | "british"
-          | "canadian"
-          | "australian") || "indian",
+        (senderDetails?.nationality as "indian" | "american" | "british" | "canadian" | "australian") || "indian",
       senderEmail: senderDetails?.senderEmail || "",
-      sourceOfFunds:
-        (senderDetails?.sourceOfFunds as
-          | "salary"
-          | "savings"
-          | "business"
-          | "investment") || undefined,
+      sourceOfFunds: (senderDetails?.sourceOfFunds as "salary" | "savings" | "business" | "investment") || undefined,
       occupationStatus:
-        (senderDetails?.occupationStatus as
-          | "employed"
-          | "self-employed"
-          | "business-owner"
-          | "retired"
-          | "student") || undefined,
+        (senderDetails?.occupationStatus as "employed" | "self-employed" | "business-owner" | "retired" | "student") ||
+        undefined,
       payerAccountNumber: senderDetails?.payerAccountNumber || "",
       payerBankName: senderDetails?.payerBankName || "",
       senderAddressLine1: senderDetails?.senderAddressLine1 || "",
@@ -149,88 +108,117 @@ function Senderdetails() {
       senderPostalCode: senderDetails?.senderPostalCode || "",
       status: senderDetails?.status || "pending",
     },
-  });
+  })
 
   useEffect(() => {
-    form.setValue(
-      "relationship",
-      payer as
-        | "self"
-        | "parent"
-        | "brother"
-        | "sister"
-        | "spouse"
-        | "other"
-        | undefined
-    );
-  }, [payer, form]);
+    const fetchOrderStatus = async () => {
+      if (orderId) {
+        try {
+          const order = await axios.get(`/api/orders/${orderId}`)
+          if (order.data) {
+            form.setValue("status", order.data.status || "pending")
+          }
+        } catch (error) {
+          console.error("Error fetching order status:", error)
+        }
+      }
+    }
+    fetchOrderStatus()
+  }, [orderId, form])
 
-  const onSubmit = async (data: FormValues) => {
-    const errors = form.formState.errors;
-    if (Object.keys(errors).length > 0) {
-      alert("Please fix the form errors before submitting");
-      return;
+  useEffect(() => {
+    form.setValue("relationship", payer as "self" | "parent" | "brother" | "sister" | "spouse" | "other" | undefined)
+  }, [payer, form])
+
+ const onSubmit = async (data: FormValues) => {
+  const errors = form.formState.errors;
+  if (Object.keys(errors).length > 0) {
+    alert("Please fix the form errors before submitting");
+    return;
+  }
+
+  try {
+    
+    const statusToUse = "pending";
+
+    let response;
+    if (senderDetails?.id) {
+      response = await axios.put(`/api/senders/${senderDetails.id}`, {
+        ...data,
+        orderId: orderId,
+      });
+    } else {
+      response = await axios.post("/api/senders", {
+        ...data,
+        orderId: orderId,
+      });
     }
 
-    try {
-      let response;
-      if (senderDetails?.id) {
-        response = await axios.put(`/api/senders/${senderDetails.id}`, {
-          ...data,
-          orderId: orderId,
-        });
-      } else {
-        response = await axios.post("/api/senders", {
-          ...data,
-          orderId: orderId,
-        });
-      }
+if (orderId && response.data) {
+  try {
+    console.log("Updating order status to:", statusToUse);
+    await axios.patch(`/api/orders/${orderId}`, {
+      status: statusToUse, // This will always be "pending"
+      studentName: data.studentName,
+      senderId: response.data.id, // Link the sender to the order
+    });
+    console.log("Order status updated successfully");
+  } catch (patchError) {
+    console.error("Error updating order status:", patchError);
+    // Don't block the flow if order update fails
+    alert("Sender details saved, but there was an issue updating the order status.");
+  }
+}
 
-      if (response.data) {
-        router.push(`/staff/dashboard/beneficiary-details?orderId=${orderId}`);
-      }
-    } catch (error) {
-      console.error("Failed to create sender:", error);
-      alert("Failed to submit form. Please try again.");
+    if (response.data) {
+      router.push(`/staff/dashboard/beneficiary-details?orderId=${orderId}`);
     }
-  };
+  } catch (error) {
+    console.error("Failed to create sender:", error);
+    if (axios.isAxiosError(error)) {
+      console.error("Response data:", error.response?.data);
+      console.error("Response status:", error.response?.status);
+    }
+    alert("Failed to submit form. Please try again.");
+  }
+};
 
   const handleReset = () => {
-    form.reset();
-    setSameAddress(false);
-    form.setValue("status", "pending");
-  };
+    form.reset()
+    setSameAddress(false)
+    form.setValue("status", "pending")
+  }
 
   const handleSameAddressChange = (checked: boolean) => {
-    setSameAddress(checked);
+    setSameAddress(checked)
     if (checked) {
-      const { addressLine1, addressLine2, state, postalCode } =
-        form.getValues();
-      form.setValue("senderAddressLine1", addressLine1);
-      form.setValue("senderAddressLine2", addressLine2);
-      form.setValue("senderState", state);
-      form.setValue("senderPostalCode", postalCode);
+      const { addressLine1, addressLine2, state, postalCode } = form.getValues()
+      form.setValue("senderAddressLine1", addressLine1)
+      form.setValue("senderAddressLine2", addressLine2)
+      form.setValue("senderState", state)
+      form.setValue("senderPostalCode", postalCode)
     }
-  };
+  }
 
-  const handleStatusConfirm = () => {
-    form.setValue("status", selectedStatus);
-    setShowStatusPopup(false);
-  };
+  const handleStatusConfirm = async () => {
+    form.setValue("status", selectedStatus)
+    if (orderId) {
+      try {
+        await axios.patch(`/api/orders/${orderId}`, {
+          status: selectedStatus,
+        })
+      } catch (error) {
+        console.error("Error updating status:", error)
+        alert("Failed to update status. Please try again.")
+      }
+    }
+    setShowStatusPopup(false)
+  }
 
   const handleOpenChange = (open: boolean) => {
-    if (!open) return; // Prevent closing when clicking outside
-    setShowStatusPopup(open);
-  };
-
-  // useEffect(() => {
-  //   console.log("Form state:", {
-  //     isValid: form.formState.isValid,
-  //     isDirty: form.formState.isDirty,
-  //     errors: form.formState.errors,
-  //     values: form.getValues(),
-  //   });
-  // }, [form.formState.isValid, form.formState.isDirty, form.formState.errors]);
+    if (!open) return // Prevent closing when clicking outside
+    setShowStatusPopup(open)
+  }
 
   return (
     <div>
@@ -238,18 +226,11 @@ function Senderdetails() {
       <Dialog open={showStatusPopup} onOpenChange={handleOpenChange}>
         <DialogContent className="w-[90vw] max-w-[425px] md:w-full">
           <DialogHeader className="px-4 sm:px-6">
-            <DialogTitle className="text-lg sm:text-xl">
-              Rate Status
-            </DialogTitle>
-            <DialogDescription className="mt-2 sm:mt-3 text-sm sm:text-base">
-              Update rate status
-            </DialogDescription>
+            <DialogTitle className="text-lg sm:text-xl">Rate Status</DialogTitle>
+            <DialogDescription className="mt-2 sm:mt-3 text-sm sm:text-base">Update rate status</DialogDescription>
           </DialogHeader>
           <div className="px-4 sm:px-6 py-2 sm:py-4">
-            <Select
-              value={selectedStatus}
-              onValueChange={(value) => setSelectedStatus(value)}
-            >
+            <Select value={selectedStatus} onValueChange={(value) => setSelectedStatus(value)}>
               <SelectTrigger className="w-full h-10 sm:h-12 text-sm sm:text-base">
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
@@ -268,21 +249,17 @@ function Senderdetails() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
       <div className="max-w-7xl mx-auto -mt-10 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         <Tabs defaultValue="sender" className="w-full">
           <TabsContent value="sender">
             <Card className="shadow-none bg-transparent sm:bg-white sm:shadow-sm sm:border rounded-none">
               <CardContent className="p-0 sm:p-0">
                 <Form {...form}>
-                  <form
-                    onSubmit={form.handleSubmit(onSubmit)}
-                    className="space-y-6 sm:space-y-8"
-                  >
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 sm:space-y-8">
                     {/* Student Details Section - Always shown */}
                     <div className="p-6 sm:p-6 mb-5">
-                      <h2 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6 font-jakarta">
-                        Student Details
-                      </h2>
+                      <h2 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6 font-jakarta">Student Details</h2>
                       <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2">
                         {/* Student Name */}
                         <FormField
@@ -420,9 +397,7 @@ function Senderdetails() {
                           name="state"
                           render={({ field }) => (
                             <FormItem className="space-y-1 sm:space-y-2">
-                              <FormLabel className="font-jakarta text-sm sm:text-base text-gray-500">
-                                State
-                              </FormLabel>
+                              <FormLabel className="font-jakarta text-sm sm:text-base text-gray-500">State</FormLabel>
                               <FormControl>
                                 <Input
                                   placeholder="State"
@@ -465,44 +440,26 @@ function Senderdetails() {
                               <FormLabel className="font-jakarta text-sm sm:text-base text-gray-500">
                                 Nationality
                               </FormLabel>
-                              <Select
-                                onValueChange={field.onChange}
-                                defaultValue={field.value}
-                              >
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
                                 <FormControl>
                                   <SelectTrigger className="bg-blue-50 h-12 sm:h-14 rounded-none">
                                     <SelectValue placeholder="Select nationality" />
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent className="rounded-none text-gray-500">
-                                  <SelectItem
-                                    value="indian"
-                                    className="rounded-none"
-                                  >
+                                  <SelectItem value="indian" className="rounded-none">
                                     Indian
                                   </SelectItem>
-                                  <SelectItem
-                                    value="american"
-                                    className="rounded-none"
-                                  >
+                                  <SelectItem value="american" className="rounded-none">
                                     American
                                   </SelectItem>
-                                  <SelectItem
-                                    value="british"
-                                    className="rounded-none"
-                                  >
+                                  <SelectItem value="british" className="rounded-none">
                                     British
                                   </SelectItem>
-                                  <SelectItem
-                                    value="canadian"
-                                    className="rounded-none"
-                                  >
+                                  <SelectItem value="canadian" className="rounded-none">
                                     Canadian
                                   </SelectItem>
-                                  <SelectItem
-                                    value="australian"
-                                    className="rounded-none"
-                                  >
+                                  <SelectItem value="australian" className="rounded-none">
                                     Australian
                                   </SelectItem>
                                 </SelectContent>
@@ -517,10 +474,7 @@ function Senderdetails() {
                     {/* Conditionally render Sender Details Section based on payer */}
                     {payer !== "self" && (
                       <div className="p-4 sm:p-6 border-t border-gray-200">
-                        <h2 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6 font-jakarta">
-                          Sender Details
-                        </h2>
-
+                        <h2 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6 font-jakarta">Sender Details</h2>
                         {/* Relationship and Name */}
                         <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2">
                           {/* Relationship */}
@@ -532,38 +486,23 @@ function Senderdetails() {
                                 <FormLabel className="font-jakarta text-sm sm:text-base text-gray-500">
                                   Relationship to Student
                                 </FormLabel>
-                                <Select
-                                  onValueChange={field.onChange}
-                                  value={field.value}
-                                >
+                                <Select onValueChange={field.onChange} value={field.value}>
                                   <FormControl>
                                     <SelectTrigger className="bg-blue-50 font-jakarta h-12 sm:h-14 rounded-none">
                                       <SelectValue placeholder="Select relationship" />
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent className="rounded-none">
-                                    <SelectItem
-                                      value="parent"
-                                      className="rounded-none"
-                                    >
+                                    <SelectItem value="parent" className="rounded-none">
                                       Parent
                                     </SelectItem>
-                                    <SelectItem
-                                      value="brother"
-                                      className="rounded-none"
-                                    >
+                                    <SelectItem value="brother" className="rounded-none">
                                       Brother
                                     </SelectItem>
-                                    <SelectItem
-                                      value="sister"
-                                      className="rounded-none"
-                                    >
+                                    <SelectItem value="sister" className="rounded-none">
                                       Sister
                                     </SelectItem>
-                                    <SelectItem
-                                      value="spouse"
-                                      className="rounded-none"
-                                    >
+                                    <SelectItem value="spouse" className="rounded-none">
                                       Spouse
                                     </SelectItem>
                                   </SelectContent>
@@ -619,9 +558,7 @@ function Senderdetails() {
 
                         {/* Foreign bank charges */}
                         <div className="space-y-1 sm:space-y-2 mt-4 sm:mt-6">
-                          <Label className="text-sm sm:text-base text-gray-500">
-                            Foreign bank charges
-                          </Label>
+                          <Label className="text-sm sm:text-base text-gray-500">Foreign bank charges</Label>
                           <div className="flex flex-wrap gap-3 sm:gap-4 mt-1 sm:mt-2">
                             <FormField
                               control={form.control}
@@ -634,15 +571,10 @@ function Senderdetails() {
                                       id="resident"
                                       className="h-4 w-4 rounded-none"
                                       checked={field.value === "resident"}
-                                      onChange={() =>
-                                        field.onChange("resident")
-                                      }
+                                      onChange={() => field.onChange("resident")}
                                     />
                                   </FormControl>
-                                  <Label
-                                    htmlFor="resident"
-                                    className="text-sm sm:text-base "
-                                  >
+                                  <Label htmlFor="resident" className="text-sm sm:text-base ">
                                     Resident
                                   </Label>
                                 </FormItem>
@@ -662,10 +594,7 @@ function Senderdetails() {
                                       onChange={() => field.onChange("nri")}
                                     />
                                   </FormControl>
-                                  <Label
-                                    htmlFor="nri"
-                                    className="text-sm sm:text-base"
-                                  >
+                                  <Label htmlFor="nri" className="text-sm sm:text-base">
                                     NRI
                                   </Label>
                                 </FormItem>
@@ -685,10 +614,7 @@ function Senderdetails() {
                                       onChange={() => field.onChange("pio")}
                                     />
                                   </FormControl>
-                                  <Label
-                                    htmlFor="pio"
-                                    className="text-sm sm:text-base"
-                                  >
+                                  <Label htmlFor="pio" className="text-sm sm:text-base">
                                     PIO/OCI
                                   </Label>
                                 </FormItem>
@@ -731,9 +657,7 @@ function Senderdetails() {
                             name="dob"
                             render={({ field }) => (
                               <FormItem className="space-y-1 sm:space-y-2">
-                                <FormLabel className="font-jakarta text-sm sm:text-base text-gray-500">
-                                  DOB
-                                </FormLabel>
+                                <FormLabel className="font-jakarta text-sm sm:text-base text-gray-500">DOB</FormLabel>
                                 <FormControl>
                                   <Input
                                     placeholder="DD/MM/YYYY"
@@ -755,14 +679,9 @@ function Senderdetails() {
                               id="sameAddress"
                               className="h-4 w-4 rounded-none"
                               checked={sameAddress}
-                              onChange={(e) =>
-                                handleSameAddressChange(e.target.checked)
-                              }
+                              onChange={(e) => handleSameAddressChange(e.target.checked)}
                             />
-                            <Label
-                              htmlFor="sameAddress"
-                              className="text-sm sm:text-base "
-                            >
+                            <Label htmlFor="sameAddress" className="text-sm sm:text-base ">
                               Same address as student
                             </Label>
                           </div>
@@ -815,9 +734,7 @@ function Senderdetails() {
                             name="senderState"
                             render={({ field }) => (
                               <FormItem className="space-y-1 sm:space-y-2">
-                                <FormLabel className="font-jakarta text-sm sm:text-base text-gray-500">
-                                  State
-                                </FormLabel>
+                                <FormLabel className="font-jakarta text-sm sm:text-base text-gray-500">State</FormLabel>
                                 <FormControl>
                                   <Input
                                     placeholder="State"
@@ -860,41 +777,24 @@ function Senderdetails() {
                             name="sourceOfFunds"
                             render={({ field }) => (
                               <FormItem className="space-y-1 sm:space-y-2">
-                                <FormLabel className="font-jakarta text-sm sm:text-base">
-                                  Source of funds
-                                </FormLabel>
-                                <Select
-                                  onValueChange={field.onChange}
-                                  value={field.value}
-                                >
+                                <FormLabel className="font-jakarta text-sm sm:text-base">Source of funds</FormLabel>
+                                <Select onValueChange={field.onChange} value={field.value}>
                                   <FormControl>
                                     <SelectTrigger className="bg-blue-50 font-jakarta h-12 sm:h-14 rounded-none">
                                       <SelectValue placeholder="Source of funds" />
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent className="rounded-none">
-                                    <SelectItem
-                                      value="salary"
-                                      className="rounded-none"
-                                    >
+                                    <SelectItem value="salary" className="rounded-none">
                                       Salary
                                     </SelectItem>
-                                    <SelectItem
-                                      value="savings"
-                                      className="rounded-none"
-                                    >
+                                    <SelectItem value="savings" className="rounded-none">
                                       Savings
                                     </SelectItem>
-                                    <SelectItem
-                                      value="business"
-                                      className="rounded-none"
-                                    >
+                                    <SelectItem value="business" className="rounded-none">
                                       Business Income
                                     </SelectItem>
-                                    <SelectItem
-                                      value="investment"
-                                      className="rounded-none"
-                                    >
+                                    <SelectItem value="investment" className="rounded-none">
                                       Investment Returns
                                     </SelectItem>
                                   </SelectContent>
@@ -910,47 +810,27 @@ function Senderdetails() {
                             name="occupationStatus"
                             render={({ field }) => (
                               <FormItem className="space-y-1 sm:space-y-2">
-                                <FormLabel className="font-jakarta text-sm sm:text-base">
-                                  Occupation status
-                                </FormLabel>
-                                <Select
-                                  onValueChange={field.onChange}
-                                  value={field.value}
-                                >
+                                <FormLabel className="font-jakarta text-sm sm:text-base">Occupation status</FormLabel>
+                                <Select onValueChange={field.onChange} value={field.value}>
                                   <FormControl>
                                     <SelectTrigger className="bg-blue-50 font-jakarta h-12 sm:h-14 rounded-none">
                                       <SelectValue placeholder="Employment status" />
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent className="rounded-none">
-                                    <SelectItem
-                                      value="employed"
-                                      className="rounded-none"
-                                    >
+                                    <SelectItem value="employed" className="rounded-none">
                                       Employed
                                     </SelectItem>
-                                    <SelectItem
-                                      value="self-employed"
-                                      className="rounded-none"
-                                    >
+                                    <SelectItem value="self-employed" className="rounded-none">
                                       Self-employed
                                     </SelectItem>
-                                    <SelectItem
-                                      value="business-owner"
-                                      className="rounded-none"
-                                    >
+                                    <SelectItem value="business-owner" className="rounded-none">
                                       Business Owner
                                     </SelectItem>
-                                    <SelectItem
-                                      value="retired"
-                                      className="rounded-none"
-                                    >
+                                    <SelectItem value="retired" className="rounded-none">
                                       Retired
                                     </SelectItem>
-                                    <SelectItem
-                                      value="student"
-                                      className="rounded-none"
-                                    >
+                                    <SelectItem value="student" className="rounded-none">
                                       Student
                                     </SelectItem>
                                   </SelectContent>
@@ -990,9 +870,7 @@ function Senderdetails() {
                             name="payerBankName"
                             render={({ field }) => (
                               <FormItem className="space-y-1 sm:space-y-2">
-                                <FormLabel className="font-jakarta text-sm sm:text-base">
-                                  Payer Bank Name
-                                </FormLabel>
+                                <FormLabel className="font-jakarta text-sm sm:text-base">Payer Bank Name</FormLabel>
                                 <FormControl>
                                   <Input
                                     placeholder="Enter bank name"
@@ -1014,14 +892,7 @@ function Senderdetails() {
                         type="submit"
                         className="bg-dark-blue hover:bg-dark-blue text-white px-4 sm:px-8 h-12 sm:h-15 w-full sm:w-55 rounded-none"
                       >
-                        <Image
-                          src="/continue.svg"
-                          alt=""
-                          width={15}
-                          height={15}
-                          className="mr-2"
-                        />{" "}
-                        CONTINUE
+                        <Image src="/continue.svg" alt="" width={15} height={15} className="mr-2" /> CONTINUE
                       </Button>
                       <Button
                         type="button"
@@ -1029,14 +900,7 @@ function Senderdetails() {
                         className="bg-white hover:bg-white text-dark-gray border-gray-300 h-12 sm:h-15 w-full sm:w-55 rounded-none"
                         onClick={handleReset}
                       >
-                        <Image
-                          src="/reset.svg"
-                          alt=""
-                          width={15}
-                          height={15}
-                          className="mr-2"
-                        />{" "}
-                        RESET
+                        <Image src="/reset.svg" alt="" width={15} height={15} className="mr-2" /> RESET
                       </Button>
                     </div>
                   </form>
@@ -1046,12 +910,12 @@ function Senderdetails() {
           </TabsContent>
         </Tabs>
       </div>
+
       <div className="text-xs text-white-500 mt-8">
-        © 2025, Made by{" "}
-        <span className="text-bold text-dark-blue">Buy Exchange</span>.
+        © 2025, Made by <span className="text-bold text-dark-blue">Buy Exchange</span>.
       </div>
     </div>
-  );
+  )
 }
 
 export default Senderdetails;
