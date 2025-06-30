@@ -249,6 +249,7 @@ enum OrderStatus {
   Rejected
   Completed
   QuoteDownloaded
+  blocked
   Authorize
   DocumentsPlaced
   RateExpired
