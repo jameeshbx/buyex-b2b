@@ -58,7 +58,23 @@ export async function POST(req: Request) {
     ) {
       return new NextResponse("Missing required fields", { status: 400 });
     }
+    const validStatuses = [
+      "Pending",
+      "QuoteDownloaded",
+      "blocked",
+      "SenderDetails",
+      "BeneficiaryDetails",
+      "DocumentsUploaded",
+      "PaymentPending",
+      "PaymentCompleted",
+      "Completed",
+      "Cancelled",
+    ]
 
+ if (status && !validStatuses.includes(status)) {
+      return new NextResponse(`Invalid status: ${status}`, { status: 400 })
+    }
+    
     const order = await db.order.create({
       data: {
         purpose,
