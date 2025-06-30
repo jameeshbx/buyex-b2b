@@ -180,7 +180,7 @@ export default function Dashboard() {
           </SelectTrigger>
           <SelectContent>
             {statusOptions.map((status) => (
-              <SelectItem key={status} value={status}>
+              <SelectItem key={status ?? ""} value={status ?? ""}>
                 {status}
               </SelectItem>
             ))}
