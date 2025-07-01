@@ -1,10 +1,10 @@
+import ChangePassword from '@/components/landing-content/Change-password'
 import React from 'react'
-import { Sidebar } from './(components)/Sidebar'
 
 function page() {
   return (
     <div>
-        <Sidebar/>
+        <ChangePassword/>
     </div>
   )
 }
