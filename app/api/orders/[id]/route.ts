@@ -53,6 +53,25 @@ export async function PATCH(
 
     const { id } = await params;
 
+     const validStatuses = [
+      "Pending",
+      "QuoteDownloaded",
+      "blocked",
+      "SenderDetails",
+      "BeneficiaryDetails",
+      "DocumentsUploaded",
+      "PaymentPending",
+      "PaymentCompleted",
+      "Completed",
+      "Cancelled",
+    ]
+
+    if (status && !validStatuses.includes(status)) {
+      return new NextResponse(`Invalid status: ${status}. Valid statuses are: ${validStatuses.join(", ")}`, {
+        status: 400,
+      })
+    }
+
     const order = await db.order.update({
       where: {
         id,
@@ -71,7 +90,7 @@ export async function PATCH(
         ibrRate: ibrRate ? parseFloat(ibrRate) : undefined,
         amount: amount ? parseFloat(amount) : undefined,
         currency,
-        status,
+        status:status || undefined,
         totalAmount: totalAmount ? parseFloat(totalAmount) : undefined,
         customerRate: customerRate ? parseFloat(customerRate) : undefined,
         senderId,
