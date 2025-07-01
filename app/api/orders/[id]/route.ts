@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+ // Add this import if you have Prisma types
 
 // GET /api/orders/[id] - Get a specific order
 export async function GET(
@@ -33,68 +34,35 @@ export async function PATCH(
 ) {
   try {
     const body = await req.json();
-    const {
-      purpose,
-      foreignBankCharges,
-      payer,
-      forexPartner,
-      margin,
-      receiverBankCountry,
-      studentName,
-      consultancy,
-      ibrRate,
-      status,
-      amount,
-      currency,
-      totalAmount,
-      customerRate,
-      senderId,
-    } = body;
-
     const { id } = await params;
 
-     const validStatuses = [
-      "Pending",
-      "QuoteDownloaded",
-      "blocked",
-      "SenderDetails",
-      "BeneficiaryDetails",
-      "DocumentsUploaded",
-      "PaymentPending",
-      "PaymentCompleted",
-      "Completed",
-      "Cancelled",
-    ]
-
-    if (status && !validStatuses.includes(status)) {
-      return new NextResponse(`Invalid status: ${status}. Valid statuses are: ${validStatuses.join(", ")}`, {
-        status: 400,
-      })
-    }
+    // Build updateData by only including defined fields
+    const updateData = Object.fromEntries(
+      Object.entries({
+        purpose: body.purpose,
+        foreignBankCharges: body.foreignBankCharges !== undefined ? parseFloat(body.foreignBankCharges) : undefined,
+        payer: body.payer,
+        forexPartner: body.forexPartner,
+        margin: body.margin !== undefined ? parseFloat(body.margin) : undefined,
+        receiverBankCountry: body.receiverBankCountry,
+        studentName: body.studentName,
+        consultancy: body.consultancy,
+        ibrRate: body.ibrRate !== undefined ? parseFloat(body.ibrRate) : undefined,
+        status: body.status,
+        amount: body.amount !== undefined ? parseFloat(body.amount) : undefined,
+        currency: body.currency,
+        totalAmount: body.totalAmount !== undefined ? parseFloat(body.totalAmount) : undefined,
+        customerRate: body.customerRate !== undefined ? parseFloat(body.customerRate) : undefined,
+        senderId: body.senderId,
+        beneficiaryId: body.beneficiaryId,
+      }).filter(([, v]) => v !== undefined && v !== null)
+    );
 
     const order = await db.order.update({
       where: {
         id,
       },
-      data: {
-        purpose,
-        foreignBankCharges: foreignBankCharges
-          ? parseFloat(foreignBankCharges)
-          : undefined,
-        payer,
-        forexPartner,
-        margin: margin ? parseFloat(margin) : undefined,
-        receiverBankCountry,
-        studentName,
-        consultancy,
-        ibrRate: ibrRate ? parseFloat(ibrRate) : undefined,
-        amount: amount ? parseFloat(amount) : undefined,
-        currency,
-        status:status || undefined,
-        totalAmount: totalAmount ? parseFloat(totalAmount) : undefined,
-        customerRate: customerRate ? parseFloat(customerRate) : undefined,
-        senderId,
-      },
+      data: updateData,
     });
 
     return NextResponse.json(order);
