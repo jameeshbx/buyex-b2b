@@ -24,14 +24,30 @@ import { useRouter, useSearchParams } from "next/navigation"
 import axios from "axios"
 import type { Sender } from "@prisma/client"
 
+
 type FormValues = OriginalFormValues & {
   status?: string
 }
 
 function Senderdetails() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const orderId = searchParams.get("orderId"); // <-- Always get latest orderId
+  const router = useRouter();
+
+  const [orderId, setOrderId] = useState<string | null>(null);
+
+  // On mount, get orderId from URL or localStorage
+  useEffect(() => {
+    const urlOrderId = searchParams.get("orderId");
+    if (urlOrderId) {
+      setOrderId(urlOrderId);
+      localStorage.setItem("currentOrderId", urlOrderId);
+    } else {
+      const storedOrderId = localStorage.getItem("currentOrderId");
+      if (storedOrderId) {
+        setOrderId(storedOrderId);
+      }
+    }
+  }, [searchParams]);
 
   const [payer, setPayer] = useState<string>("self");
   const [showStatusPopup, setShowStatusPopup] = useState(false);
@@ -45,35 +61,6 @@ function Senderdetails() {
       setPayer(storedPayer.toLowerCase())
     }
   }, [])
-
-  useEffect(() => {
-    const fetchOrder = async () => {
-      if (orderId) {
-        try {
-          const order = await axios.get(`/api/orders/${orderId}`)
-          if (order.data.senderId) {
-            const sender = await axios.get(`/api/senders/${order.data.senderId}`)
-            if (sender.data) {
-              setSenderDetails(sender.data)
-              form.reset({
-                ...sender.data,
-                bankCharges: "resident",
-                occupationStatus: "employed",
-                sourceOfFunds: "salary",
-              })
-            }
-          } else {
-            router.push(`/staff/dashboard/sender-details`)
-          }
-        } catch  {
-          // If no sender, you may want to clear the form or handle accordingly
-          setSenderDetails(null);
-          form.reset(); // Optionally reset the form
-        }
-      }
-    };
-    fetchOrder();
-  }, [orderId]); // <-- Depend on orderId
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -111,6 +98,32 @@ function Senderdetails() {
   })
 
   useEffect(() => {
+    const fetchOrder = async () => {
+      if (orderId) {
+        try {
+          const order = await axios.get(`/api/orders/${orderId}`)
+          console.log("Fetched order:", order.data);
+          if (order.data.senderId) {
+            console.log("Fetching sender details for senderId:", order.data.senderId);
+            const sender = await axios.get(`/api/senders/${order.data.senderId}`)
+            console.log("Fetched sender details:", sender.data);
+            if (sender.data) {
+              setSenderDetails(sender.data);
+              // form.reset will be handled by the useEffect above
+            }
+          } else {
+            router.push(`/staff/dashboard/sender-details`)
+          }
+        } catch  {
+          setSenderDetails(null);
+          form.reset();
+        }
+      }
+    };
+    fetchOrder();
+  }, [orderId, form, router]); // <-- Depend on orderId
+
+  useEffect(() => {
     const fetchOrderStatus = async () => {
       if (orderId) {
         try {
@@ -130,6 +143,82 @@ function Senderdetails() {
     form.setValue("relationship", payer as "self" | "parent" | "brother" | "sister" | "spouse" | "other" | undefined)
   }, [payer, form])
 
+  useEffect(() => {
+    if (senderDetails) {
+      // Ensure all values match your form schema types
+      const allowedBankCharges = ["resident", "nri", "pio"] as const;
+      const allowedOccupationStatus = [
+        "employed",
+        "self-employed",
+        "business-owner",
+        "retired",
+        "student",
+      ] as const;
+      const allowedSourceOfFunds = ["salary", "savings", "business", "investment"] as const;
+
+      // Remove unused safeBankCharges and safeOccupationStatus variables since they're not used
+      const safeSourceOfFunds =
+        senderDetails.sourceOfFunds &&
+        (allowedSourceOfFunds as readonly string[]).includes(senderDetails.sourceOfFunds)
+          ? (senderDetails.sourceOfFunds as typeof allowedSourceOfFunds[number])
+          : undefined;
+
+      form.reset({
+        ...senderDetails,
+        addressLine1: senderDetails.addressLine1 ?? "",
+        addressLine2: senderDetails.addressLine2 ?? "",
+        state: senderDetails.state ?? "",
+        postalCode: senderDetails.postalCode ?? "",
+        studentName: senderDetails.studentName ?? "",
+        studentEmailOriginal: senderDetails.studentEmailOriginal ?? "",
+        studentEmailFake: senderDetails.studentEmailFake ?? "",
+        phoneNumber: senderDetails.phoneNumber ?? "",
+        relationship: (senderDetails.relationship ?? undefined) as
+          | "self"
+          | "parent"
+          | "brother"
+          | "sister"
+          | "spouse"
+          | "other"
+          | undefined,
+        senderName: senderDetails.senderName ?? "",
+        bankCharges: senderDetails.bankCharges && 
+          (allowedBankCharges as readonly string[]).includes(senderDetails.bankCharges)
+          ? (senderDetails.bankCharges as typeof allowedBankCharges[number])
+          : "resident",
+        mothersName: senderDetails.mothersName ?? "",
+        dob: senderDetails.dob ?? "",
+        senderNationality: (senderDetails.nationality ?? "indian") as
+          | "indian"
+          | "american"
+          | "british"
+          | "canadian"
+          | "australian"
+          | undefined,
+        senderEmail: senderDetails.senderEmail ?? "",
+        sourceOfFunds: safeSourceOfFunds,
+        occupationStatus: senderDetails.occupationStatus && 
+          (allowedOccupationStatus as readonly string[]).includes(senderDetails.occupationStatus)
+          ? (senderDetails.occupationStatus as typeof allowedOccupationStatus[number])
+          : "employed",
+        payerAccountNumber: senderDetails.payerAccountNumber ?? "",
+        payerBankName: senderDetails.payerBankName ?? "",
+        senderAddressLine1: senderDetails.senderAddressLine1 ?? "",
+        senderAddressLine2: senderDetails.senderAddressLine2 ?? "",
+        senderState: senderDetails.senderState ?? "",
+        senderPostalCode: senderDetails.senderPostalCode ?? "",
+        nationality: (senderDetails.nationality ?? "indian") as
+          | "indian"
+          | "american"
+          | "british"
+          | "canadian"
+          | "australian"
+          | undefined,
+        status: senderDetails.status || "pending",
+      });
+    }
+  }, [senderDetails, form]);
+
  const onSubmit = async (data: FormValues) => {
   const errors = form.formState.errors;
   if (Object.keys(errors).length > 0) {
@@ -138,40 +227,44 @@ function Senderdetails() {
   }
 
   try {
-    
-    const statusToUse = "pending";
-
     let response;
     if (senderDetails?.id) {
+      // Update sender
       response = await axios.put(`/api/senders/${senderDetails.id}`, {
         ...data,
-        orderId: orderId,
+        orderId, // not used in PUT, but harmless
       });
+
+      // PATCH the order to set senderId (since PUT does not do this)
+      if (orderId && response.data?.id) {
+        await axios.patch(`/api/orders/${orderId}`, {
+          senderId: response.data.id,
+          status: "Pending",
+        });
+      }
     } else {
+      // Create sender
       response = await axios.post("/api/senders", {
         ...data,
-        orderId: orderId,
+        orderId,
       });
+
+      // PATCH the order to set senderId (since POST does not do this)
+      if (orderId && response.data?.id) {
+        await axios.patch(`/api/orders/${orderId}`, {
+          senderId: response.data.id,
+          status: "Pending",
+        });
+      }
     }
 
-if (orderId && response.data) {
-  try {
-    console.log("Updating order status to:", statusToUse);
-    await axios.patch(`/api/orders/${orderId}`, {
-      status: statusToUse, // This will always be "pending"
-      studentName: data.studentName,
-      senderId: response.data.id, // Link the sender to the order
-    });
-    console.log("Order status updated successfully");
-  } catch (patchError) {
-    console.error("Error updating order status:", patchError);
-    // Don't block the flow if order update fails
-    alert("Sender details saved, but there was an issue updating the order status.");
-  }
-}
-
-    if (response.data) {
+    console.log("order id is ",orderId);
+    
+    // Continue navigation
+    if (orderId) {
       router.push(`/staff/dashboard/beneficiary-details?orderId=${orderId}`);
+    } else {
+      alert("Order ID is missing. Cannot continue.");
     }
   } catch (error) {
     console.error("Failed to create sender:", error);
@@ -219,6 +312,7 @@ if (orderId && response.data) {
     if (!open) return // Prevent closing when clicking outside
     setShowStatusPopup(open)
   }
+
 
   return (
     <div>
