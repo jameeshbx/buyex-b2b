@@ -14,6 +14,10 @@ export async function GET(
       where: {
         id,
       },
+      include: {
+        sender: true,
+        beneficiary: true,
+      },
     });
 
     if (!order) {
