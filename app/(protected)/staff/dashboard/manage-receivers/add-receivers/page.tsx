@@ -47,7 +47,7 @@ export default function AddReceiversPage() {
       })
 
       toast.success("Receiver added successfully!")
-      router.push("/staff/dashboard/document-upload")
+      router.push("/staff/dashboard/manage-receivers/list-receivers")
     } catch (error: unknown) {
       console.error("Error submitting form:", error)
       const errorMessage =

@@ -1,76 +1,57 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { Download, ArrowRight, RotateCcw, Play, Loader2 } from "lucide-react";
-import { useSession } from "next-auth/react";
-import axios from "axios";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { Download, ArrowRight, RotateCcw, Play, Loader2 } from "lucide-react"
+import { useSession } from "next-auth/react"
+import axios from "axios"
+import { Button } from "@/components/ui/button"
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Label } from "@/components/ui/label"
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import {
-  orderDetailsFormSchema,
-  OrderDetailsFormValues,
-} from "@/schema/orderdetails";
-import { useRouter } from "next/navigation";
-import {
-  calculateGst,
-  calculateTcs,
-  calculateTotalPayable,
-  getLiveRate,
-} from "@/lib/financial";
-
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { orderDetailsFormSchema, type OrderDetailsFormValues } from "@/schema/orderdetails"
+import { useRouter } from "next/navigation"
+import { calculateGst, calculateTcs, calculateTotalPayable, getLiveRate } from "@/lib/financial"
+import jsPDF from "jspdf"
+import autoTable from "jspdf-autotable"
 
 interface CalculatedValues {
-  inrAmount: string;
-  bankFee: string;
-  gst: string;
-  tcsApplicable: string;
-  totalPayable: string;
-  customerRate: string;
+  inrAmount: string
+  bankFee: string
+  gst: string
+  tcsApplicable: string
+  totalPayable: string
+  customerRate: string
 }
 
 interface JsPDFWithAutoTable extends jsPDF {
   lastAutoTable: {
-    finalY: number;
-  };
+    finalY: number
+  }
 }
 
-async function generateQuotePDF(
-  formData: OrderDetailsFormValues,
-  calculatedValues: CalculatedValues
-) {
-  const doc = new jsPDF() as JsPDFWithAutoTable;
-  let lastY = 30; // Track the last Y position manually
+async function generateQuotePDF(formData: OrderDetailsFormValues, calculatedValues: CalculatedValues) {
+  const doc = new jsPDF() as JsPDFWithAutoTable
+  let lastY = 30
 
-  // Add logo
-  const logo = "/header-logo.png";
-  doc.addImage(logo, "PNG", 14, 10, 50, 20); // Adjusted size for better visibility
+  const logo = "/header-logo.png"
+  doc.addImage(logo, "PNG", 14, 10, 50, 20)
 
-  // Title (moved slightly to the right to accommodate logo)
-  doc.setFontSize(18);
-  doc.setFont("helvetica", "bold");
-  doc.text("Send Money Abroad Quote", 105, 20, { align: "center" });
+  doc.setFontSize(18)
+  doc.setFont("helvetica", "bold")
+  doc.text("Send Money Abroad Quote", 105, 20, { align: "center" })
 
-  // Quote Info Table
   autoTable(doc, {
     startY: lastY,
     styles: { fontSize: 10 },
@@ -88,19 +69,17 @@ async function generateQuotePDF(
       ["Processing Charges", calculatedValues.bankFee],
       ["Total Payable Amount in INR", calculatedValues.totalPayable],
     ],
-  });
+  })
 
-  lastY = doc.lastAutoTable.finalY + 10;
+  lastY = doc.lastAutoTable.finalY + 10
 
-  // Bank Details Title
-  doc.setFontSize(12);
-  doc.setTextColor(0);
-  doc.setFont("helvetica", "bold");
-  doc.text("Forex Partner Bank Account Details ", 14, lastY);
-  doc.setTextColor(255, 0, 0);
-  doc.text("(Cash deposit not accepted)", 130, lastY);
+  doc.setFontSize(12)
+  doc.setTextColor(0)
+  doc.setFont("helvetica", "bold")
+  doc.text("Forex Partner Bank Account Details ", 14, lastY)
+  doc.setTextColor(255, 0, 0)
+  doc.text("(Cash deposit not accepted)", 130, lastY)
 
-  // Bank Info Table
   autoTable(doc, {
     startY: lastY + 15,
     styles: { fontSize: 10 },
@@ -112,38 +91,32 @@ async function generateQuotePDF(
       ["IFSC Code", "HDFC0001372"],
       ["Branch", "MUMBAI"],
     ],
-  });
+  })
 
-  lastY = doc.lastAutoTable.finalY + 10;
+  lastY = doc.lastAutoTable.finalY + 10
 
-  // Upload Info
-  doc.setTextColor(0);
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "bold");
-  doc.text(
-    "Thank you for choosing BuyExchange for your forex needs.",
-    14,
-    lastY
-  );
-  doc.setFont("helvetica", "normal");
+  doc.setTextColor(0)
+  doc.setFontSize(10)
+  doc.setFont("helvetica", "bold")
+  doc.text("Thank you for choosing BuyExchange for your forex needs.", 14, lastY)
+  doc.setFont("helvetica", "normal")
   doc.text(
     "To proceed with your transaction, please upload the required documents using the secure link below:",
     14,
-    lastY + 6
-  );
-  doc.setTextColor(0, 0, 255);
+    lastY + 6,
+  )
+  doc.setTextColor(0, 0, 255)
   doc.textWithLink("www.buyexchange.in/upload-documents", 14, lastY + 12, {
     url: "https://www.buyexchange.in/upload-documents",
-  });
+  })
 
-  // Terms & Conditions
-  doc.setTextColor(0);
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "bold");
-  doc.text("Terms & Conditions", 14, lastY + 25);
+  doc.setTextColor(0)
+  doc.setFontSize(12)
+  doc.setFont("helvetica", "bold")
+  doc.text("Terms & Conditions", 14, lastY + 25)
+  doc.setFontSize(9)
+  doc.setFont("helvetica", "normal")
 
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "normal");
   const terms = [
     "• The above quote is generated for one time use only and must not be shared or used by any other remitter to make payments",
     "• Supported payment modes are RTGS, NEFT and Bank Transfer. No cash deposit accepted",
@@ -151,25 +124,30 @@ async function generateQuotePDF(
     "• The payment must be made in full for the amount reflected in this quote and any part payments / multiple payments may get rejected or returned",
     "• The given exchange rate is subject to market fluctuations and valid between 10.00 AM to 2.45 PM on a bank working day.",
     "• The given rate is valid for 30 minutes.",
-  ];
-  let y = lastY + 32;
-  terms.forEach((term) => {
-    doc.text(term, 14, y);
-    y += 6;
-  });
+  ]
 
-  const pdfUrl = `Send_Money_Abroad_Quote-${Date.now()}.pdf`;
-  doc.save(pdfUrl);
-  return pdfUrl;
+  let y = lastY + 32
+  terms.forEach((term) => {
+    doc.text(term, 14, y)
+    y += 6
+  })
+
+  const pdfUrl = `Send_Money_Abroad_Quote-${Date.now()}.pdf`
+  doc.save(pdfUrl)
+  return pdfUrl
 }
 
 export default function OrderDetailsForm() {
-  const [showCalculation, setShowCalculation] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isQuoteDownloaded, setIsQuoteDownloaded] = useState(false);
-  const { data: session, status } = useSession();
-  const [orderId, setOrderId] = useState<string | null>(null);
-  const router = useRouter();
+  const [showCalculation, setShowCalculation] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isQuoteDownloaded, setIsQuoteDownloaded] = useState(false)
+  const [showStatusPopup, setShowStatusPopup] = useState(false)
+  const [selectedStatus, setSelectedStatus] = useState("blocked") // Default to blocked
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
+  const { data: session, status } = useSession()
+  const [orderId, setOrderId] = useState<string | null>(null)
+  const router = useRouter()
+
   const [calculatedValues, setCalculatedValues] = useState<CalculatedValues>({
     inrAmount: "0",
     bankFee: "1500",
@@ -177,7 +155,7 @@ export default function OrderDetailsForm() {
     tcsApplicable: "0",
     totalPayable: "0",
     customerRate: "0",
-  });
+  })
 
   const form = useForm<OrderDetailsFormValues>({
     resolver: zodResolver(orderDetailsFormSchema),
@@ -196,9 +174,8 @@ export default function OrderDetailsForm() {
       totalAmount: "",
       customerRate: "",
       educationLoan: "no",
-       // Changed from undefined to "no"
     },
-  });
+  })
 
   const COUNTRY_CURRENCY_MAP = {
     Germany: "EUR",
@@ -217,115 +194,146 @@ export default function OrderDetailsForm() {
     Latvia: "EUR",
     Lithuania: "EUR",
     Uzbekistan: "USD",
-  };
+  }
 
+  // Modified onSubmit to show popup first
   function onSubmit() {
-    router.push(`/staff/dashboard/sender-details?orderId=${orderId}`);
+    if (!isQuoteDownloaded) {
+      alert("Please download the quote first before proceeding.")
+      return
+    }
+    setShowStatusPopup(true)
+  }
+
+  // Handle status confirmation and navigation
+  const handleStatusConfirm = async () => {
+    if (!orderId) {
+      alert("Order ID not found. Please try again.")
+      return
+    }
+
+    setIsUpdatingStatus(true)
+
+    try {
+      console.log("Updating order status to:", selectedStatus)
+
+      // Update order status to blocked
+      const response = await axios.patch(`/api/orders/${orderId}`, {
+        status: selectedStatus, // This should be "blocked"
+      })
+
+      console.log("Order status updated successfully:", response.data)
+
+      setShowStatusPopup(false)
+      router.push(`/staff/dashboard/sender-details?orderId=${orderId}`)
+    } catch (error) {
+      console.error("Error updating order status:", error)
+
+      // More detailed error logging
+      if (axios.isAxiosError(error)) {
+        console.error("Response data:", error.response?.data)
+        console.error("Response status:", error.response?.status)
+        console.error("Response headers:", error.response?.headers)
+
+        if (error.response?.status === 500) {
+          alert(
+            `Server error: ${error.response?.data || "Internal server error"}. Please check if 'blocked' status is added to your OrderStatus enum.`,
+          )
+        } else {
+          alert(`Failed to update status: ${error.response?.data || error.message}`)
+        }
+      } else {
+        alert("Failed to update status. Please try again.")
+      }
+    } finally {
+      setIsUpdatingStatus(false)
+    }
   }
 
   function resetForm() {
-    form.reset();
-    setShowCalculation(false);
+    form.reset()
+    setShowCalculation(false)
+    setIsQuoteDownloaded(false)
+    setOrderId(null)
   }
 
   function handleShowCalculation() {
-    setShowCalculation(true);
+    setShowCalculation(true)
   }
 
-  const amount = form.watch("amount");
-  const currency = form.watch("currency");
-  // const receiverBankCountry = form.watch("receiverBankCountry");
-  // const purpose = form.watch("purpose");
-  const foreignBankCharges = form.watch("foreignBankCharges");
-  // const payer = form.watch("payer");
-  const margin = form.watch("margin");
-  const ibrRate = form.watch("ibrRate");
+  const amount = form.watch("amount")
+  const currency = form.watch("currency")
+  const foreignBankCharges = form.watch("foreignBankCharges")
+  const margin = form.watch("margin")
+  const ibrRate = form.watch("ibrRate")
 
   useEffect(() => {
     if (currency) {
       getLiveRate(currency, "INR").then((rate: number) => {
-        form.setValue("ibrRate", rate.toString());
-      });
+        form.setValue("ibrRate", rate.toString())
+      })
     }
-  }, [currency, form]);
+  }, [currency, form])
 
   useEffect(() => {
     if (foreignBankCharges === "OUR") {
       setCalculatedValues((prev) => ({
         ...prev,
         bankFee: "1500",
-      }));
+      }))
     } else {
       setCalculatedValues((prev) => ({
         ...prev,
         bankFee: "300",
-      }));
+      }))
     }
-  }, [foreignBankCharges]);
+  }, [foreignBankCharges])
 
   useEffect(() => {
-    const currentAmount = parseFloat(amount || "0");
-    const currentMargin = parseFloat(margin || "0");
-    const currentIbrRate = parseFloat(ibrRate || "0");
+    const currentAmount = Number.parseFloat(amount || "0")
+    const currentMargin = Number.parseFloat(margin || "0")
+    const currentIbrRate = Number.parseFloat(ibrRate || "0")
 
     if (currentAmount && currentMargin) {
-      const totalAmount = (currentIbrRate + currentMargin) * currentAmount;
-
-      form.setValue(
-        "customerRate",
-        (currentIbrRate + currentMargin).toFixed(2).toString()
-      );
-
+      const totalAmount = (currentIbrRate + currentMargin) * currentAmount
+      form.setValue("customerRate", (currentIbrRate + currentMargin).toFixed(2).toString())
       setCalculatedValues((prev) => ({
         ...prev,
         inrAmount: totalAmount.toString(),
         gst: calculateGst(totalAmount).toString(),
-        tcsApplicable:
-          form.watch("educationLoan") === "yes"
-            ? "0"
-            : calculateTcs(totalAmount).toString(),
-        totalPayable: calculateTotalPayable(
-          totalAmount,
-          parseFloat(prev.bankFee)
-        ).toString(),
-      }));
+        tcsApplicable: form.watch("educationLoan") === "yes" ? "0" : calculateTcs(totalAmount).toString(),
+        totalPayable: calculateTotalPayable(totalAmount, Number.parseFloat(prev.bankFee)).toString(),
+      }))
     }
-  }, [amount, margin, ibrRate, calculatedValues.bankFee, form]);
+  }, [amount, margin, ibrRate, calculatedValues.bankFee, form])
 
   useEffect(() => {
-    form.setValue("totalAmount", calculatedValues.totalPayable.toString());
-  }, [calculatedValues.totalPayable, form]);
+    form.setValue("totalAmount", calculatedValues.totalPayable.toString())
+  }, [calculatedValues.totalPayable, form])
 
-  // At the top level of your component
   useEffect(() => {
-    const selectedCountry = form.watch("receiverBankCountry");
-    const currencyValue = form.watch("currency");
+    const selectedCountry = form.watch("receiverBankCountry")
+    const currencyValue = form.watch("currency")
     const countryCurrency = selectedCountry
-      ? COUNTRY_CURRENCY_MAP[
-          selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP
-        ]
-      : "USD";
+      ? COUNTRY_CURRENCY_MAP[selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP]
+      : "USD"
 
     if (selectedCountry && currencyValue !== "USD") {
-      form.setValue("currency", countryCurrency, { shouldValidate: true });
+      form.setValue("currency", countryCurrency, { shouldValidate: true })
     }
-  }, [form.watch("receiverBankCountry")]);
+  }, [form.watch("receiverBankCountry")])
 
-  const handleDownloadQuote = async (
-    formData: OrderDetailsFormValues,
-    calculatedValues: CalculatedValues
-  ) => {
-    setIsSubmitting(true);
+  const handleDownloadQuote = async (formData: OrderDetailsFormValues, calculatedValues: CalculatedValues) => {
+    setIsSubmitting(true)
     if (!session?.user?.name) {
-      console.error("User session not available");
-      return;
+      console.error("User session not available")
+      setIsSubmitting(false)
+      return
     }
 
     try {
-      // First generate the PDF
-      const pdfUrl = await generateQuotePDF(formData, calculatedValues);
+      const pdfUrl = await generateQuotePDF(formData, calculatedValues)
 
-      // Then make the POST request with the generated PDF URL
       const order = await axios.post("/api/orders", {
         purpose: formData.purpose,
         foreignBankCharges: formData.foreignBankCharges,
@@ -340,7 +348,7 @@ export default function OrderDetailsForm() {
         currency: formData.currency,
         totalAmount: formData.totalAmount,
         customerRate: formData.customerRate,
-        status: "QuoteDownloaded",
+        status: "QuoteDownloaded", // Use valid enum value
         createdAt: new Date(),
         updatedAt: new Date(),
         createdBy: session.user.name,
@@ -348,736 +356,635 @@ export default function OrderDetailsForm() {
           ...formData,
           currency:
             formData.currency ||
-            COUNTRY_CURRENCY_MAP[
-              formData.receiverBankCountry as keyof typeof COUNTRY_CURRENCY_MAP
-            ] ||
+            COUNTRY_CURRENCY_MAP[formData.receiverBankCountry as keyof typeof COUNTRY_CURRENCY_MAP] ||
             "",
         },
         calculations: calculatedValues,
         generatedPDF: pdfUrl,
-      });
-      setIsQuoteDownloaded(true);
-      if (typeof window !== "undefined") {
-        setOrderId(order.data.id);
-        // Save to localStorage
-        localStorage.setItem("selectedPayer", order.data.payer);
-        localStorage.setItem("educationLoan", order.data.educationLoan || "no"); // Save education loan selection
-        localStorage.setItem("fromPlaceOrder", "true");
-      }
-      setIsSubmitting(false);
-    } catch (error) {
-      console.error("Error generating quote:", error);
-    }
-  };
+      })
 
-  // Add loading state handling
+      setIsQuoteDownloaded(true)
+      if (typeof window !== "undefined") {
+        setOrderId(order.data.id)
+        localStorage.setItem("selectedPayer", order.data.payer)
+        localStorage.setItem("educationLoan", order.data.educationLoan || "no")
+        localStorage.setItem("fromPlaceOrder", "true")
+      }
+    } catch (error) {
+      console.error("Error generating quote:", error)
+      if (axios.isAxiosError(error)) {
+        console.error("Response data:", error.response?.data)
+        alert(`Failed to create order: ${error.response?.data || error.message}`)
+      } else {
+        alert("Failed to generate quote. Please try again.")
+      }
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   if (status === "loading") {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
       </div>
-    );
+    )
   }
 
-  // Add unauthenticated state handling
   if (status === "unauthenticated") {
-    router.push("/auth/signin");
-    return null;
+    router.push("/auth/signin")
+    return null
   }
 
   return (
-    <Form {...form}>
-      <form
-        onSubmit={(e) => {
-          console.log("Form submit triggered");
-          form.handleSubmit(onSubmit)(e);
-        }}
-        className="space-y-6"
-      >
-        {Object.keys(form.formState.errors).length > 0 && (
-          <div className="text-red-500 p-4 border border-red-200 rounded-md bg-red-50">
-            Please fix the following errors:
-            <ul className="list-disc pl-5">
-              {Object.entries(form.formState.errors).map(([key, error]) => (
-                <li key={key}>{error.message}</li>
-              ))}
-            </ul>
+    <>
+      {/* Block Rate Status Popup */}
+      <Dialog open={showStatusPopup} onOpenChange={() => {}}>
+        <DialogContent className="w-[90vw] max-w-[425px] md:w-full">
+          <DialogHeader className="px-4 sm:px-6">
+            <DialogTitle className="text-lg sm:text-xl">Block Rate Status</DialogTitle>
+            <DialogDescription className="mt-2 sm:mt-3 text-sm sm:text-base">
+              Update rate status before proceeding
+            </DialogDescription>
+          </DialogHeader>
+          <div className="px-4 sm:px-6 py-2 sm:py-4">
+            <Select value={selectedStatus} onValueChange={(value) => setSelectedStatus(value)}>
+              <SelectTrigger className="w-full h-10 sm:h-12 text-sm sm:text-base">
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent className="text-sm sm:text-base z-50">
+                <SelectItem value="blocked">Blocked</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-        )}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Left Column */}
-          <div className="space-y-6">
-            <FormField
-              control={form.control}
-              name="purpose"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-gray-700 font-normal">
-                    Purpose
-                  </FormLabel>
-                  <Select
-                    onValueChange={(value) => {
-                      field.onChange(value);
-                      // Automatically set country based on purpose
-                      if (value === "Blocked account transfer") {
-                        form.setValue("receiverBankCountry", "Germany");
-                        form.setValue("currency", "EUR");
-                      } else if (value === "GIC Canada fee deposite") {
-                        form.setValue("receiverBankCountry", "Canada");
-                        form.setValue("currency", "CAD");
-                      } else {
-                        form.setValue("receiverBankCountry", "");
-                        // Set currency based on country if available, else empty
-                        const selectedCountry = form.getValues(
-                          "receiverBankCountry"
-                        );
-                        const countryCurrency =
-                          COUNTRY_CURRENCY_MAP[
-                            selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP
-                          ] || "";
-                        form.setValue("currency", countryCurrency);
-                      }
-                    }}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="bg-blue-50/50 border-blue-100 h-12 w-full">
-                        <SelectValue placeholder="Select purpose" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="University fee transfer">
-                        University fee transfer
-                      </SelectItem>
-                      <SelectItem value="Student Living expenses transfer">
-                        Student Living expenses transfer
-                      </SelectItem>
-                      <SelectItem value="Student Visa fee payment">
-                        Student Visa fee payment
-                      </SelectItem>
-                      <SelectItem value="Convera registered payment">
-                        Convera registered payment
-                      </SelectItem>
-                      <SelectItem value="Flywire registered payment">
-                        Flywire registered payment
-                      </SelectItem>
-                      <SelectItem value="Blocked account transfer">
-                        Blocked account transfer
-                      </SelectItem>
-                      <SelectItem value="Application fee">
-                        Application fee
-                      </SelectItem>
-                      <SelectItem value="Accomodation fee">
-                        Accomodation fee
-                      </SelectItem>
-                      <SelectItem value="GIC Canada fee deposite">
-                        GIC Canada fee deposite
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {form.formState.errors.purpose && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {form.formState.errors.purpose.message}
-                    </p>
-                  )}
-                </FormItem>
+          <DialogFooter className="px-4 sm:px-6 pb-4 sm:pb-6">
+            <Button
+              onClick={handleStatusConfirm}
+              disabled={isUpdatingStatus}
+              className="w-full h-10 sm:h-12 text-sm sm:text-base bg-dark-blue hover:bg-dark-blue"
+            >
+              {isUpdatingStatus ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Updating...
+                </>
+              ) : (
+                "Submit"
               )}
-            />
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-            <div className="flex flex-col md:flex-row gap-6">
-              {/* Education Loan Section */}
-              <div className="flex-1">
-                <p className="text-gray-700 font-normal mb-2">Education loan</p>
-                <FormField
-                  control={form.control}
-                  name="educationLoan"
-                  render={({ field }) => (
-                    <RadioGroup
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                        // Update TCS applicability based on selection
-                        if (value === "yes") {
-                          setCalculatedValues((prev) => ({
-                            ...prev,
-                            tcsApplicable: "0",
-                          }));
-                        } else {
-                          setCalculatedValues((prev) => ({
-                            ...prev,
-                            tcsApplicable: calculateTcs(
-                              parseFloat(prev.inrAmount)
-                            ).toString(),
-                          }));
-                        }
-                      }}
-                      value={field.value}
-                      className="flex items-center gap-6"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem
-                          value="yes"
-                          id="yes"
-                          className="border-blue-600 text-blue-600"
-                        />
-                        <Label htmlFor="yes" className="font-normal">
-                          Yes
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="no" id="no" />
-                        <Label htmlFor="no" className="font-normal">
-                          No
-                        </Label>
-                      </div>
-                    </RadioGroup>
-                  )}
-                />
-                {form.watch("educationLoan") === "yes" ? (
-                  <p className="text-xs text-green-600 mt-1">
-                    *No TCS applicable
-                  </p>
-                ) : (
-                  <p className="text-xs text-green-600 mt-1">
-                    *5% TCS applicable
-                  </p>
-                )}
-              </div>
-
-              {/* Foreign Bank Charges Section */}
-              <div className="flex-1">
-                <p className="text-gray-700 font-normal mb-2">
-                  Foreign bank charges
-                </p>
-                <FormField
-                  control={form.control}
-                  name="foreignBankCharges"
-                  render={({ field }) => (
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      className="flex items-center gap-6"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem
-                          value="OUR"
-                          id="our"
-                          className="border-blue-600 text-blue-600"
-                        />
-                        <Label htmlFor="our" className="font-normal">
-                          OUR
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="BEN" id="ben" />
-                        <Label htmlFor="ben" className="font-normal">
-                          BEN
-                        </Label>
-                      </div>
-                    </RadioGroup>
-                  )}
-                />
-                {form.watch("foreignBankCharges") === "OUR" ? (
-                  <p className="text-xs text-green-600 mt-1">
-                    *Zero foreign bank charges{" "}
-                  </p>
-                ) : (
-                  <p className="text-xs text-green-600 mt-1">
-                    *Receiver bank charges applicable
-                  </p>
-                )}
-              </div>
-            </div>
-            {/* Rest of the left column fields remain the same */}
-            <FormField
-              control={form.control}
-              name="payer"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-gray-700 font-normal">
-                    Payer
-                  </FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="bg-blue-50/50 border-blue-100 h-12 w-full">
-                        <SelectValue placeholder="Select payer" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Self">Self</SelectItem>
-                      <SelectItem value="Parent">Parent</SelectItem>
-                      <SelectItem value="Siblings">Siblings</SelectItem>
-                      <SelectItem value="Spouse">Spouse</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="forexPartner"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-gray-700 font-normal">
-                    Choose forex partner
-                  </FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="bg-blue-50/50 border-blue-100 h-12 w-full">
-                        <SelectValue placeholder="Select forex partner" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Nium Forex India Pvt Ltd">
-                        Nium Forex India Pvt Ltd
-                      </SelectItem>
-                      <SelectItem value="Ebix Cash World Money Ltd">
-                        Ebix Cash World Money Ltd
-                      </SelectItem>
-                      <SelectItem value="WSFX Global Pay Ltd">
-                        WSFX Global Pay Ltd
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="margin"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-gray-700 font-normal">
-                    Margin
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      className="bg-blue-50/50 border-blue-100 h-12"
-                      placeholder="Enter margin"
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-          </div>
-
-          {/* Right Column - All fields remain the same */}
-          <div className="space-y-6">
-            <FormField
-              control={form.control}
-              name="receiverBankCountry"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-gray-700 font-normal">
-                    Receiver&apos;s bank country
-                  </FormLabel>
-                  <Select
-                    onValueChange={(value) => {
-                      field.onChange(value);
-                      // Automatically set currency based on selected country
-                      const currency =
-                        COUNTRY_CURRENCY_MAP[
-                          value as keyof typeof COUNTRY_CURRENCY_MAP
-                        ] || "USD";
-                      form.setValue("currency", currency, {
-                        shouldValidate: true,
-                      }); // Add shouldValidate
-                    }}
-                    value={field.value}
-                    disabled={
-                      form.watch("purpose") === "Blocked account transfer" ||
-                      form.watch("purpose") === "GIC Canada fee deposite"
-                    }
-                  >
-                    <FormControl>
-                      <SelectTrigger className="bg-blue-50/50 border-blue-100 h-12 w-full">
-                        <SelectValue placeholder="Select country" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Germany">Germany</SelectItem>
-                      <SelectItem value="UAE">UAE</SelectItem>
-                      <SelectItem value="Australia">Australia</SelectItem>
-                      <SelectItem value="Canada">Canada</SelectItem>
-                      <SelectItem value="Switzerland">Switzerland</SelectItem>
-                      <SelectItem value="France">France</SelectItem>
-                      <SelectItem value="United States of America">
-                        United States of America
-                      </SelectItem>
-                      <SelectItem value="United Kingdom">
-                        United Kingdom
-                      </SelectItem>
-                      <SelectItem value="New Zealand">New Zealand</SelectItem>
-                      <SelectItem value="Sweden">Sweden</SelectItem>
-                      <SelectItem value="Geogia">Geogia</SelectItem>
-                      <SelectItem value="Bulgaria">Bulgaria</SelectItem>
-                      <SelectItem value="Ireland">Ireland</SelectItem>
-                      <SelectItem value="Latvia">Latvia</SelectItem>
-                      <SelectItem value="Lithuania">Lithuania</SelectItem>
-                      <SelectItem value="Uzbekistan">Uzbekistan</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {(form.watch("purpose") === "Blocked account transfer" ||
-                    form.watch("purpose") === "GIC Canada fee deposite") && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      Country automatically set based on purpose selection
-                    </p>
-                  )}
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="studentName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-gray-700 font-normal">
-                    Student name
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      className="bg-blue-50/50 border-blue-100 h-12"
-                      placeholder="Enter name"
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="consultancy"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-gray-700 font-normal ">
-                    Choose consultancy
-                  </FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="bg-blue-50/50 border-blue-100 h-12 w-full">
-                        <SelectValue placeholder="Select consultancy" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="SPAN">SPAN</SelectItem>
-                      <SelectItem value="Orion Study Abroad">
-                        Orion Study Abroad
-                      </SelectItem>
-                      <SelectItem value="Join in campus">
-                        Join in campus
-                      </SelectItem>
-                      <SelectItem value="Scope overseas">
-                        Scope overseas
-                      </SelectItem>
-                      <SelectItem value="Triumph Education Centre">
-                        Triumph Education Centre
-                      </SelectItem>
-                      <SelectItem value="Career Gyan">Career Gyan</SelectItem>
-                      <SelectItem value="Entry Fly">Entry Fly</SelectItem>
-                      <SelectItem value="Buy Exchange">Buy Exchange</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="ibrRate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-gray-700 font-normal">
-                    IBR Rate
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      className="bg-blue-50/50 border-blue-100 h-12"
-                      readOnly
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            {/* Updated Amount and Dynamic Currency Section */}
-            <div className="grid grid-cols-4 gap-2">
-              <div className="col-span-3">
-                <FormField
-                  control={form.control}
-                  name="amount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-gray-700 font-normal">
-                        Amount
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          className="bg-blue-50/50 border-blue-100 h-12"
-                          placeholder="Enter amount"
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="col-span-1">
-                <FormField
-                  control={form.control}
-                  name="currency"
-                  render={({ field }) => {
-                    const selectedCountry = form.watch("receiverBankCountry");
-                    const countryCurrency = selectedCountry
-                      ? COUNTRY_CURRENCY_MAP[
-                          selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP
-                        ]
-                      : "USD";
-
-                    // Countries where USD is already the primary currency
-                    const usdPrimaryCountries = [
-                      "United States of America",
-                      "Uzbekistan",
-                    ];
-                    const showUsdOption =
-                      selectedCountry &&
-                      !usdPrimaryCountries.includes(selectedCountry);
-
-                    return (
-                      <FormItem>
-                        <FormLabel className="font-normal">&nbsp;</FormLabel>
-                        <Select
-                          onValueChange={(value) => {
-                            field.onChange(value);
-                            form.trigger("currency"); // Trigger validation after change
-                          }}
-                          value={field.value || countryCurrency}
-                        >
-                          <FormControl>
-                            <SelectTrigger className="w-full h-12 bg-dark-blue text-white hover:text-white hover:bg-medium-blue border-blue-800">
-                              <SelectValue
-                                placeholder={field.value || countryCurrency}
-                              />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value={countryCurrency}>
-                              {countryCurrency} {!showUsdOption && "(Default)"}
-                            </SelectItem>
-                            {showUsdOption && (
-                              <SelectItem value="USD">
-                                USD (Alternative)
-                              </SelectItem>
-                            )}
-                          </SelectContent>
-                        </Select>
-                        {field.value === "USD" && countryCurrency !== "USD" && (
-                          <p className="text-xs text-gray-500 mt-1">
-                            Using USD instead of {countryCurrency}
-                          </p>
-                        )}
-                      </FormItem>
-                    );
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Calculation Section */}
-        <div className="mt-4">
-          {showCalculation ? (
-            <div className="relative border-t pt-6 pb-4">
-              <div className="absolute right-0 top-4 flex items-center">
-                <span className="text-gray-500 text-sm mr-1">
-                  Hide Calculation
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setShowCalculation(false)}
-                  className="h-5 w-5 rounded-full border border-rose-400 flex items-center justify-center bg-white"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="#FF6B93"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="m5 12 7-7 7 7" />
-                    <path d="M12 19V5" />
-                  </svg>
-                </button>
-              </div>
-
-              <div className="absolute right-2 top-9 bottom-4 w-0.5 bg-rose-200">
-                <div className="absolute top-4 h-2 w-2 rounded-full bg-rose-200 border border-white -right-[3px]"></div>
-                <div className="absolute top-[26%] h-2 w-2 rounded-full bg-rose-200 border border-white -right-[3px]"></div>
-                <div className="absolute top-[46%] h-2 w-2 rounded-full bg-rose-200 border border-white -right-[3px]"></div>
-                <div className="absolute top-[66%] h-2 w-2 rounded-full bg-rose-200 border border-white -right-[3px]"></div>
-                <div className="absolute bottom-2 h-2 w-2 rounded-full bg-rose-200 border border-white -right-[3px]"></div>
-              </div>
-
-              <div className="space-y-6 mt-4">
-                <div className="flex justify-between items-center">
-                  <div className="text-gray-600">INR Amount</div>
-                  <div className="font-medium text-gray-700 pr-6">
-                    {calculatedValues.inrAmount}
-                  </div>
-                </div>
-                <div className="flex justify-between items-center">
-                  <div className="text-gray-600">Bank Fee</div>
-                  <div className="font-medium text-gray-700 pr-6">
-                    {calculatedValues.bankFee}
-                  </div>
-                </div>
-                <div className="flex justify-between items-center">
-                  <div className="text-gray-600">GST</div>
-                  <div className="font-medium text-gray-700 pr-6">
-                    {calculatedValues.gst}
-                  </div>
-                </div>
-                <div className="flex justify-between items-center">
-                  <div className="text-gray-600">TCS Applicable</div>
-                  <div className="font-medium text-gray-700 pr-6">
-                    {calculatedValues.tcsApplicable}
-                  </div>
-                </div>
-                <div className="border-t pt-4 flex justify-between items-center">
-                  <div className="font-medium text-gray-700">Total Payable</div>
-                  <div className="font-medium text-gray-700 pr-6">
-                    {calculatedValues.totalPayable}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="flex justify-end">
-              <Button
-                type="button"
-                variant="ghost"
-                className="text-gray-500 hover:text-gray-500 flex items-center gap-1 p-0"
-                onClick={handleShowCalculation}
-              >
-                <span>Enter amount to view calculation</span>
-                <div className="h-5 w-5 rounded-full border border-rose-400 flex items-center justify-center">
-                  <ArrowRight className="h-3 w-3 text-rose-400" />
-                </div>
-              </Button>
+      <Form {...form}>
+        <form
+          onSubmit={(e) => {
+            console.log("Form submit triggered")
+            form.handleSubmit(onSubmit)(e)
+          }}
+          className="space-y-6"
+        >
+          {Object.keys(form.formState.errors).length > 0 && (
+            <div className="text-red-500 p-4 border border-red-200 rounded-md bg-red-50">
+              Please fix the following errors:
+              <ul className="list-disc pl-5">
+                {Object.entries(form.formState.errors).map(([key, error]) => (
+                  <li key={key}>{error.message}</li>
+                ))}
+              </ul>
             </div>
           )}
-        </div>
 
-        {/* Total Amount and Customer Rate */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
-          <div>
-            <p className="text-gray-700 font-normal mb-2">Total amount</p>
-            <div className="flex">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Left Column */}
+            <div className="space-y-6">
               <FormField
                 control={form.control}
-                name="totalAmount"
+                name="purpose"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-gray-700 font-normal">Purpose</FormLabel>
+                    <Select
+                      onValueChange={(value) => {
+                        field.onChange(value)
+                        if (value === "Blocked account transfer") {
+                          form.setValue("receiverBankCountry", "Germany")
+                          form.setValue("currency", "EUR")
+                        } else if (value === "GIC Canada fee deposite") {
+                          form.setValue("receiverBankCountry", "Canada")
+                          form.setValue("currency", "CAD")
+                        } else {
+                          form.setValue("receiverBankCountry", "")
+                          const selectedCountry = form.getValues("receiverBankCountry")
+                          const countryCurrency =
+                            COUNTRY_CURRENCY_MAP[selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP] || ""
+                          form.setValue("currency", countryCurrency)
+                        }
+                      }}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="bg-blue-50/50 border-blue-100 h-12 w-full">
+                          <SelectValue placeholder="Select purpose" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="University fee transfer">University fee transfer</SelectItem>
+                        <SelectItem value="Student Living expenses transfer">
+                          Student Living expenses transfer
+                        </SelectItem>
+                        <SelectItem value="Student Visa fee payment">Student Visa fee payment</SelectItem>
+                        <SelectItem value="Convera registered payment">Convera registered payment</SelectItem>
+                        <SelectItem value="Flywire registered payment">Flywire registered payment</SelectItem>
+                        <SelectItem value="Blocked account transfer">Blocked account transfer</SelectItem>
+                        <SelectItem value="Application fee">Application fee</SelectItem>
+                        <SelectItem value="Accomodation fee">Accomodation fee</SelectItem>
+                        <SelectItem value="GIC Canada fee deposite">GIC Canada fee deposite</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {form.formState.errors.purpose && (
+                      <p className="text-red-500 text-xs mt-1">{form.formState.errors.purpose.message}</p>
+                    )}
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex flex-col md:flex-row gap-6">
+                <div className="flex-1">
+                  <p className="text-gray-700 font-normal mb-2">Education loan</p>
+                  <FormField
+                    control={form.control}
+                    name="educationLoan"
+                    render={({ field }) => (
+                      <RadioGroup
+                        onValueChange={(value) => {
+                          field.onChange(value)
+                          if (value === "yes") {
+                            setCalculatedValues((prev) => ({
+                              ...prev,
+                              tcsApplicable: "0",
+                            }))
+                          } else {
+                            setCalculatedValues((prev) => ({
+                              ...prev,
+                              tcsApplicable: calculateTcs(Number.parseFloat(prev.inrAmount)).toString(),
+                            }))
+                          }
+                        }}
+                        value={field.value}
+                        className="flex items-center gap-6"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="yes" id="yes" className="border-blue-600 text-blue-600" />
+                          <Label htmlFor="yes" className="font-normal">
+                            Yes
+                          </Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="no" id="no" />
+                          <Label htmlFor="no" className="font-normal">
+                            No
+                          </Label>
+                        </div>
+                      </RadioGroup>
+                    )}
+                  />
+                  {form.watch("educationLoan") === "yes" ? (
+                    <p className="text-xs text-green-600 mt-1">*No TCS applicable</p>
+                  ) : (
+                    <p className="text-xs text-green-600 mt-1">*5% TCS applicable</p>
+                  )}
+                </div>
+
+                <div className="flex-1">
+                  <p className="text-gray-700 font-normal mb-2">Foreign bank charges</p>
+                  <FormField
+                    control={form.control}
+                    name="foreignBankCharges"
+                    render={({ field }) => (
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        className="flex items-center gap-6"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="OUR" id="our" className="border-blue-600 text-blue-600" />
+                          <Label htmlFor="our" className="font-normal">
+                            OUR
+                          </Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="BEN" id="ben" />
+                          <Label htmlFor="ben" className="font-normal">
+                            BEN
+                          </Label>
+                        </div>
+                      </RadioGroup>
+                    )}
+                  />
+                  {form.watch("foreignBankCharges") === "OUR" ? (
+                    <p className="text-xs text-green-600 mt-1">*Zero foreign bank charges </p>
+                  ) : (
+                    <p className="text-xs text-green-600 mt-1">*Receiver bank charges applicable</p>
+                  )}
+                </div>
+              </div>
+
+              <FormField
+                control={form.control}
+                name="payer"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-gray-700 font-normal">Payer</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="bg-blue-50/50 border-blue-100 h-12 w-full">
+                          <SelectValue placeholder="Select payer" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Self">Self</SelectItem>
+                        <SelectItem value="Parent">Parent</SelectItem>
+                        <SelectItem value="Siblings">Siblings</SelectItem>
+                        <SelectItem value="Spouse">Spouse</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="forexPartner"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-gray-700 font-normal">Choose forex partner</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="bg-blue-50/50 border-blue-100 h-12 w-full">
+                          <SelectValue placeholder="Select forex partner" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Nium Forex India Pvt Ltd">Nium Forex India Pvt Ltd</SelectItem>
+                        <SelectItem value="Ebix Cash World Money Ltd">Ebix Cash World Money Ltd</SelectItem>
+                        <SelectItem value="WSFX Global Pay Ltd">WSFX Global Pay Ltd</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="margin"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-gray-700 font-normal">Margin</FormLabel>
+                    <FormControl>
+                      <Input {...field} className="bg-blue-50/50 border-blue-100 h-12" placeholder="Enter margin" />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Right Column */}
+            <div className="space-y-6">
+              <FormField
+                control={form.control}
+                name="receiverBankCountry"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-gray-700 font-normal">Receiver&apos;s bank country</FormLabel>
+                    <Select
+                      onValueChange={(value) => {
+                        field.onChange(value)
+                        const currency = COUNTRY_CURRENCY_MAP[value as keyof typeof COUNTRY_CURRENCY_MAP] || "USD"
+                        form.setValue("currency", currency, {
+                          shouldValidate: true,
+                        })
+                      }}
+                      value={field.value}
+                      disabled={
+                        form.watch("purpose") === "Blocked account transfer" ||
+                        form.watch("purpose") === "GIC Canada fee deposite"
+                      }
+                    >
+                      <FormControl>
+                        <SelectTrigger className="bg-blue-50/50 border-blue-100 h-12 w-full">
+                          <SelectValue placeholder="Select country" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Germany">Germany</SelectItem>
+                        <SelectItem value="UAE">UAE</SelectItem>
+                        <SelectItem value="Australia">Australia</SelectItem>
+                        <SelectItem value="Canada">Canada</SelectItem>
+                        <SelectItem value="Switzerland">Switzerland</SelectItem>
+                        <SelectItem value="France">France</SelectItem>
+                        <SelectItem value="United States of America">United States of America</SelectItem>
+                        <SelectItem value="United Kingdom">United Kingdom</SelectItem>
+                        <SelectItem value="New Zealand">New Zealand</SelectItem>
+                        <SelectItem value="Sweden">Sweden</SelectItem>
+                        <SelectItem value="Geogia">Geogia</SelectItem>
+                        <SelectItem value="Bulgaria">Bulgaria</SelectItem>
+                        <SelectItem value="Ireland">Ireland</SelectItem>
+                        <SelectItem value="Latvia">Latvia</SelectItem>
+                        <SelectItem value="Lithuania">Lithuania</SelectItem>
+                        <SelectItem value="Uzbekistan">Uzbekistan</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {(form.watch("purpose") === "Blocked account transfer" ||
+                      form.watch("purpose") === "GIC Canada fee deposite") && (
+                      <p className="text-xs text-gray-500 mt-1">Country automatically set based on purpose selection</p>
+                    )}
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="studentName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-gray-700 font-normal">Student name</FormLabel>
+                    <FormControl>
+                      <Input {...field} className="bg-blue-50/50 border-blue-100 h-12" placeholder="Enter name" />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="consultancy"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-gray-700 font-normal ">Choose consultancy</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="bg-blue-50/50 border-blue-100 h-12 w-full">
+                          <SelectValue placeholder="Select consultancy" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="SPAN">SPAN</SelectItem>
+                        <SelectItem value="Orion Study Abroad">Orion Study Abroad</SelectItem>
+                        <SelectItem value="Join in campus">Join in campus</SelectItem>
+                        <SelectItem value="Scope overseas">Scope overseas</SelectItem>
+                        <SelectItem value="Triumph Education Centre">Triumph Education Centre</SelectItem>
+                        <SelectItem value="Career Gyan">Career Gyan</SelectItem>
+                        <SelectItem value="Entry Fly">Entry Fly</SelectItem>
+                        <SelectItem value="Buy Exchange">Buy Exchange</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="ibrRate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-gray-700 font-normal">IBR Rate</FormLabel>
+                    <FormControl>
+                      <Input {...field} className="bg-blue-50/50 border-blue-100 h-12" readOnly />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-4 gap-2">
+                <div className="col-span-3">
+                  <FormField
+                    control={form.control}
+                    name="amount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700 font-normal">Amount</FormLabel>
+                        <FormControl>
+                          <Input {...field} className="bg-blue-50/50 border-blue-100 h-12" placeholder="Enter amount" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="col-span-1">
+                  <FormField
+                    control={form.control}
+                    name="currency"
+                    render={({ field }) => {
+                      const selectedCountry = form.watch("receiverBankCountry")
+                      const countryCurrency = selectedCountry
+                        ? COUNTRY_CURRENCY_MAP[selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP]
+                        : "USD"
+
+                      const usdPrimaryCountries = ["United States of America", "Uzbekistan"]
+
+                      const showUsdOption = selectedCountry && !usdPrimaryCountries.includes(selectedCountry)
+
+                      return (
+                        <FormItem>
+                          <FormLabel className="font-normal">&nbsp;</FormLabel>
+                          <Select
+                            onValueChange={(value) => {
+                              field.onChange(value)
+                              form.trigger("currency")
+                            }}
+                            value={field.value || countryCurrency}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="w-full h-12 bg-dark-blue text-white hover:text-white hover:bg-medium-blue border-blue-800">
+                                <SelectValue placeholder={field.value || countryCurrency} />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value={countryCurrency}>
+                                {countryCurrency} {!showUsdOption && "(Default)"}
+                              </SelectItem>
+                              {showUsdOption && <SelectItem value="USD">USD (Alternative)</SelectItem>}
+                            </SelectContent>
+                          </Select>
+                          {field.value === "USD" && countryCurrency !== "USD" && (
+                            <p className="text-xs text-gray-500 mt-1">Using USD instead of {countryCurrency}</p>
+                          )}
+                        </FormItem>
+                      )
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Calculation Section */}
+          <div className="mt-4">
+            {showCalculation ? (
+              <div className="relative border-t pt-6 pb-4">
+                <div className="absolute right-0 top-4 flex items-center">
+                  <span className="text-gray-500 text-sm mr-1">Hide Calculation</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowCalculation(false)}
+                    className="h-5 w-5 rounded-full border border-rose-400 flex items-center justify-center bg-white"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#FF6B93"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="m5 12 7-7 7 7" />
+                      <path d="M12 19V5" />
+                    </svg>
+                  </button>
+                </div>
+                <div className="absolute right-2 top-9 bottom-4 w-0.5 bg-rose-200">
+                  <div className="absolute top-4 h-2 w-2 rounded-full bg-rose-200 border border-white -right-[3px]"></div>
+                  <div className="absolute top-[26%] h-2 w-2 rounded-full bg-rose-200 border border-white -right-[3px]"></div>
+                  <div className="absolute top-[46%] h-2 w-2 rounded-full bg-rose-200 border border-white -right-[3px]"></div>
+                  <div className="absolute top-[66%] h-2 w-2 rounded-full bg-rose-200 border border-white -right-[3px]"></div>
+                  <div className="absolute bottom-2 h-2 w-2 rounded-full bg-rose-200 border border-white -right-[3px]"></div>
+                </div>
+                <div className="space-y-6 mt-4">
+                  <div className="flex justify-between items-center">
+                    <div className="text-gray-600">INR Amount</div>
+                    <div className="font-medium text-gray-700 pr-6">{calculatedValues.inrAmount}</div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <div className="text-gray-600">Bank Fee</div>
+                    <div className="font-medium text-gray-700 pr-6">{calculatedValues.bankFee}</div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <div className="text-gray-600">GST</div>
+                    <div className="font-medium text-gray-700 pr-6">{calculatedValues.gst}</div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <div className="text-gray-600">TCS Applicable</div>
+                    <div className="font-medium text-gray-700 pr-6">{calculatedValues.tcsApplicable}</div>
+                  </div>
+                  <div className="border-t pt-4 flex justify-between items-center">
+                    <div className="font-medium text-gray-700">Total Payable</div>
+                    <div className="font-medium text-gray-700 pr-6">{calculatedValues.totalPayable}</div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex justify-end">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="text-gray-500 hover:text-gray-500 flex items-center gap-1 p-0"
+                  onClick={handleShowCalculation}
+                >
+                  <span>Enter amount to view calculation</span>
+                  <div className="h-5 w-5 rounded-full border border-rose-400 flex items-center justify-center">
+                    <ArrowRight className="h-3 w-3 text-rose-400" />
+                  </div>
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* Total Amount and Customer Rate */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+            <div>
+              <p className="text-gray-700 font-normal mb-2">Total amount</p>
+              <div className="flex">
+                <FormField
+                  control={form.control}
+                  name="totalAmount"
+                  render={({ field }) => (
+                    <FormControl>
+                      <Input
+                        {...field}
+                        readOnly
+                        placeholder="Total amount"
+                        className="rounded-r-none bg-blue-50/50 border-blue-100 h-12"
+                      />
+                    </FormControl>
+                  )}
+                />
+                <Button
+                  type="button"
+                  className="rounded-l-none h-12 bg-dark-blue text-white hover:bg-medium-blue border-blue-800"
+                >
+                  INR
+                </Button>
+              </div>
+            </div>
+            <div>
+              <p className="text-gray-700 font-normal mb-2">Customer rate</p>
+              <FormField
+                control={form.control}
+                name="customerRate"
                 render={({ field }) => (
                   <FormControl>
                     <Input
                       {...field}
                       readOnly
-                      placeholder="Total amount"
-                      className="rounded-r-none bg-blue-50/50 border-blue-100 h-12"
+                      placeholder=" customer rate"
+                      className="bg-blue-50/50 border-blue-100 h-12"
                     />
                   </FormControl>
                 )}
               />
-              <Button
-                type="button"
-                className="rounded-l-none h-12 bg-dark-blue text-white hover:bg-medium-blue border-blue-800"
-              >
-                INR
-              </Button>
             </div>
           </div>
-          <div>
-            <p className="text-gray-700 font-normal mb-2">Customer rate</p>
-            <FormField
-              control={form.control}
-              name="customerRate"
-              render={({ field }) => (
-                <FormControl>
-                  <Input
-                    {...field}
-                    readOnly
-                    placeholder=" customer rate"
-                    className="bg-blue-50/50 border-blue-100 h-12"
-                  />
-                </FormControl>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
+            <Button
+              type="button"
+              onClick={() => handleDownloadQuote(form.getValues(), calculatedValues)}
+              variant="outline"
+              className="text-white border-none hover:opacity-90 flex items-center gap-2 h-12 rounded-md px-6"
+              style={{
+                background: "linear-gradient(to right, #614385, #516395)",
+              }}
+              disabled={isSubmitting || isQuoteDownloaded}
+            >
+              <Download className="h-5 w-5" />
+              <span>Download Quote</span>
+              <div className="flex ml-1">
+                <span className="text-white font-bold">&gt;&gt;&gt;</span>
+              </div>
+            </Button>
+
+            <Button
+              type="submit"
+              className="bg-dark-blue hover:bg-medium-blue text-white flex items-center gap-2 h-12 rounded-md px-6 border-none"
+              disabled={isSubmitting || !isQuoteDownloaded}
+            >
+              {isSubmitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <>
+                  <Play className="h-4 w-4" />
+                  <span className="font-medium">PROCEED</span>
+                </>
               )}
-            />
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="border-gray-300 text-gray-700 hover:bg-gray-100 flex items-center gap-2 h-12 rounded-md px-6 bg-transparent"
+              onClick={resetForm}
+            >
+              <RotateCcw className="h-4 w-4" />
+              <span className="font-medium">RESET</span>
+            </Button>
           </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
-          <Button
-            type="button"
-            onClick={() =>
-              handleDownloadQuote(form.getValues(), calculatedValues)
-            }
-            variant="outline"
-            className="text-white border-none hover:opacity-90 flex items-center gap-2 h-12 rounded-md px-6"
-            style={{
-              background: "linear-gradient(to right, #614385, #516395)",
-            }}
-            disabled={isSubmitting || isQuoteDownloaded}
-          >
-            <Download className="h-5 w-5" />
-            <span>Download Quote</span>
-            <div className="flex ml-1">
-              <span className="text-white font-bold">&gt;&gt;&gt;</span>
-            </div>
-          </Button>
-
-          <Button
-            type="submit"
-            className="bg-dark-blue hover:bg-medium-blue text-white flex items-center gap-2 h-12 rounded-md px-6 border-none"
-            disabled={isSubmitting || !isQuoteDownloaded}
-          >
-            {isSubmitting ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <>
-                <Play className="h-4 w-4" />
-                <span className="font-medium">PROCEED</span>
-              </>
-            )}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            className="border-gray-300 text-gray-700 hover:bg-gray-100 flex items-center gap-2 h-12 rounded-md px-6"
-            onClick={resetForm}
-          >
-            <RotateCcw className="h-4 w-4" />
-            <span className="font-medium">RESET</span>
-          </Button>
-        </div>
-      </form>
-    </Form>
-  );
+        </form>
+      </Form>
+    </>
+  )
 }
