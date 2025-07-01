@@ -69,6 +69,14 @@ const fileUploadConstants = {
   currentUser: "Staff Member",
 };
 
+type DocumentFromAPI = {
+  id: string;
+  type: string;
+  role: string;
+  createdAt: string;
+  imageUrl?: string;
+};
+
 const getFileIcon = (type: string, name: string) => {
   const extension = name.split(".").pop()?.toLowerCase();
   if (type.startsWith("image/")) {
@@ -135,21 +143,14 @@ export default function UploadsPage({
     const fetchDocuments = async () => {
       try {
         const response = await fetch(`/api/upload/document/${orderId}`);
+        console.log(orderId);
+        
         if (!response.ok) {
           throw new Error("Failed to fetch documents");
         }
         const documents = await response.json();
-
-        interface DocumentFromAPI {
-          id: string;
-          type: string;
-          role: string;
-          createdAt: string;
-          imageUrl: string;
-        }
-
-        // Then update your mapping:
-        const initialFiles = documents.map((doc: DocumentFromAPI) => ({
+        const docsArray = Array.isArray(documents) ? documents : [];
+        const initialFiles = docsArray.map((doc: DocumentFromAPI) => ({
           id: doc.id,
           name: doc.type.split("/").pop() || doc.type,
           type: doc.type,
@@ -266,13 +267,11 @@ export default function UploadsPage({
 
         const response = await fetch("/api/upload/document", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            role: "staff",
+            role: "ORDER", // <-- must match your enum
             userId: "current-user-id",
-            type: selectedFile.file.type,
+            type: "OTHER", // <-- must match your enum
             imageUrl: fileData,
             orderId: orderId,
           }),
@@ -307,6 +306,7 @@ export default function UploadsPage({
       setComment("");
 
       toast.custom(<div className="bg-green-100 text-green-800 p-2 rounded">Success!</div>);
+      await fetchDocuments(); // <--- Refresh the list after upload
     } catch (error) {
       console.error("Error uploading files:", error);
       if (error instanceof z.ZodError) {
@@ -314,7 +314,6 @@ export default function UploadsPage({
       } else {
         toast.custom(
           <div className="bg-red-100 text-red-800 p-2 rounded">
-            <strong>Error:</strong> Failed to upload files
           </div>
         );
       }
@@ -879,4 +878,8 @@ export default function UploadsPage({
       </div>
     </div>
   );
+}
+
+function fetchDocuments() {
+  throw new Error("Function not implemented.");
 }
