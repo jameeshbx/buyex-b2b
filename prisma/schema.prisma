@@ -1,25 +1,11 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearchPostgres"]
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-}
-
-enum UserRole {
-  SUPER_ADMIN
-  ADMIN
-  USER
-  MANAGER
-  ORGANISATION_ADMIN
-  ORGANISATION_USER
 }
 
 model User {
@@ -32,11 +18,12 @@ model User {
   role           UserRole             @default(ORGANISATION_USER)
   createdAt      DateTime             @default(now())
   updatedAt      DateTime             @updatedAt
-  accounts       Account[]
-  sessions       Session[]
-  resetTokens    PasswordResetToken[]
-  organisation   Organisation?        @relation(fields: [organisationId], references: [id])
   organisationId String?
+  status         Boolean              @default(true)
+  accounts       Account[]
+  resetTokens    PasswordResetToken[]
+  sessions       Session[]
+  organisation   Organisation?        @relation(fields: [organisationId], references: [id])
 
   @@map("users")
 }
@@ -47,15 +34,14 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
   @@map("accounts")
@@ -77,7 +63,7 @@ model PasswordResetToken {
   token     String   @unique
   expires   DateTime
   createdAt DateTime @default(now())
-  user      User     @relation(fields: [email], references: [email], onDelete: Restrict)
+  user      User     @relation(fields: [email], references: [email])
 
   @@map("password_reset_tokens")
 }
@@ -103,4 +89,167 @@ model VerificationToken {
   token     String   @unique
   expires   DateTime
   createdAt DateTime @default(now())
+}
+
+model Sender {
+  id                   String   @id @default(cuid())
+  studentName          String
+  studentEmailOriginal String
+  studentEmailFake     String
+  phoneNumber          String
+  addressLine1         String
+  addressLine2         String?
+  state                String
+  postalCode           String
+  nationality          String   @default("indian")
+  relationship         String   @default("self")
+  senderName           String?
+  bankCharges          String?
+  mothersName          String?
+  dob                  String?
+  senderNationality    String?  @default("indian")
+  senderEmail          String?
+  sourceOfFunds        String?
+  occupationStatus     String?
+  payerAccountNumber   String?
+  payerBankName        String?
+  senderAddressLine1   String?
+  senderAddressLine2   String?
+  senderState          String?
+  senderPostalCode     String?
+  status               String   @default("pending")
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  orders               Order[]
+
+  @@map("senders")
+}
+
+model Beneficiary {
+  id                        String   @id @default(cuid())
+  receiverFullName          String
+  receiverCountry           String
+  address                   String
+  receiverBank              String
+  receiverBankAddress       String
+  receiverBankCountry       String
+  receiverAccount           String
+  receiverBankSwiftCode     String
+  iban                      String?
+  sortCode                  String?
+  transitNumber             String?
+  bsbCode                   String?
+  routingNumber             String?
+  anyIntermediaryBank       String   @default("NO")
+  intermediaryBankName      String?
+  intermediaryBankAccountNo String?
+  intermediaryBankIBAN      String?
+  intermediaryBankSwiftCode String?
+  totalRemittance           String
+  field70                   String?
+  status                    Boolean  @default(true)
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+  orders                    Order[]
+
+  @@map("beneficiaries")
+}
+
+model Order {
+  id                  String       @id @default(cuid())
+  purpose             String
+  foreignBankCharges  Float
+  payer               String
+  forexPartner        String
+  margin              Float
+  receiverBankCountry String
+  studentName         String
+  consultancy         String
+  ibrRate             Float
+  amount              Float
+  currency            String
+  totalAmount         Float
+  customerRate        Float
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  status              OrderStatus
+  calculations        Json
+  createdBy           String
+  generatedPDF        String
+  quote               Json
+  beneficiaryId       String?
+  senderId            String?
+  beneficiary         Beneficiary? @relation(fields: [beneficiaryId], references: [id])
+  sender              Sender?      @relation(fields: [senderId], references: [id])
+  documents           Document[]
+
+  @@map("orders")
+}
+
+model Document {
+  id         String       @id @default(cuid())
+  role       DocumentRole
+  userId     String
+  type       DocumentType
+  imageUrl   String
+  isVerified Boolean      @default(false)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  order      Order?       @relation(fields: [orderId], references: [id])
+  orderId    String?
+
+  @@map("documents")
+}
+
+model DownloadedQuotes {
+  id           String   @id @default(cuid())
+  username     String
+  createdBy    String
+  quote        Json
+  calculations Json
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  generatedPDF String?
+
+  @@map("downloaded_quotes")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  USER
+  MANAGER
+  ORGANISATION_ADMIN
+  ORGANISATION_USER
+}
+
+enum DocumentType {
+  PAN
+  AADHAR_FRONT
+  AADHAR_BACK
+  PASSPORT_FRONT
+  PASSPORT_BACK
+  UNIVERSITY_FEE_RECEIPT
+  LOAN_SANCTION_LETTER
+  UNIVERSITY_OFFER_LETTER
+  OTHER
+}
+
+enum DocumentRole {
+  SENDER
+  BENEFICIARY
+  STUDENT
+  ORDER
+}
+
+enum OrderStatus {
+  Received
+  Verified
+  Pending
+  Rejected
+  Completed
+  QuoteDownloaded
+  Authorize
+  DocumentsPlaced
+  RateExpired
 }

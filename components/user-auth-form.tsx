@@ -150,7 +150,7 @@ function ResetPasswordForm() {
             }
 
             toast.success("Password has been reset successfully")
-            router.push("/login")
+            router.push("/signin")
         } catch (error: unknown) {
             toast.error(
                 error instanceof Error 
@@ -241,7 +241,7 @@ function RegisterForm() {
             }
 
             toast.success("Account created successfully")
-            router.push("/login")
+            router.push("/signin")
         } catch (error: unknown) {
             toast.error(
                 error instanceof Error 
