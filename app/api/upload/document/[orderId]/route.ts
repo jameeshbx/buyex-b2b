@@ -11,25 +11,21 @@ export async function GET(
     
     const documents = await db.document.findMany({
       where: {
-        order: {
-          id: orderId
-        }
+        orderId: orderId, // <-- direct filter by orderId
       },
       include: {
         order: {
           select: {
             id: true,
-            studentName: true
-          }
-        }
-      }
+            studentName: true,
+          },
+        },
+      },
     });
 
     if (!documents || documents.length === 0) {
-      return NextResponse.json(
-        { error: "No documents found for this order" },
-        { status: 404 }
-      );
+      // Always return an array, not an object
+      return NextResponse.json([], { status: 200 });
     }
 
     return NextResponse.json(documents);

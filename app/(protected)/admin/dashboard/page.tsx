@@ -1,43 +1,65 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { ChevronDown, ChevronRight, Upload, Search, Filter } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import Link from "next/link"
-import React from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import Image from "next/image"
-import { Input } from "@/components/ui/input"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { useEffect, useState } from "react";
+import {
+  ChevronDown,
+  ChevronRight,
+  Upload,
+  Search,
+  Filter,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Link from "next/link";
+import React from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import Image from "next/image";
+import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type Order = {
-  id: string
-  purpose: string
-  studentName: string
-  currency: string
-  amount: number
-  totalAmount: number
-  ibrRate?: number
-  customerRate?: number
-  fxRate: number
-  fxRateUpdated?: boolean
-  status: string
-  createdAt: string
-  receiverBankCountry?: string
-  forexPartner?: string
-  receiverAccount?: string
-  payer?: string
-  consultancy?: string
-  margin?: number
-  foreignBankCharges?: number
-  createdBy?: string
-  quote?: Record<string, unknown> // Replaced any with Record<string, unknown>
-  calculations?: Record<string, unknown> // Replaced any with Record<string, unknown>
-  generatedPDF?: Record<string, unknown> // Replaced any with Record<string, unknown>
-}
+  id: string;
+  purpose: string;
+  studentName: string;
+  currency: string;
+  amount: number;
+  totalAmount: number;
+  ibrRate?: number;
+  customerRate?: number;
+  fxRate: number;
+  fxRateUpdated?: boolean;
+  status: string;
+  createdAt: string;
+  receiverBankCountry?: string;
+  forexPartner?: string;
+  receiverAccount?: string;
+  payer?: string;
+  consultancy?: string;
+  margin?: number;
+  foreignBankCharges?: number;
+  createdBy?: string;
+  quote?: Record<string, unknown>; // Replaced any with Record<string, unknown>
+  calculations?: Record<string, unknown>; // Replaced any with Record<string, unknown>
+  generatedPDF?: Record<string, unknown>; // Replaced any with Record<string, unknown>
+};
 
 const statusOptions = [
   "Received",
@@ -48,115 +70,137 @@ const statusOptions = [
   "Pending",
   "Rejected",
   "Completed",
-]
-const nonChangeableStatuses = ["QuoteDownloaded", "Documents placed", "Verified", "Rejected", "Completed"]
+];
+const nonChangeableStatuses = [
+  "QuoteDownloaded",
+  "Documents placed",
+  "Verified",
+  "Rejected",
+  "Completed",
+];
 
 export default function Dashboard() {
-  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
-  const [orders, setOrders] = useState<Order[]>([])
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
-  const [showRateModal, setShowRateModal] = useState(false)
-  const [expandedAuthorize, setExpandedAuthorize] = useState<Record<string, boolean>>({})
-  const [statusSelections, setStatusSelections] = useState<Record<string, string>>({})
-  const [ibrRate, setIbrRate] = useState<string>("")
-  const [customerRate, setCustomerRate] = useState<string>("")
-  const [settlementRate, setSettlementRate] = useState<string>("")
-  const [visibleRows, setVisibleRows] = useState(5)
-  const [selectedPurpose, setSelectedPurpose] = useState<string>("all")
-  const [searchTerm, setSearchTerm] = useState<string>("")
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [showRateModal, setShowRateModal] = useState(false);
+  const [expandedAuthorize, setExpandedAuthorize] = useState<
+    Record<string, boolean>
+  >({});
+  const [statusSelections, setStatusSelections] = useState<
+    Record<string, string>
+  >({});
+  const [ibrRate, setIbrRate] = useState<string>("");
+  const [customerRate, setCustomerRate] = useState<string>("");
+  const [settlementRate, setSettlementRate] = useState<string>("");
+  const [visibleRows, setVisibleRows] = useState(5);
+  const [selectedPurpose, setSelectedPurpose] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const [showIbrModal, setShowIbrModal] = useState(false)
-  const [selectedOrderForIbr, setSelectedOrderForIbr] = useState<Order | null>(null)
-  const [ibrModalRate, setIbrModalRate] = useState<string>("")
+  const [showIbrModal, setShowIbrModal] = useState(false);
+  const [selectedOrderForIbr, setSelectedOrderForIbr] = useState<Order | null>(
+    null
+  );
+  const [ibrModalRate, setIbrModalRate] = useState<string>("");
 
   const [formValidation, setFormValidation] = useState<
     Record<
       string,
       {
-        currency?: string
-        fcyAmt?: string
-        purpose?: string
-        receiverAccount?: string
-        isValid?: boolean
+        currency?: string;
+        fcyAmt?: string;
+        purpose?: string;
+        receiverAccount?: string;
+        isValid?: boolean;
       }
     >
-  >({})
-  const [authorizedOrders, setAuthorizedOrders] = useState<Set<string>>(new Set())
+  >({});
+  const [authorizedOrders, setAuthorizedOrders] = useState<Set<string>>(
+    new Set()
+  );
 
   // Fetch orders from API
   useEffect(() => {
     const fetchOrders = async () => {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
       try {
-        const res = await fetch("/api/orders")
-        if (!res.ok) throw new Error("Failed to fetch orders")
-        const data = await res.json()
-        setOrders(data)
+        const res = await fetch("/api/orders");
+        if (!res.ok) throw new Error("Failed to fetch orders");
+        const data = await res.json();
+        setOrders(data);
       } catch (err: unknown) {
-        let errorMessage = "Error fetching orders"
+        let errorMessage = "Error fetching orders";
         if (err instanceof Error) {
-          errorMessage = err.message
+          errorMessage = err.message;
         }
-        setError(errorMessage)
+        setError(errorMessage);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
-    fetchOrders()
-  }, [])
+    };
+    fetchOrders();
+  }, []);
 
   const toggleRowExpansion = (orderId: string) => {
-    const newExpanded = new Set(expandedRows)
+    const newExpanded = new Set(expandedRows);
     if (newExpanded.has(orderId)) {
-      newExpanded.delete(orderId)
+      newExpanded.delete(orderId);
     } else {
-      newExpanded.add(orderId)
+      newExpanded.add(orderId);
     }
-    setExpandedRows(newExpanded)
-  }
+    setExpandedRows(newExpanded);
+  };
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
     // If clicking on Pending status, navigate to sender details
     if (newStatus === "Pending") {
-      window.location.href = `/staff/dashboard/sender-details?orderId=${orderId}`
-      return
+      window.location.href = `/staff/dashboard/sender-details?orderId=${orderId}`;
+      return;
     }
 
     try {
-      setLoading(true)
+      setLoading(true);
       const res = await fetch(`/api/orders/${orderId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
-      })
-      if (!res.ok) throw new Error("Failed to update status")
-      const updatedOrder = await res.json()
-      setOrders((prevOrders) => prevOrders.map((order) => (order.id === orderId ? updatedOrder : order)))
+      });
+      if (!res.ok) throw new Error("Failed to update status");
+      const updatedOrder = await res.json();
+      setOrders((prevOrders) =>
+        prevOrders.map((order) => (order.id === orderId ? updatedOrder : order))
+      );
     } catch (err: unknown) {
-      let errorMessage = "Error updating status"
+      let errorMessage = "Error updating status";
       if (err instanceof Error) {
-        errorMessage = err.message
+        errorMessage = err.message;
       }
-      setError(errorMessage)
+      setError(errorMessage);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleUpdateRateClick = (order: Order) => {
-    setSelectedOrder(order)
-    setIbrRate(order.ibrRate?.toString() || "")
-    setCustomerRate(order.customerRate?.toString() || order.fxRate?.toString() || "")
-    setSettlementRate("")
-    setShowRateModal(true)
-  }
+    setSelectedOrder(order);
+    setIbrRate(order.ibrRate?.toString() || "");
+    setCustomerRate(
+      order.customerRate?.toString() || order.fxRate?.toString() || ""
+    );
+    setSettlementRate("");
+    setShowRateModal(true);
+  };
 
-  const handleRateUpdate = async (orderId: string, ibrRateValue: number, customerRateValue: number) => {
+  const handleRateUpdate = async (
+    orderId: string,
+    ibrRateValue: number,
+    customerRateValue: number
+  ) => {
     try {
-      setLoading(true)
+      setLoading(true);
       const res = await fetch(`/api/orders/${orderId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -166,53 +210,58 @@ export default function Dashboard() {
           fxRate: customerRateValue,
           fxRateUpdated: true, // Add this line
         }),
-      })
-      if (!res.ok) throw new Error("Failed to update rates")
-      const updatedOrder = await res.json()
-      setOrders((prevOrders) => prevOrders.map((order) => (order.id === orderId ? updatedOrder : order)))
-      setShowRateModal(false)
+      });
+      if (!res.ok) throw new Error("Failed to update rates");
+      const updatedOrder = await res.json();
+      setOrders((prevOrders) =>
+        prevOrders.map((order) => (order.id === orderId ? updatedOrder : order))
+      );
+      setShowRateModal(false);
     } catch (err: unknown) {
-      let errorMessage = "Error updating rates"
+      let errorMessage = "Error updating rates";
       if (err instanceof Error) {
-        errorMessage = err.message
+        errorMessage = err.message;
       }
-      setError(errorMessage)
+      setError(errorMessage);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const handleSeeMoreClick = () => setVisibleRows((prev) => prev + 5)
-  const handleSeeLessClick = () => setVisibleRows(5)
+  const handleSeeMoreClick = () => setVisibleRows((prev) => prev + 5);
+  const handleSeeLessClick = () => setVisibleRows(5);
 
   const getStatusBadgeColor = (status: string) => {
     switch (status.toLowerCase()) {
       case "received":
-        return "bg-blue-100 text-blue-800 hover:bg-blue-200"
+        return "bg-blue-100 text-blue-800 hover:bg-blue-200";
       case "QuoteDownloaded":
-        return "bg-green-100 text-green-800 hover:bg-green-200"
+        return "bg-green-100 text-green-800 hover:bg-green-200";
       case "authorized":
-        return "bg-green-100 text-green-800 hover:bg-green-200"
+        return "bg-green-100 text-green-800 hover:bg-green-200";
       case "documents placed":
-        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-200"
+        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-200";
       case "verified":
-        return "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
+        return "bg-emerald-100 text-emerald-800 hover:bg-emerald-200";
       case "pending":
-        return "bg-orange-100 text-orange-800 hover:bg-orange-200"
+        return "bg-orange-100 text-orange-800 hover:bg-orange-200";
       case "rejected":
-        return "bg-red-100 text-red-800 hover:bg-red-200"
+        return "bg-red-100 text-red-800 hover:bg-red-200";
       case "completed":
-        return "bg-green-100 text-green-800 hover:bg-green-200"
+        return "bg-green-100 text-green-800 hover:bg-green-200";
       default:
-        return "bg-gray-100 text-gray-800 hover:bg-gray-200"
+        return "bg-gray-100 text-gray-800 hover:bg-gray-200";
     }
-  }
+  };
 
   const renderStatusElement = (order: Order) => {
-    const currentStatus = order.status
+    const currentStatus = order.status;
 
     if (nonChangeableStatuses.includes(currentStatus)) {
-      if (currentStatus === "QuoteDownloaded" || currentStatus === "Documents placed") {
+      if (
+        currentStatus === "QuoteDownloaded" ||
+        currentStatus === "Documents placed"
+      ) {
         return (
           <Link
             href={`/staff/dashboard/sender-details?orderId=${order.id}`}
@@ -220,15 +269,26 @@ export default function Dashboard() {
           >
             {currentStatus}
           </Link>
-        )
+        );
       } else {
-        return <Badge className={getStatusBadgeColor(currentStatus)}>{currentStatus}</Badge>
+        return (
+          <Badge className={getStatusBadgeColor(currentStatus)}>
+            {currentStatus}
+          </Badge>
+        );
       }
     } else {
       return (
-        <Select value={currentStatus} onValueChange={(value) => handleStatusChange(order.id, value)}>
+        <Select
+          value={currentStatus}
+          onValueChange={(value) => handleStatusChange(order.id, value)}
+        >
           <SelectTrigger className="w-32 h-8 border-0 bg-transparent p-0">
-            <Badge className={`${getStatusBadgeColor(currentStatus)} flex items-center gap-1`}>
+            <Badge
+              className={`${getStatusBadgeColor(
+                currentStatus
+              )} flex items-center gap-1`}
+            >
               <SelectValue />
               <ChevronDown className="h-3 w-3 opacity-50" />
             </Badge>
@@ -241,9 +301,9 @@ export default function Dashboard() {
             ))}
           </SelectContent>
         </Select>
-      )
+      );
     }
-  }
+  };
 
   // Define the available purposes
   const availablePurposes = [
@@ -256,52 +316,57 @@ export default function Dashboard() {
     "Application fee",
     "Accomodation fee",
     "GIC Canada fee deposite",
-  ]
+  ];
 
   // Filter orders based on purpose and search term
   const filteredOrders = orders.filter((order) => {
-    const matchesPurpose = selectedPurpose === "all" || order.purpose === selectedPurpose
+    const matchesPurpose =
+      selectedPurpose === "all" || order.purpose === selectedPurpose;
     const matchesSearch =
       searchTerm === "" ||
       order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.studentName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.purpose.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.currency.toLowerCase().includes(searchTerm.toLowerCase())
+      order.currency.toLowerCase().includes(searchTerm.toLowerCase());
 
-    return matchesPurpose && matchesSearch
-  })
+    return matchesPurpose && matchesSearch;
+  });
 
   // Fixed IBR submit function to prevent page refresh
- const handleIbrSubmit = async (e?: React.FormEvent) => {
+  const handleIbrSubmit = async (e?: React.FormEvent) => {
     // Prevent default form submission behavior
     if (e) {
-      e.preventDefault()
-      e.stopPropagation()
+      e.preventDefault();
+      e.stopPropagation();
     }
 
-    if (!selectedOrderForIbr || !ibrModalRate.trim()) return
+    if (!selectedOrderForIbr || !ibrModalRate.trim()) return;
 
     try {
-      setLoading(true)
+      setLoading(true);
       const res = await fetch(`/api/orders/${selectedOrderForIbr.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ibrRate: Number.parseFloat(ibrModalRate) }),
-      })
+      });
 
       if (!res.ok) {
-        throw new Error("Failed to update IBR rate")
+        throw new Error("Failed to update IBR rate");
       }
 
-      const updatedOrder = await res.json()
+      const updatedOrder = await res.json();
 
       // Update the orders state without causing a page refresh
-      setOrders((prevOrders) => prevOrders.map((order) => (order.id === selectedOrderForIbr.id ? updatedOrder : order)))
+      setOrders((prevOrders) =>
+        prevOrders.map((order) =>
+          order.id === selectedOrderForIbr.id ? updatedOrder : order
+        )
+      );
 
       // Close modal and reset state
-      setShowIbrModal(false)
-      setIbrModalRate("")
-      setSelectedOrderForIbr(null)
+      setShowIbrModal(false);
+      setIbrModalRate("");
+      setSelectedOrderForIbr(null);
     } catch (err: unknown) {
       let errorMessage = "Failed to update IBR rate";
       if (err instanceof Error) {
@@ -309,36 +374,48 @@ export default function Dashboard() {
       }
       setError(errorMessage);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const validateOrderForm = (order: Order, formData: {
-  currency?: string;
-  fcyAmt?: string;
-  purpose?: string;
-  receiverAccount?: string;
-}) => {
-  if (!formData) return false;
+  const validateOrderForm = (
+    order: Order,
+    formData: {
+      currency?: string;
+      fcyAmt?: string;
+      purpose?: string;
+      receiverAccount?: string;
+    }
+  ) => {
+    if (!formData) return false;
 
-  const currencyValid = !formData.currency || formData.currency === order.currency;
-  const amountValid = !formData.fcyAmt || Number.parseFloat(formData.fcyAmt) === order.amount;
-  const purposeValid = !formData.purpose || formData.purpose === order.purpose;
-  const accountValid = !formData.receiverAccount || formData.receiverAccount === order.receiverAccount;
+    const currencyValid =
+      !formData.currency || formData.currency === order.currency;
+    const amountValid =
+      !formData.fcyAmt || Number.parseFloat(formData.fcyAmt) === order.amount;
+    const purposeValid =
+      !formData.purpose || formData.purpose === order.purpose;
+    const accountValid =
+      !formData.receiverAccount ||
+      formData.receiverAccount === order.receiverAccount;
 
-  return currencyValid && amountValid && purposeValid && accountValid;
-}
+    return currencyValid && amountValid && purposeValid && accountValid;
+  };
 
-  if (loading) return <div className="p-8 text-center">Loading...</div>
-  if (error) return <div className="p-8 text-center text-red-500">{error}</div>
+  if (loading) return <div className="p-8 text-center">Loading...</div>;
+  if (error) return <div className="p-8 text-center text-red-500">{error}</div>;
 
   return (
     <div className="min-h-screen  bg-gray-50">
       <div className="max-w-7xl mx-auto  py-8">
         {/* Header */}
         <div className="mb-8 pt-6">
-          <h1 className="text-2xl sm:text-3xl font-bold font-jakarta text-gray-900 mb-2">Dashboard</h1>
-          <p className="text-sm sm:text-base text-gray-400 font-jakarta">Get summary of your portal here.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold font-jakarta text-gray-900 mb-2">
+            Dashboard
+          </h1>
+          <p className="text-sm sm:text-base text-gray-400 font-jakarta">
+            Get summary of your portal here.
+          </p>
         </div>
 
         {/* Order History Card */}
@@ -386,7 +463,11 @@ export default function Dashboard() {
                 <DropdownMenuContent align="start" className="w-56">
                   <DropdownMenuItem
                     onClick={() => setSelectedPurpose("all")}
-                    className={selectedPurpose === "all" ? "bg-blue-50 text-blue-700" : ""}
+                    className={
+                      selectedPurpose === "all"
+                        ? "bg-blue-50 text-blue-700"
+                        : ""
+                    }
                   >
                     All Purposes
                   </DropdownMenuItem>
@@ -394,7 +475,11 @@ export default function Dashboard() {
                     <DropdownMenuItem
                       key={purpose}
                       onClick={() => setSelectedPurpose(purpose)}
-                      className={selectedPurpose === purpose ? "bg-blue-50 text-blue-700" : ""}
+                      className={
+                        selectedPurpose === purpose
+                          ? "bg-blue-50 text-blue-700"
+                          : ""
+                      }
                     >
                       {purpose}
                     </DropdownMenuItem>
@@ -446,15 +531,25 @@ export default function Dashboard() {
                         ) : (
                           <ChevronRight className="h-4 w-4 text-gray-400" />
                         )}
-                        <span className="font-semibold text-sm font-jakarta text-gray-900">{order.id}</span>
+                        <span className="font-semibold text-sm font-jakarta text-gray-900">
+                          {order.id}
+                        </span>
                       </div>
                       <div className="text-gray-600 text-sm font-jakarta">
                         {new Date(order.createdAt).toLocaleDateString()}
                       </div>
-                      <div className="text-gray-600 text-sm font-jakarta">{order.purpose}</div>
-                      <div className="text-gray-600 text-sm font-jakarta">{order.studentName}</div>
-                      <div className="text-gray-600 text-sm font-jakarta">{order.currency}</div>
-                      <div className="font-semibold text-sm font-jakarta text-gray-900">{order.amount}</div>
+                      <div className="text-gray-600 text-sm font-jakarta">
+                        {order.purpose}
+                      </div>
+                      <div className="text-gray-600 text-sm font-jakarta">
+                        {order.studentName}
+                      </div>
+                      <div className="text-gray-600 text-sm font-jakarta">
+                        {order.currency}
+                      </div>
+                      <div className="font-semibold text-sm font-jakarta text-gray-900">
+                        {order.amount}
+                      </div>
                       <div>
                         <button
                           className={`w-24 h-7 rounded-sm text-xs font-medium border ${
@@ -464,8 +559,8 @@ export default function Dashboard() {
                           }`}
                           onClick={(e) => {
                             if (!order.fxRateUpdated) {
-                              e.stopPropagation()
-                              handleUpdateRateClick(order)
+                              e.stopPropagation();
+                              handleUpdateRateClick(order);
                             }
                           }}
                           disabled={order.fxRateUpdated}
@@ -473,9 +568,14 @@ export default function Dashboard() {
                           {order.fxRateUpdated ? "UPDATED" : "UPDATE RATE"}
                         </button>
                       </div>
-                      <div onClick={(e) => e.stopPropagation()}>{renderStatusElement(order)}</div>
                       <div onClick={(e) => e.stopPropagation()}>
-                        <Button size="sm" className="bg-dark-blue text-white px-2 py-2 text-xs h-7">
+                        {renderStatusElement(order)}
+                      </div>
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <Button
+                          size="sm"
+                          className="bg-dark-blue text-white px-2 py-2 text-xs h-7"
+                        >
                           <Upload className="h-3 w-3" />
                           Uploads
                         </Button>
@@ -492,27 +592,38 @@ export default function Dashboard() {
                             <ChevronRight className="h-4 w-4 text-gray-400" />
                           )}
                           <div>
-                            <div className="font-medium font-jakarta text-gray-900">#{order.id}</div>
+                            <div className="font-medium font-jakarta text-gray-900">
+                              #{order.id}
+                            </div>
                           </div>
                         </div>
                         <div className="text-right">
                           <div className="font-medium font-jakarta text-gray-900">
                             {new Date(order.createdAt).toLocaleDateString()}
                           </div>
-                          <div className="text-xs sm:text-sm font-jakarta text-gray-600">{order.purpose}</div>
+                          <div className="text-xs sm:text-sm font-jakarta text-gray-600">
+                            {order.purpose}
+                          </div>
                         </div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-y-3 text-sm mb-3">
                         <div>
-                          <span className="text-xs sm:text-sm text-gray-600 font-jakarta">Name:</span>
+                          <span className="text-xs sm:text-sm text-gray-600 font-jakarta">
+                            Name:
+                          </span>
                           <div className="font-medium font-jakarta text-gray-900 text-sm sm:text-base">
                             {order.studentName}
                           </div>
                         </div>
                         <div className="text-right">
-                          <span className="text-xs sm:text-sm text-gray-600 font-jakarta">Status:</span>
-                          <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
+                          <span className="text-xs sm:text-sm text-gray-600 font-jakarta">
+                            Status:
+                          </span>
+                          <div
+                            className="flex justify-end"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             {renderStatusElement(order)}
                           </div>
                         </div>
@@ -526,14 +637,17 @@ export default function Dashboard() {
                               : "bg-white text-red-600 border-red-600 font-bold hover:bg-red-50 cursor-pointer"
                           }`}
                           onClick={(e) => {
-                            e.stopPropagation()
-                            handleUpdateRateClick(order)
+                            e.stopPropagation();
+                            handleUpdateRateClick(order);
                           }}
                         >
                           {order.fxRateUpdated ? "UPDATED" : "UPDATE RATE"}
                         </button>
                         <div onClick={(e) => e.stopPropagation()}>
-                          <Button size="sm" className="bg-dark-blue text-white h-7 px-3">
+                          <Button
+                            size="sm"
+                            className="bg-dark-blue text-white h-7 px-3"
+                          >
                             <Upload className="h-3 w-3 mr-1" />
                             Uploads
                           </Button>
@@ -598,10 +712,16 @@ export default function Dashboard() {
                               <div className="flex justify-center sm:justify-end mt-[-62px] mr-[-33px]">
                                 <Button
                                   type="button"
-                                  onClick={() => setExpandedAuthorize((prev) => ({ ...prev, [order.id]: true }))}
+                                  onClick={() =>
+                                    setExpandedAuthorize((prev) => ({
+                                      ...prev,
+                                      [order.id]: true,
+                                    }))
+                                  }
                                   className="text-white hover:opacity-90 flex items-center gap-2 h-10 sm:h-12 rounded-md px-4 sm:px-6 mt-2 sm:mt-0 sm:mr-[275px]"
                                   style={{
-                                    background: "linear-gradient(to right, #614385, #516395)",
+                                    background:
+                                      "linear-gradient(to right, #614385, #516395)",
                                   }}
                                 >
                                   <Image
@@ -611,9 +731,13 @@ export default function Dashboard() {
                                     height={35}
                                     className="w-8 h-8 sm:w-6 sm:h-6"
                                   />
-                                  <span className="text-sm sm:text-base">Authorize</span>
+                                  <span className="text-sm sm:text-base">
+                                    Authorize
+                                  </span>
                                   <div className="flex ml-1">
-                                    <span className="text-white font-bold">&gt;&gt;&gt;</span>
+                                    <span className="text-white font-bold">
+                                      &gt;&gt;&gt;
+                                    </span>
                                   </div>
                                 </Button>
                               </div>
@@ -627,22 +751,28 @@ export default function Dashboard() {
                                       Foreign currency
                                     </h4>
                                     <Select
-                                      value={formValidation[order.id]?.currency || ""}
+                                      value={
+                                        formValidation[order.id]?.currency || ""
+                                      }
                                       onValueChange={(value) => {
                                         setFormValidation((prev) => ({
                                           ...prev,
                                           [order.id]: {
                                             ...prev[order.id],
                                             currency: value,
-                                            isValid: validateOrderForm(order, { ...prev[order.id], currency: value }),
+                                            isValid: validateOrderForm(order, {
+                                              ...prev[order.id],
+                                              currency: value,
+                                            }),
                                           },
-                                        }))
+                                        }));
                                       }}
                                     >
                                       <SelectTrigger
                                         className={`bg-white border h-10 sm:h-12 ${
                                           formValidation[order.id]?.currency &&
-                                          formValidation[order.id]?.currency !== order.currency
+                                          formValidation[order.id]?.currency !==
+                                            order.currency
                                             ? "border-red-500"
                                             : "border-gray-200"
                                         }`}
@@ -665,9 +795,11 @@ export default function Dashboard() {
                                       </SelectContent>
                                     </Select>
                                     {formValidation[order.id]?.currency &&
-                                      formValidation[order.id]?.currency !== order.currency && (
+                                      formValidation[order.id]?.currency !==
+                                        order.currency && (
                                         <p className="text-red-500 text-xs mt-1">
-                                          Currency must match order currency: {order.currency}
+                                          Currency must match order currency:{" "}
+                                          {order.currency}
                                         </p>
                                       )}
                                   </div>
@@ -680,7 +812,10 @@ export default function Dashboard() {
                                     <div
                                       className={`bg-white p-2 sm:p-3 rounded-sm border ${
                                         formValidation[order.id]?.fcyAmt &&
-                                        Number.parseFloat(formValidation[order.id]?.fcyAmt || "0") !== order.amount
+                                        Number.parseFloat(
+                                          formValidation[order.id]?.fcyAmt ||
+                                            "0"
+                                        ) !== order.amount
                                           ? "border-red-500"
                                           : "border-gray-200"
                                       }`}
@@ -688,28 +823,36 @@ export default function Dashboard() {
                                       <input
                                         type="text"
                                         name="fcyAmt"
-                                        value={formValidation[order.id]?.fcyAmt || ""}
+                                        value={
+                                          formValidation[order.id]?.fcyAmt || ""
+                                        }
                                         onChange={(e) => {
                                           setFormValidation((prev) => ({
                                             ...prev,
                                             [order.id]: {
                                               ...prev[order.id],
                                               fcyAmt: e.target.value,
-                                              isValid: validateOrderForm(order, {
-                                                ...prev[order.id],
-                                                fcyAmt: e.target.value,
-                                              }),
+                                              isValid: validateOrderForm(
+                                                order,
+                                                {
+                                                  ...prev[order.id],
+                                                  fcyAmt: e.target.value,
+                                                }
+                                              ),
                                             },
-                                          }))
+                                          }));
                                         }}
                                         className="w-full font-medium text-sm sm:text-base text-black focus:outline-none bg-transparent"
                                         placeholder="Enter amount"
                                       />
                                     </div>
                                     {formValidation[order.id]?.fcyAmt &&
-                                      Number.parseFloat(formValidation[order.id]?.fcyAmt || "0") !== order.amount && (
+                                      Number.parseFloat(
+                                        formValidation[order.id]?.fcyAmt || "0"
+                                      ) !== order.amount && (
                                         <p className="text-red-500 text-xs mt-1">
-                                          Amount must match order amount: {order.amount}
+                                          Amount must match order amount:{" "}
+                                          {order.amount}
                                         </p>
                                       )}
                                   </div>
@@ -720,22 +863,28 @@ export default function Dashboard() {
                                       Purpose
                                     </h4>
                                     <Select
-                                      value={formValidation[order.id]?.purpose || ""}
+                                      value={
+                                        formValidation[order.id]?.purpose || ""
+                                      }
                                       onValueChange={(value) => {
                                         setFormValidation((prev) => ({
                                           ...prev,
                                           [order.id]: {
                                             ...prev[order.id],
                                             purpose: value,
-                                            isValid: validateOrderForm(order, { ...prev[order.id], purpose: value }),
+                                            isValid: validateOrderForm(order, {
+                                              ...prev[order.id],
+                                              purpose: value,
+                                            }),
                                           },
-                                        }))
+                                        }));
                                       }}
                                     >
                                       <SelectTrigger
                                         className={`bg-white border h-10 sm:h-12 ${
                                           formValidation[order.id]?.purpose &&
-                                          formValidation[order.id]?.purpose !== order.purpose
+                                          formValidation[order.id]?.purpose !==
+                                            order.purpose
                                             ? "border-red-500"
                                             : "border-gray-200"
                                         }`}
@@ -743,7 +892,9 @@ export default function Dashboard() {
                                         <SelectValue placeholder="Select purpose" />
                                       </SelectTrigger>
                                       <SelectContent>
-                                        <SelectItem value="University fee transfer">University fee transfer</SelectItem>
+                                        <SelectItem value="University fee transfer">
+                                          University fee transfer
+                                        </SelectItem>
                                         <SelectItem value="Student Living expenses transfer">
                                           Student Living expenses transfer
                                         </SelectItem>
@@ -759,15 +910,23 @@ export default function Dashboard() {
                                         <SelectItem value="Blocked account transfer">
                                           Blocked account transfer
                                         </SelectItem>
-                                        <SelectItem value="Application fee">Application fee</SelectItem>
-                                        <SelectItem value="Accomodation fee">Accomodation fee</SelectItem>
-                                        <SelectItem value="GIC Canada fee deposite">GIC Canada fee deposite</SelectItem>
+                                        <SelectItem value="Application fee">
+                                          Application fee
+                                        </SelectItem>
+                                        <SelectItem value="Accomodation fee">
+                                          Accomodation fee
+                                        </SelectItem>
+                                        <SelectItem value="GIC Canada fee deposite">
+                                          GIC Canada fee deposite
+                                        </SelectItem>
                                       </SelectContent>
                                     </Select>
                                     {formValidation[order.id]?.purpose &&
-                                      formValidation[order.id]?.purpose !== order.purpose && (
+                                      formValidation[order.id]?.purpose !==
+                                        order.purpose && (
                                         <p className="text-red-500 text-xs mt-1">
-                                          Purpose must match order purpose: {order.purpose}
+                                          Purpose must match order purpose:{" "}
+                                          {order.purpose}
                                         </p>
                                       )}
                                   </div>
@@ -779,8 +938,11 @@ export default function Dashboard() {
                                     </h4>
                                     <div
                                       className={`bg-white p-2 sm:p-3 rounded-sm border ${
-                                        formValidation[order.id]?.receiverAccount &&
-                                        formValidation[order.id]?.receiverAccount !== order.receiverAccount
+                                        formValidation[order.id]
+                                          ?.receiverAccount &&
+                                        formValidation[order.id]
+                                          ?.receiverAccount !==
+                                          order.receiverAccount
                                           ? "border-red-500"
                                           : "border-gray-200"
                                       }`}
@@ -788,28 +950,39 @@ export default function Dashboard() {
                                       <input
                                         type="text"
                                         name="receiverAccount"
-                                        value={formValidation[order.id]?.receiverAccount || ""}
+                                        value={
+                                          formValidation[order.id]
+                                            ?.receiverAccount || ""
+                                        }
                                         onChange={(e) => {
                                           setFormValidation((prev) => ({
                                             ...prev,
                                             [order.id]: {
                                               ...prev[order.id],
                                               receiverAccount: e.target.value,
-                                              isValid: validateOrderForm(order, {
-                                                ...prev[order.id],
-                                                receiverAccount: e.target.value,
-                                              }),
+                                              isValid: validateOrderForm(
+                                                order,
+                                                {
+                                                  ...prev[order.id],
+                                                  receiverAccount:
+                                                    e.target.value,
+                                                }
+                                              ),
                                             },
-                                          }))
+                                          }));
                                         }}
                                         className="w-full font-medium text-sm sm:text-base text-black focus:outline-none bg-transparent"
                                         placeholder="Enter account number"
                                       />
                                     </div>
-                                    {formValidation[order.id]?.receiverAccount &&
-                                      formValidation[order.id]?.receiverAccount !== order.receiverAccount && (
+                                    {formValidation[order.id]
+                                      ?.receiverAccount &&
+                                      formValidation[order.id]
+                                        ?.receiverAccount !==
+                                        order.receiverAccount && (
                                         <p className="text-red-500 text-xs mt-1">
-                                          Account number must match order account: {order.receiverAccount}
+                                          Account number must match order
+                                          account: {order.receiverAccount}
                                         </p>
                                       )}
                                   </div>
@@ -823,11 +996,14 @@ export default function Dashboard() {
                                       <Select
                                         value={statusSelections[order.id] || ""}
                                         onValueChange={(value) => {
-                                          setStatusSelections((prev) => ({ ...prev, [order.id]: value }))
-                                          if (value === "blocked") {
-                                            setSelectedOrderForIbr(order)
-                                            setIbrModalRate("")
-                                            setShowIbrModal(true)
+                                          setStatusSelections((prev) => ({
+                                            ...prev,
+                                            [order.id]: value,
+                                          }));
+                                          if (value === "Blocked") {
+                                            setSelectedOrderForIbr(order);
+                                            setIbrModalRate("");
+                                            setShowIbrModal(true);
                                           }
                                         }}
                                       >
@@ -835,37 +1011,61 @@ export default function Dashboard() {
                                           <SelectValue placeholder="Select status" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                          <SelectItem value="pending">Pending</SelectItem>
-                                          <SelectItem value="blocked">Blocked</SelectItem>
+                                          <SelectItem value="pending">
+                                            Pending
+                                          </SelectItem>
+                                          <SelectItem value="Blocked">
+                                            Blocked
+                                          </SelectItem>
                                         </SelectContent>
                                       </Select>
 
                                       <Button
                                         className={`h-10 sm:h-12 px-4 sm:px-6 ${
-                                          !formValidation[order.id]?.isValid && statusSelections[order.id] === "blocked"
+                                          !formValidation[order.id]?.isValid &&
+                                          statusSelections[order.id] ===
+                                            "Blocked"
                                             ? "bg-gray-400 cursor-not-allowed"
                                             : "bg-dark-blue hover:bg-dark-blue"
                                         } text-white`}
                                         disabled={
-                                          !formValidation[order.id]?.isValid && statusSelections[order.id] === "blocked"
+                                          !formValidation[order.id]?.isValid &&
+                                          statusSelections[order.id] ===
+                                            "Blocked"
                                         }
                                         onClick={() => {
                                           if (
-                                            statusSelections[order.id] === "blocked" &&
+                                            statusSelections[order.id] ===
+                                              "Blocked" &&
                                             formValidation[order.id]?.isValid
                                           ) {
-                                            setAuthorizedOrders((prev) => new Set([...(Array.from(prev)), order.id]))
-                                            handleStatusChange(order.id, "Authorized")
+                                            setAuthorizedOrders(
+                                              (prev) =>
+                                                new Set([
+                                                  ...Array.from(prev),
+                                                  order.id,
+                                                ])
+                                            );
+                                            handleStatusChange(
+                                              order.id,
+                                              "Authorized"
+                                            );
                                             setExpandedAuthorize((prev) => ({
                                               ...prev,
                                               [order.id]: false,
-                                            }))
-                                          } else if (statusSelections[order.id] !== "blocked") {
-                                            handleStatusChange(order.id, "Authorized")
+                                            }));
+                                          } else if (
+                                            statusSelections[order.id] !==
+                                            "Blocked"
+                                          ) {
+                                            handleStatusChange(
+                                              order.id,
+                                              "Authorized"
+                                            );
                                             setExpandedAuthorize((prev) => ({
                                               ...prev,
                                               [order.id]: false,
-                                            }))
+                                            }));
                                           }
                                         }}
                                       >
@@ -879,17 +1079,26 @@ export default function Dashboard() {
                                 <div className="flex justify-center sm:justify-end sm:absolute sm:top-[-87px] sm:right-[275px] mt-4 sm:mt-0">
                                   <Button
                                     className={`text-white flex items-center gap-2 h-10 sm:h-12 rounded-md px-4 sm:px-6 ${
-                                      authorizedOrders.has(order.id) ? "cursor-default" : "cursor-pointer"
+                                      authorizedOrders.has(order.id)
+                                        ? "cursor-default"
+                                        : "cursor-pointer"
                                     }`}
                                     onClick={() => {
                                       if (!authorizedOrders.has(order.id)) {
-                                        handleStatusChange(order.id, "Authorized")
-                                        setExpandedAuthorize((prev) => ({ ...prev, [order.id]: false }))
+                                        handleStatusChange(
+                                          order.id,
+                                          "Authorized"
+                                        );
+                                        setExpandedAuthorize((prev) => ({
+                                          ...prev,
+                                          [order.id]: false,
+                                        }));
                                       }
                                     }}
                                     style={{
                                       background:
-                                        authorizedOrders.has(order.id) || order.status === "Authorized"
+                                        authorizedOrders.has(order.id) ||
+                                        order.status === "Authorized"
                                           ? "linear-gradient(to right, #61C454, #414143)"
                                           : "linear-gradient(to right, #614385, #516395)",
                                     }}
@@ -902,12 +1111,15 @@ export default function Dashboard() {
                                       className="w-5 h-5 sm:w-6 sm:h-6"
                                     />
                                     <span className="text-sm sm:text-base">
-                                      {authorizedOrders.has(order.id) || order.status === "Authorized"
+                                      {authorizedOrders.has(order.id) ||
+                                      order.status === "Authorized"
                                         ? "Authorized"
                                         : "Authorize"}
                                     </span>
                                     <div className="flex ml-1">
-                                      <span className="text-white font-bold animate-bounce-slower">&gt;&gt;&gt;</span>
+                                      <span className="text-white font-bold animate-bounce-slower">
+                                        &gt;&gt;&gt;
+                                      </span>
                                     </div>
                                   </Button>
                                 </div>
@@ -929,12 +1141,16 @@ export default function Dashboard() {
       <Dialog open={showRateModal} onOpenChange={setShowRateModal}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle className="text-lg sm:text-xl">Update FX Rates</DialogTitle>
+            <DialogTitle className="text-lg sm:text-xl">
+              Update FX Rates
+            </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center">
               <span className="text-sm font-medium">Order ID:</span>
-              <span className="col-span-2 text-sm -ml-7">#{selectedOrder?.id}</span>
+              <span className="col-span-2 text-sm -ml-7">
+                #{selectedOrder?.id}
+              </span>
             </div>
 
             <div className="grid grid-cols-3 gap-4 text-sm font-medium">
@@ -974,12 +1190,23 @@ export default function Dashboard() {
             <button
               className="bg-dark-blue hover:bg-dark-blue text-white px-14 py-2 rounded-sm text-sm flex items-center"
               onClick={() => {
-                const ibrValue = Number.parseFloat(ibrRate) || 0
-                const customerValue = Number.parseFloat(customerRate) || selectedOrder?.fxRate || 0
-                handleRateUpdate(selectedOrder?.id || "", ibrValue, customerValue)
+                const ibrValue = Number.parseFloat(ibrRate) || 0;
+                const customerValue =
+                  Number.parseFloat(customerRate) || selectedOrder?.fxRate || 0;
+                handleRateUpdate(
+                  selectedOrder?.id || "",
+                  ibrValue,
+                  customerValue
+                );
               }}
             >
-              <Image src="/bolt.png" alt="" width={20} height={20} className="mr-2" />
+              <Image
+                src="/bolt.png"
+                alt=""
+                width={20}
+                height={20}
+                className="mr-2"
+              />
               Update rates
             </button>
           </div>
@@ -990,13 +1217,17 @@ export default function Dashboard() {
       <Dialog open={showIbrModal} onOpenChange={setShowIbrModal}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <DialogTitle className="text-lg sm:text-xl">Set IBR Rate</DialogTitle>
+            <DialogTitle className="text-lg sm:text-xl">
+              Set IBR Rate
+            </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleIbrSubmit}>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center">
                 <span className="text-sm font-medium">Order ID:</span>
-                <span className="col-span-2 text-sm -ml-7">#{selectedOrderForIbr?.id}</span>
+                <span className="col-span-2 text-sm -ml-7">
+                  #{selectedOrderForIbr?.id}
+                </span>
               </div>
 
               <div className="space-y-2">
@@ -1009,8 +1240,8 @@ export default function Dashboard() {
                   placeholder="Enter IBR rate"
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
-                      e.preventDefault()
-                      handleIbrSubmit()
+                      e.preventDefault();
+                      handleIbrSubmit();
                     }
                   }}
                 />
@@ -1022,9 +1253,9 @@ export default function Dashboard() {
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  setShowIbrModal(false)
-                  setIbrModalRate("")
-                  setSelectedOrderForIbr(null)
+                  setShowIbrModal(false);
+                  setIbrModalRate("");
+                  setSelectedOrderForIbr(null);
                 }}
                 className="px-6"
               >
@@ -1034,8 +1265,8 @@ export default function Dashboard() {
                 type="button"
                 className="bg-dark-blue hover:bg-dark-blue text-white px-6"
                 onClick={(e) => {
-                  e.preventDefault()
-                  handleIbrSubmit()
+                  e.preventDefault();
+                  handleIbrSubmit();
                 }}
               >
                 Submit
@@ -1045,5 +1276,5 @@ export default function Dashboard() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

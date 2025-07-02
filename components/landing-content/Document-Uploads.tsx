@@ -266,7 +266,7 @@ export default function DocumentUploadForm() {
       formData.append('payerType', payer || '')
       formData.append('hasEducationLoan', educationLoan || 'no')
 
-      const response = await fetch('/api/documents', {
+      const response = await fetch('/api/upload/document', {
       method: 'POST',
       body: formData,
       headers: {
