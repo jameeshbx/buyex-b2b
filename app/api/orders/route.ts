@@ -61,7 +61,7 @@ export async function POST(req: Request) {
     const validStatuses = [
       "Pending",
       "QuoteDownloaded",
-      "blocked",
+      "Blocked",
       "SenderDetails",
       "BeneficiaryDetails",
       "DocumentsUploaded",
