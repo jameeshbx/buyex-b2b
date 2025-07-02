@@ -14,6 +14,10 @@ export async function GET(
       where: {
         id,
       },
+      include: {
+        sender: true,
+        beneficiary: true,
+      },
     });
 
     if (!order) {
@@ -57,6 +61,12 @@ export async function PATCH(
         beneficiaryId: body.beneficiaryId,
       }).filter(([, v]) => v !== undefined && v !== null)
     );
+
+    // Convert status to proper case if it's 'blocked'
+    if (updateData.status === 'blocked') {
+      updateData.status = 'Blocked';
+    }
+    
 
     const order = await db.order.update({
       where: {

@@ -120,7 +120,7 @@ export default function Dashboard() {
     switch (status.toLowerCase()) {
       case "received":
         return "bg-blue-100 text-blue-800 hover:bg-blue-200"
-      case "quote downloaded":
+      case "QuoteDownloaded":
         return "bg-green-100 text-green-800 hover:bg-green-200"
       case "authorize":
         return "bg-red-100 text-red-800 hover:bg-red-200"
@@ -157,35 +157,55 @@ export default function Dashboard() {
   }
 
   const renderStatusElement = (order: Order) => {
-    const currentStatus = orderStatuses[order.id] || order.status
+    const currentStatus = orderStatuses[order.id] || order.status;
+    // Normalize status for comparison
+    const normalizedStatus = currentStatus.replace(/\s+/g, '').toLowerCase();
+
+    // List of statuses to show as link
+    const linkStatuses = ["quotedownloaded", "documentsplaced", "pending"];
 
     if (nonChangeableStatuses.includes(currentStatus)) {
-      if (currentStatus === "Quote downloaded" || currentStatus === "Documents placed") {
+      if (linkStatuses.includes(normalizedStatus)) {
         return (
-          <Link href="/staff/dashboard/sender-details" className="text-dark-blue hover:text-blue-800 underline text-sm">
+          <Link
+            href={`/staff/dashboard/sender-details?orderId=${order.id}`}
+            className="text-dark-blue hover:text-blue-800 underline text-sm"
+            onClick={e => e.stopPropagation()}
+          >
             {currentStatus}
           </Link>
-        )
+        );
       } else {
-        return <Badge className={getStatusBadgeColor(currentStatus)}>{currentStatus}</Badge>
+        return (
+          <Badge className={getStatusBadgeColor(currentStatus)}>
+            {currentStatus}
+          </Badge>
+        )
       }
     } else {
       return (
-        <Select value={currentStatus} onValueChange={(value) => handleStatusChange(order.id, value)}>
-          <SelectTrigger className="w-32 h-8 border-0 bg-transparent p-0">
-            <Badge className={`${getStatusBadgeColor(currentStatus)} flex items-center gap-1`}>
-              <SelectValue />
-              <ChevronDown className="h-3 w-3 opacity-50" />
-            </Badge>
-          </SelectTrigger>
-          <SelectContent>
-            {statusOptions.map((status) => (
-              <SelectItem key={status ?? ""} value={status ?? ""}>
-                {status}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <>
+          <Select
+            value={currentStatus}
+            onValueChange={(value) => handleStatusChange(order.id, value)}
+          >
+            <SelectTrigger className="w-32 h-8 border-0 bg-transparent p-0">
+              <Badge className={`${getStatusBadgeColor(currentStatus)} flex items-center gap-1`}>
+                <SelectValue />
+                <ChevronDown className="h-3 w-3 opacity-50" />
+              </Badge>
+            </SelectTrigger>
+            <SelectContent>
+              {statusOptions
+                .filter((status): status is string => typeof status === "string")
+                .map((status) => (
+                  <SelectItem key={status} value={status}>
+                    {status}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
+        </>
       )
     }
   }
