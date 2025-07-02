@@ -62,6 +62,12 @@ export async function PATCH(
       }).filter(([, v]) => v !== undefined && v !== null)
     );
 
+    // Convert status to proper case if it's 'blocked'
+    if (updateData.status === 'blocked') {
+      updateData.status = 'Blocked';
+    }
+    
+
     const order = await db.order.update({
       where: {
         id,
