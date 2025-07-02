@@ -19,7 +19,7 @@ export const formSchema = z.object({
   mothersName: z.string().optional(),
   dob: z.string().optional(),
   senderNationality: z.enum(["indian", "american", "british", "canadian", "australian"]).optional(),
-  senderEmail: z.string().email("Invalid email format").optional(),
+  senderEmail: z.string().optional(),
   sourceOfFunds: z.enum(["salary", "savings", "business", "investment"]).optional(),
   occupationStatus: z.enum(["employed", "self-employed", "business-owner", "retired", "student"]).optional(),
   payerAccountNumber: z.string().optional(),
@@ -29,19 +29,25 @@ export const formSchema = z.object({
   senderState: z.string().optional(),
   senderPostalCode: z.string().optional(),
 }).superRefine((data, ctx) => {
-  // If payer is not self, validate sender fields
-  if (data.relationship !== "self") {
-    if (!data.senderName) {
+  // If relationship is not "self" (meaning someone else is paying), validate sender fields
+  if (data.relationship && data.relationship !== "self") {
+    if (!data.senderName || data.senderName.trim() === "") {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Sender name is required",
         path: ["senderName"],
       });
     }
-    if (!data.senderEmail) {
+    if (!data.senderEmail || data.senderEmail.trim() === "") {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Sender email is required",
+        path: ["senderEmail"],
+      });
+    } else if (data.senderEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.senderEmail)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Invalid email format",
         path: ["senderEmail"],
       });
     }
@@ -50,6 +56,69 @@ export const formSchema = z.object({
         code: z.ZodIssueCode.custom,
         message: "Bank charges type is required",
         path: ["bankCharges"],
+      });
+    }
+    if (!data.mothersName || data.mothersName.trim() === "") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Mother's name is required",
+        path: ["mothersName"],
+      });
+    }
+    if (!data.dob || data.dob.trim() === "") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Date of birth is required",
+        path: ["dob"],
+      });
+    }
+    if (!data.sourceOfFunds) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Source of funds is required",
+        path: ["sourceOfFunds"],
+      });
+    }
+    if (!data.occupationStatus) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Occupation status is required",
+        path: ["occupationStatus"],
+      });
+    }
+    if (!data.payerAccountNumber || data.payerAccountNumber.trim() === "") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Payer account number is required",
+        path: ["payerAccountNumber"],
+      });
+    }
+    if (!data.payerBankName || data.payerBankName.trim() === "") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Payer bank name is required",
+        path: ["payerBankName"],
+      });
+    }
+    if (!data.senderAddressLine1 || data.senderAddressLine1.trim() === "") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Sender address is required",
+        path: ["senderAddressLine1"],
+      });
+    }
+    if (!data.senderState || data.senderState.trim() === "") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Sender state is required",
+        path: ["senderState"],
+      });
+    }
+    if (!data.senderPostalCode || data.senderPostalCode.trim() === "") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Sender postal code is required",
+        path: ["senderPostalCode"],
       });
     }
   }
