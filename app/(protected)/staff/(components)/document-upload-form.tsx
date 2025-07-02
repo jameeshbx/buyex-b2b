@@ -354,6 +354,7 @@ export default function DocumentUploadForm() {
           type: "AADHAR_FRONT",
           imageUrl: formState.senderDetails.aadhaarUrl,
           userId: senderDetails?.id,
+          orderId,
         });
       }
       if (formState.senderDetails?.passport) {
@@ -362,6 +363,7 @@ export default function DocumentUploadForm() {
           type: "PASSPORT_FRONT",
           imageUrl: formState.senderDetails.passportUrl,
           userId: senderDetails?.id,
+          orderId,
         });
       }
       if (formState.senderDetails?.payerPAN) {
@@ -370,6 +372,7 @@ export default function DocumentUploadForm() {
           type: "PAN",
           imageUrl: formState.senderDetails.payerPANUrl,
           userId: senderDetails?.id,
+          orderId,
         });
       }
 
@@ -380,6 +383,7 @@ export default function DocumentUploadForm() {
             type: "AADHAR_FRONT",
             imageUrl: formState.studentDetails.aadhaarUrl,
             userId: senderDetails?.id,
+            orderId,
           });
         }
         if (formState.studentDetails?.passport) {
@@ -388,6 +392,7 @@ export default function DocumentUploadForm() {
             type: "PASSPORT_FRONT",
             imageUrl: formState.studentDetails.passportUrl,
             userId: senderDetails?.id,
+            orderId,
           });
         }
         if (formState.studentDetails?.payerPAN) {
@@ -396,6 +401,7 @@ export default function DocumentUploadForm() {
             type: "PAN",
             imageUrl: formState.studentDetails.payerPANUrl,
             userId: senderDetails?.id,
+            orderId,
           });
         }
       }
@@ -406,6 +412,7 @@ export default function DocumentUploadForm() {
           type: "UNIVERSITY_FEE_RECEIPT",
           imageUrl: formState.universityDocuments.feeReceiptUrl,
           userId: senderDetails?.id,
+          orderId,
         });
       }
       if (formState.universityDocuments?.loanSanctionLetter) {
@@ -414,6 +421,7 @@ export default function DocumentUploadForm() {
           type: "LOAN_SANCTION_LETTER",
           imageUrl: formState.universityDocuments.loanSanctionLetterUrl,
           userId: senderDetails?.id,
+          orderId,
         });
       }
       if (formState.universityDocuments?.offerLetter) {
@@ -422,6 +430,7 @@ export default function DocumentUploadForm() {
           type: "UNIVERSITY_OFFER_LETTER",
           imageUrl: formState.universityDocuments.offerLetterUrl,
           userId: senderDetails?.id,
+          orderId,
         });
       }
 
@@ -443,7 +452,7 @@ export default function DocumentUploadForm() {
           throw new Error(`Upload failed: ${errorDetails}`);
         }
       }
-      router.push("/staff/dashboard/order-preview");
+      router.push(`/staff/dashboard/order-preview?orderId=${orderId}`);
     } catch (error) {
       console.error("Submission error:", error);
       toast.error(
