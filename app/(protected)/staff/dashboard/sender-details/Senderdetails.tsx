@@ -872,7 +872,7 @@ function Senderdetails() {
                               </FormControl>
                               {payer === "self" && (
                                 <p className="text-xs text-gray-500">
-                                  Automatically set to student's email
+                                  Automatically set to student&apos;s email
                                 </p>
                               )}
                               <FormMessage className="text-xs sm:text-sm" />
