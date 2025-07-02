@@ -63,7 +63,8 @@ interface JsPDFWithAutoTable extends jsPDF {
 
 async function generateQuotePDF(
   formData: OrderDetailsFormValues,
-  calculatedValues: CalculatedValues
+  calculatedValues: CalculatedValues,
+  orderId?: string
 ) {
   const doc = new jsPDF() as JsPDFWithAutoTable;
   let lastY = 30;
@@ -133,8 +134,10 @@ async function generateQuotePDF(
     lastY + 6
   );
   doc.setTextColor(0, 0, 255);
-  doc.textWithLink("www.buyexchange.in/upload-documents", 14, lastY + 12, {
-    url: "https://www.buyexchange.in/upload-documents",
+  doc.textWithLink("www.buyexchange.in/document-uploads", 14, lastY + 12, {
+    url: `${process.env.NEXT_PUBLIC_APP_URL}/document-uploads/${
+      orderId || "pending"
+    }`,
   });
 
   doc.setTextColor(0);
@@ -377,8 +380,7 @@ export default function OrderDetailsForm() {
     }
 
     try {
-      const pdfUrl = await generateQuotePDF(formData, calculatedValues);
-
+      // First, create the order to get the orderId
       const order = await axios.post("/api/orders", {
         purpose: formData.purpose,
         foreignBankCharges: formData.foreignBankCharges,
@@ -407,12 +409,26 @@ export default function OrderDetailsForm() {
             "",
         },
         calculations: calculatedValues,
+        generatedPDF: "https://www.buyexchange.in/upload-documents", // Will be updated after PDF generation
+      });
+
+      const orderId = order.data.id;
+
+      // Now generate the PDF with the actual orderId
+      const pdfUrl = await generateQuotePDF(
+        formData,
+        calculatedValues,
+        orderId
+      );
+
+      // Update the order with the generated PDF URL
+      await axios.patch(`/api/orders/${orderId}`, {
         generatedPDF: pdfUrl,
       });
 
       setIsQuoteDownloaded(true);
       if (typeof window !== "undefined") {
-        setOrderId(order.data.id);
+        setOrderId(orderId);
         localStorage.setItem("selectedPayer", order.data.payer);
         localStorage.setItem("educationLoan", order.data.educationLoan || "no");
         localStorage.setItem("fromPlaceOrder", "true");
