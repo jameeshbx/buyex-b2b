@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { toast } from "sonner";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { S3FileUploader } from "./s3-file-uploader";
 import { Sender } from "@prisma/client";
 import axios from "axios";
@@ -46,7 +46,7 @@ type FormState = {
   };
 };
 
-export default function DocumentUploadForm() {
+export default function DocumentUploadForm({ orderID }: { orderID: string }) {
   const router = useRouter();
   const [formState, setFormState] = useState<FormState>({
     senderDetails: {
@@ -70,14 +70,13 @@ export default function DocumentUploadForm() {
   const [payer, setPayer] = useState<string | null>(null);
   const [educationLoan, setEducationLoan] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const searchParams = useSearchParams();
+
   const [senderDetails, setSenderDetails] = useState<Sender | null>(null);
-  const [orderId] = useState<string | null>(
-    searchParams.get("orderId") || null
-  );
+  const [orderId] = useState<string | null>(orderID);
 
   useEffect(() => {
     const fetchOrder = async () => {
+      console.log(orderId);
       if (orderId) {
         const order = await axios.get(`/api/orders/${orderId}`);
 

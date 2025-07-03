@@ -1,19 +1,33 @@
+"use client";
+
 import DocumentUploadForm from "@/app/(protected)/staff/(components)/document-upload-form";
 import { Topbar } from "../../(components)/Topbar";
 import { pagesData } from "@/data/navigation";
 import Menubar from "../../(components)/Menubar";
 import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 
-export default function Home() {
+function DocumentUploadContent() {
+  const searchParams = useSearchParams();
+  const orderID = searchParams.get("orderId") || "";
+
   return (
     <main className="container  mx-auto py-8 px-4">
       <Topbar pageData={pagesData.documentUpload} />
       <Menubar />
       <div className="p-4 bg-white">
         <Suspense fallback={<div>Loading...</div>}>
-          <DocumentUploadForm />
+          <DocumentUploadForm orderID={orderID} />
         </Suspense>
       </div>
     </main>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <DocumentUploadContent />
+    </Suspense>
   );
 }
