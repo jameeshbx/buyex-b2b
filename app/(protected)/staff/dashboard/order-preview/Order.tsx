@@ -11,7 +11,8 @@ import {
 } from "@/lib/financial";
 import axios from "axios";
 import { Loader2 } from "lucide-react";
-import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
+import { generateA2Form } from "@/lib/pdf";
+import { orderReceivedTemplate } from "@/lib/email-templates";
 
 interface Order {
   id: string;
@@ -614,498 +615,7 @@ export default function TransactionDetails({
 // Helper to generate A2 form PDF and upload to S3
 async function generateA2FormPDF(order: Order) {
   try {
-    const pdfDoc = await PDFDocument.create();
-    const PAGE_HEIGHT = 842;
-    const PAGE_WIDTH = 595;
-    const MARGIN_TOP = 30;
-    const MARGIN_BOTTOM = 30;
-    const LINE_HEIGHT = 18;
-
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-
-    // Helper to manage y position and page breaks
-    let page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
-    let y = PAGE_HEIGHT - MARGIN_TOP;
-
-    const addNewPage = () => {
-      page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
-      y = PAGE_HEIGHT - MARGIN_TOP;
-    };
-
-    const drawText = (text: string, x: number, size = 10, bold = false) => {
-      if (y < MARGIN_BOTTOM + size) {
-        addNewPage();
-      }
-      const safeText = text.replace(/₹/g, "Rs.");
-      page.drawText(safeText, {
-        x,
-        y,
-        size,
-        font: bold ? fontBold : font,
-        color: rgb(0, 0, 0),
-      });
-      y -= LINE_HEIGHT;
-    };
-
-    const drawLine = (x1: number, y1: number, x2: number, y2: number) => {
-      page.drawLine({
-        start: { x: x1, y: y1 },
-        end: { x: x2, y: y2 },
-        thickness: 0.5,
-        color: rgb(0, 0, 0),
-      });
-    };
-
-    // -------- PAGE 1 --------
-    drawText(
-      "FORM A2 and Application cum Declaration for purchase of foreign exchange under Liberalized Remittance Scheme (LRS) as amended by RBI",
-      30,
-      10
-    );
-    drawText(
-      "vide Master Direction-LRS dated June 20, 2018 for INDIAN PASSPORT HOLDER (To be completed by the applicant in BLOCK letters)",
-      30,
-      10
-    );
-    drawText(`Date: ${new Date().toLocaleDateString()}`, 30, 12);
-    drawText("The Branch Manager", 30, 12);
-    drawText("________________", 30, 12);
-    drawText("________________Branch", 30, 12);
-    drawText("Dear Sir,", 30, 12);
-
-    // Fill in the purpose based on order data
-    const purposeText =
-      order.purpose === "Overseas Education"
-        ? "Subject: Remittance / Release of Foreign Exchange for Overseas Education"
-        : "Subject: Remittance / Release of Foreign Exchange for Private Visit /Medical Treatment / Emigrations / University Fee";
-    drawText(purposeText, 30, 10);
-
-    drawText(
-      "Overseas Education / Employment / Other purposes Transfer (Please Specify) (Strike out whichever is not applicable).",
-      30,
-      10
-    );
-    drawText(
-      "With reference to the above I request you to release foreign exchange for the purpose mentioned above and furnish the following details:",
-      30,
-      10
-    );
-    drawText("1. Details of Applicant / Remitter", 30, 12, true);
-    drawText(
-      `Applicant Name: ${order.sender?.senderName || order.payer}`,
-      30,
-      10
-    );
-    drawText(`Date of Birth: ${order.sender?.dob || "__/__/____"}`, 300, 10);
-    drawText(
-      `Address: ${
-        order.sender?.senderAddressLine1 || "___________________________"
-      }`,
-      30,
-      10
-    );
-    drawText(
-      `City: ${order.sender?.senderState || "__________________"} Pin Code: ${
-        order.sender?.senderPostalCode || "___________"
-      }`,
-      30,
-      10
-    );
-    drawText(
-      `State: ${
-        order.sender?.senderState || "__________________"
-      } Telephone No.: ${
-        order.sender?.phoneNumber || "______________"
-      } Mobile No.: ${order.sender?.phoneNumber || "_______________"}`,
-      30,
-      10
-    );
-    drawText(
-      `Email ID.: ${
-        order.sender?.senderEmail || "___________________________"
-      } Nationality: ${order.sender?.senderNationality || "Indian"}`,
-      30,
-      10
-    );
-    drawText(
-      `PAN No.: ___________________________ Residential Status: ${
-        order.sender?.bankCharges || "resident"
-      }`,
-      30,
-      10
-    );
-    drawText(
-      "Passport No: __________________ Date of Expiry: __________ Place of Issue: __________",
-      30,
-      10
-    );
-
-    // Only show student details if purpose is Overseas Education
-    if (order.purpose === "Overseas Education") {
-      drawText(
-        "2. Details of Person on whose behalf remittance is being made only under overseas education or Medical Treatment",
-        30,
-        12,
-        true
-      );
-      drawText(
-        `Student /Patient Name: ${
-          order.sender?.studentName || order.studentName
-        } Passport No.: _______________`,
-        30,
-        10
-      );
-      drawText(
-        "PAN No.: _______________ *College/University/Hospital: _______________",
-        30,
-        10
-      );
-      drawText(
-        "Academic Year: __________ City / Country: __________ Date of Travel: __________",
-        30,
-        10
-      );
-      drawText(
-        `**Relationship with the Applicant / Remitter: ${
-          order.sender?.relationship || "_______________"
-        }`,
-        30,
-        10
-      );
-    }
-    drawText("Signature of the applicant", 400, 10);
-
-    // Add page 2
-    addNewPage();
-
-    // -------- PAGE 2 --------
-    drawText(
-      "3. Foreign exchange amount to be released / remitted (Please provide the exact split)",
-      30,
-      12,
-      true
-    );
-
-    // Draw split fields on one line
-    drawText("Cash Currency & Amount", 30, 10, false);
-    drawText("Travellers Cheque Currency & Amount", 280, 10, false);
-    y -= 12;
-    drawLine(30, y, 150, y); // underline
-    drawLine(280, y, 450, y); // underline
-
-    y -= 8;
-    drawText("Card Currency & Amount", 30, 10, false);
-    drawText("Draft Currency & Amount", 280, 10, false);
-    y -= 12;
-    drawLine(30, y, 150, y);
-    drawLine(280, y, 450, y);
-
-    y -= 10;
-    drawText(
-      `TT Currency & Amount: ${order.currency} ${order.amount}`,
-      30,
-      10,
-      false
-    );
-    y -= 12;
-    drawLine(150, y + 10, 330, y + 10); // underline for value
-
-    drawText(`Equivalent to Rs: ${order.totalAmount}`, 30, 10, false);
-    drawText("Equivalent to USD", 280, 10, false);
-    y -= 12;
-    drawLine(130, y + 10, 230, y + 10);
-    drawLine(380, y + 10, 480, y + 10);
-
-    y -= 10;
-    drawText(
-      `Country of Travel / Remittance: ${order.receiverBankCountry}`,
-      30,
-      10,
-      false
-    );
-    drawText("Date of Travel:", 280, 10, false);
-    y -= 12;
-    drawLine(210, y + 10, 270, y + 10);
-    drawLine(380, y + 10, 480, y + 10);
-
-    y -= 10;
-    drawText(
-      `Source of Funds: ${order.sender?.sourceOfFunds || "Personal Savings"}`,
-      30,
-      10,
-      false
-    );
-
-    y -= 15;
-    drawText("In case of Demand Draft", 30, 10, true);
-    drawText(
-      `Source of Funds: ${order.sender?.sourceOfFunds || "________________"}`,
-      30,
-      10,
-      false
-    );
-    y -= 12;
-    drawLine(130, y + 10, 330, y + 10);
-
-    y -= 15;
-    drawText("In case of swift / Telegraphic transfer", 30, 10, true);
-    drawText("Beneficiary Details:", 30, 10, true);
-
-    y -= 12;
-    drawText(
-      `Beneficiary Name: ${
-        order.beneficiary?.receiverFullName || "____________________________"
-      }`,
-      30,
-      10,
-      false
-    );
-    y -= 12;
-    drawText(
-      `Beneficiary Address: ${
-        order.beneficiary?.address || "____________________________"
-      }`,
-      30,
-      10,
-      false
-    );
-    y -= 12;
-    drawText(
-      `Beneficiary Bank Account Number: ${
-        order.beneficiary?.receiverAccount || "____________________________"
-      }`,
-      30,
-      10,
-      false
-    );
-    y -= 12;
-    drawText(
-      `Beneficiary Bank Name and Address: ${
-        order.beneficiary?.receiverBank || "____________________________"
-      }`,
-      30,
-      10,
-      false
-    );
-    y -= 12;
-    drawText(
-      `Swift Code / Routing No.: ${
-        order.beneficiary?.receiverBankSwiftCode ||
-        "____________________________"
-      }`,
-      30,
-      10,
-      false
-    );
-    y -= 12;
-    drawText(
-      `ABA routing / BLZ / Sort Code / Bank Code: ${
-        order.beneficiary?.sortCode ||
-        order.beneficiary?.routingNumber ||
-        order.beneficiary?.bsbCode ||
-        "____________________________"
-      }`,
-      30,
-      10,
-      false
-    );
-    y -= 12;
-    drawText(
-      `Id IBAN International: ${
-        order.beneficiary?.iban || "____________________________"
-      }`,
-      30,
-      10,
-      false
-    );
-    y -= 12;
-    drawText(
-      `Additional information to the beneficiary (if available): ${
-        order.beneficiary?.field70 || "____________________________"
-      }`,
-      30,
-      10,
-      false
-    );
-    y -= 12;
-    drawText(
-      `Information to be sent with wire transfer, if any: ____________________________`,
-      30,
-      10,
-      false
-    );
-
-    y -= 15;
-    drawText(
-      "Correspondent Bank Charges: Ours (Strike out whichever is not applicable)",
-      30,
-      10,
-      false
-    );
-
-    // --- Remittance Table ---
-    y -= 20;
-    drawText(
-      "4. # Details of the remittance made / transaction effected under the LRS in the current financial year. (April ______ March ______ ) (if needed attach additional sheets in the same format)",
-      30,
-      10,
-      false
-    );
-    y -= 15;
-
-    // Table headers
-    const tableX = 30;
-    const colWidths = [30, 60, 80, 80, 80, 150];
-    const headers = [
-      "Sr. No.",
-      "Date",
-      "FCN & Amount",
-      "Equivalent to Rs.",
-      "Equivalent to USD",
-      "Name and address of AD branch/FFMC through which the transaction has been effected",
-    ];
-    let colX = tableX;
-    headers.forEach((header, i) => {
-      page.drawText(header, {
-        x: colX + 2,
-        y: y,
-        size: 7,
-        font: fontBold,
-        color: rgb(0, 0, 0),
-      });
-      colX += colWidths[i];
-    });
-    y -= 12;
-
-    // Table rows (empty for manual fill)
-    for (let i = 0; i < 3; i++) {
-      colX = tableX;
-      colWidths.forEach((w, j) => {
-        drawLine(colX, y, colX + w, y); // top line
-        drawLine(colX, y - 12, colX + w, y - 12); // bottom line
-        drawLine(colX, y, colX, y - 12); // left line
-        if (j === colWidths.length - 1) {
-          drawLine(colX + w, y, colX + w, y - 12); // right line
-        }
-        colX += w;
-      });
-      y -= 12;
-    }
-
-    y -= 20;
-    drawText(
-      "I, undertake that in case, if it is reported that I have breached the LRS limit, I will be my responsibility to bring back/surrender the amount purchased/remitted in excess of the LRS limit and thereafter I will approach RBI for compounding of contravention under FEMA 1999.",
-      30,
-      8,
-      false
-    );
-    y -= 20;
-    drawText("Signature of the applicant", 400, 10);
-
-    // --- PAGE 3: Declaration, Payment, Bank Details, Certificate ---
-    addNewPage();
-    y -= 10;
-
-    // Declaration
-    drawText("Declaration cum undertaking", 30, 12, true);
-    y -= 10;
-    const declaration = [
-      "I, the undersigned, hereby declare that the total amount of foreign exchange purchased from or remitted through, all sources in India during this financial year including the present application does not exceed USD 2,50,000/- (US Dollar Two Lakh Fifty Thousand only) or equivalent and certify that the source of funds for making the said remittance belongs to me and the foreign exchange will not be used for prohibited purposes. I am aware that the total amount of foreign exchange purchased from or remitted through, all sources in India during this financial year including the present application does not exceed the limit prescribed by RBI under the Liberalised Remittance Scheme.",
-      "I also declare that the above information given by me is true and correct and that I am not a minor. If any information is found to be incorrect, I will be liable for action under FEMA 1999.",
-      "I also undertake to submit further information/documents as may be required by the bank.",
-      "I further declare that the funds for remittance are not from any borrowed funds or loans and are not intended for any prohibited activities such as margin trading, lottery, etc.",
-      "I am aware that the bank may refuse to process the remittance if the information provided is found to be incorrect or incomplete.",
-    ];
-    declaration.forEach((line) => {
-      drawText(line, 30, 8, false);
-    });
-
-    y -= 10;
-    drawText(
-      "Payment is made by Self ______ or **Close Relative (Relation) ______ PAN ______",
-      30,
-      10,
-      false
-    );
-    y -= 10;
-    drawText(
-      "Payment mode: Cash / Cheque / DD / PO / Bank Transfer / RTGS / NEFT (strike off which is not applicable)",
-      30,
-      10,
-      false
-    );
-
-    y -= 15;
-    drawText("Bank Details from which payment is made", 30, 10, true);
-    y -= 10;
-    drawText(
-      "Bank Account Holder Name: ___________________________ Bank: ___________________________",
-      30,
-      10,
-      false
-    );
-    drawText(
-      "Bank Branch: ___________________________ Account No.: ___________________________ IFSC: ___________________________",
-      30,
-      10,
-      false
-    );
-    drawText(
-      "Cheque No./DD No./PO No./JRT No./ Transfer No.: ___________________________",
-      30,
-      10,
-      false
-    );
-
-    y -= 15;
-    drawText(
-      "Signature of the applicant: ___________________________",
-      30,
-      10,
-      false
-    );
-    drawText(
-      "Signature of the natural guardian (if applicant is minor): ___________________________",
-      300,
-      10,
-      false
-    );
-    drawText("Name: ___________________________", 30, 10, false);
-    drawText("Name: ___________________________", 300, 10, false);
-    drawText(
-      "Relationship with the Applicant: ___________________________",
-      30,
-      10,
-      false
-    );
-
-    y -= 20;
-    drawText("Certificate by the Authorized Dealer", 30, 10, true);
-    y -= 10;
-    drawText(
-      "This is to certify that the remittance is not being made by ineligible entities and that the remittance is in conformity with the instructions issued by the Reserve Bank from time to time under the Scheme. I have verified KYC documents in originals.",
-      30,
-      8,
-      false
-    );
-    drawText(
-      "Name and designation of the authorized official: ___________________________",
-      30,
-      10,
-      false
-    );
-
-    y -= 15;
-    drawText(
-      "Signature: ___________________________ Date: ___________________________ Place: ___________________________ Stamp / seal: ___________________________",
-      30,
-      10,
-      false
-    );
-
-    // Generate PDF bytes
-    const pdfBytes = await pdfDoc.save();
+    const pdfBytes = await generateA2Form(order);
 
     // Create a File object from the PDF bytes
     const fileName = `A2_Form_${order.id}_${
@@ -1184,5 +694,55 @@ async function generateA2FormPDF(order: Order) {
   } catch (error) {
     console.error("Error generating and uploading PDF:", error);
     throw error;
+  } finally {
+    // Send email notification via API route
+    try {
+      await fetch("/api/email/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          to: "jameesh@buyex.in",
+          subject: "A2 Form Generated",
+          html: orderReceivedTemplate({
+            orderDate: new Date().toISOString(),
+            orderId: order.id,
+            senderName: order.sender?.studentName || "",
+            phone: order.sender?.phoneNumber || "",
+            email: order.sender?.studentEmailOriginal || "",
+            purpose: order.purpose || "",
+            receiverName: order.beneficiary?.receiverFullName || "",
+            foreignCurrency: order.currency || "",
+            product: order.purpose || "",
+            orderType: "",
+            quantity: "",
+            rate: order.customerRate || "",
+            tentativeAmount: order.amount || "",
+            forexConversionTax: order.foreignBankCharges || "",
+            // @ts-expect-error - calculations property not defined in Order interface
+            bankFee: order?.calculations?.bankFee || "",
+            // @ts-expect-error - calculations property not defined in Order interface
+            tcs: order?.calculations?.tcsApplicable || "",
+            totalPayableAmount: order.totalAmount || "",
+            residentStatus: "",
+            motherName: order.sender?.mothersName || "",
+            relationshipWithReceiver: order.sender?.relationship || "",
+            senderAddressLine1: order.sender?.addressLine1 || "",
+            senderAddressLine2: order.sender?.addressLine2 || "",
+            funding: order.sender?.sourceOfFunds || "",
+            senderAccountNo: order.sender?.payerAccountNumber || "",
+            ifsc: order.sender?.payerBankName || "",
+            bankName: order.sender?.payerBankName || "",
+            branchName: order.sender?.payerBankName || "",
+            agent: order.sender?.payerBankName || "",
+            supportEmail: order.sender?.payerBankName || "",
+            supportPhone: order.sender?.payerBankName || "",
+          }),
+        }),
+      });
+    } catch (error) {
+      console.error("Failed to send email notification:", error);
+    }
   }
 }
