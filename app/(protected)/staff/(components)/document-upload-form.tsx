@@ -354,6 +354,9 @@ export default function DocumentUploadForm({ orderID }: { orderID: string }) {
           imageUrl: formState.senderDetails.aadhaarUrl,
           userId: senderDetails?.id,
           orderId,
+          name: "Aadhaar Document",
+          uploadedBy: "Staff",
+          comment: "Sender Aadhaar document",
         });
       }
       if (formState.senderDetails?.passport) {
@@ -363,6 +366,9 @@ export default function DocumentUploadForm({ orderID }: { orderID: string }) {
           imageUrl: formState.senderDetails.passportUrl,
           userId: senderDetails?.id,
           orderId,
+          name: "Passport Document",
+          uploadedBy: "Staff",
+          comment: "Sender Passport document",
         });
       }
       if (formState.senderDetails?.payerPAN) {
@@ -372,6 +378,9 @@ export default function DocumentUploadForm({ orderID }: { orderID: string }) {
           imageUrl: formState.senderDetails.payerPANUrl,
           userId: senderDetails?.id,
           orderId,
+          name: "PAN Document",
+          uploadedBy: "Staff",
+          comment: "Sender PAN document",
         });
       }
 
@@ -383,6 +392,9 @@ export default function DocumentUploadForm({ orderID }: { orderID: string }) {
             imageUrl: formState.studentDetails.aadhaarUrl,
             userId: senderDetails?.id,
             orderId,
+            name: "Student Aadhaar Document",
+            uploadedBy: "Staff",
+            comment: "Student Aadhaar document",
           });
         }
         if (formState.studentDetails?.passport) {
@@ -392,6 +404,9 @@ export default function DocumentUploadForm({ orderID }: { orderID: string }) {
             imageUrl: formState.studentDetails.passportUrl,
             userId: senderDetails?.id,
             orderId,
+            name: "Student Passport Document",
+            uploadedBy: "Staff",
+            comment: "Student Passport document",
           });
         }
         if (formState.studentDetails?.payerPAN) {
@@ -401,6 +416,9 @@ export default function DocumentUploadForm({ orderID }: { orderID: string }) {
             imageUrl: formState.studentDetails.payerPANUrl,
             userId: senderDetails?.id,
             orderId,
+            name: "Student PAN Document",
+            uploadedBy: "Staff",
+            comment: "Student PAN document",
           });
         }
       }
@@ -412,6 +430,9 @@ export default function DocumentUploadForm({ orderID }: { orderID: string }) {
           imageUrl: formState.universityDocuments.feeReceiptUrl,
           userId: senderDetails?.id,
           orderId,
+          name: "University Fee Receipt",
+          uploadedBy: "Staff",
+          comment: "University fee receipt document",
         });
       }
       if (formState.universityDocuments?.loanSanctionLetter) {
@@ -421,6 +442,9 @@ export default function DocumentUploadForm({ orderID }: { orderID: string }) {
           imageUrl: formState.universityDocuments.loanSanctionLetterUrl,
           userId: senderDetails?.id,
           orderId,
+          name: "Loan Sanction Letter",
+          uploadedBy: "Staff",
+          comment: "Education loan sanction letter",
         });
       }
       if (formState.universityDocuments?.offerLetter) {
@@ -430,6 +454,9 @@ export default function DocumentUploadForm({ orderID }: { orderID: string }) {
           imageUrl: formState.universityDocuments.offerLetterUrl,
           userId: senderDetails?.id,
           orderId,
+          name: "University Offer Letter",
+          uploadedBy: "Staff",
+          comment: "University offer letter document",
         });
       }
 

@@ -19,7 +19,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { role, userId, type, imageUrl, orderId } = body;
+    const { role, userId, type, imageUrl, orderId, name, uploadedBy, comment } = body;
 
     // Validate required fields
     if (!role || !userId || !type || !imageUrl || !orderId) {
@@ -35,7 +35,10 @@ export async function POST(request: Request) {
         userId,
         type: type as DocumentType,
         imageUrl,
-        orderId, // <-- just set orderId directly!
+        orderId,
+        name,
+        uploadedBy,
+        comment,
       },
     });
 
@@ -52,7 +55,7 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const body = await request.json();
-    const { id, role, type, imageUrl, isVerified } = body;
+    const { id, role, type, imageUrl, isVerified, name, uploadedBy, comment } = body;
 
     if (!id) {
       return NextResponse.json(
@@ -68,6 +71,9 @@ export async function PUT(request: Request) {
         type: type as DocumentType,
         imageUrl,
         isVerified,
+        name,
+        uploadedBy,
+        comment,
       },
     });
 

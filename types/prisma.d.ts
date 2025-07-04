@@ -1,7 +1,8 @@
 export enum DocumentRole {
   SENDER = 'SENDER',
   BENEFICIARY = 'BENEFICIARY',
-  STUDENT = 'STUDENT'
+  STUDENT = 'STUDENT',
+  ORDER = 'ORDER'
 }
 
 export enum DocumentType {
