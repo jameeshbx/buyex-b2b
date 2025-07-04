@@ -191,6 +191,9 @@ model Document {
   role       DocumentRole
   userId     String
   type       DocumentType
+  name       String?
+  uploadedBy String?
+  comment    String?
   imageUrl   String
   isVerified Boolean      @default(false)
   createdAt  DateTime     @default(now())

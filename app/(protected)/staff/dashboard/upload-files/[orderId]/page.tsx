@@ -144,7 +144,7 @@ export default function UploadsPage({
       try {
         const response = await fetch(`/api/upload/document/${orderId}`);
         console.log(orderId);
-        
+
         if (!response.ok) {
           throw new Error("Failed to fetch documents");
         }
@@ -257,7 +257,6 @@ export default function UploadsPage({
     setValidationErrors([]);
 
     try {
-
       const uploadPromises = selectedFiles.map(async (selectedFile) => {
         const fileReader = new FileReader();
         const fileData = await new Promise<string>((resolve) => {
@@ -274,6 +273,9 @@ export default function UploadsPage({
             type: "OTHER", // <-- must match your enum
             imageUrl: fileData,
             orderId: orderId,
+            name: selectedFile.file.name,
+            uploadedBy: "Staff",
+            comment: comment.trim(),
           }),
         });
 
@@ -305,7 +307,9 @@ export default function UploadsPage({
       setSelectedFiles([]);
       setComment("");
 
-      toast.custom(<div className="bg-green-100 text-green-800 p-2 rounded">Success!</div>);
+      toast.custom(
+        <div className="bg-green-100 text-green-800 p-2 rounded">Success!</div>
+      );
       await fetchDocuments(); // <--- Refresh the list after upload
     } catch (error) {
       console.error("Error uploading files:", error);
@@ -313,8 +317,7 @@ export default function UploadsPage({
         setValidationErrors(error.errors.map((err) => err.message));
       } else {
         toast.custom(
-          <div className="bg-red-100 text-red-800 p-2 rounded">
-          </div>
+          <div className="bg-red-100 text-red-800 p-2 rounded"></div>
         );
       }
     }
@@ -356,10 +359,10 @@ export default function UploadsPage({
       prev.map((file) =>
         file.id === editingFile.id
           ? {
-            ...file,
-            name: editFileName.trim(),
-            comment: editComment.trim(),
-          }
+              ...file,
+              name: editFileName.trim(),
+              comment: editComment.trim(),
+            }
           : file
       )
     );
@@ -437,10 +440,11 @@ export default function UploadsPage({
       setStudentName("");
       setSelectedFileForShare(null);
     } catch (error) {
-      console.error('Sharing failed:', error);
+      console.error("Sharing failed:", error);
       toast.custom(
         <div className="bg-red-100 text-red-800 p-2 rounded">
-          Failed to send email: {error instanceof Error ? error.message : 'Unknown error'}
+          Failed to send email:{" "}
+          {error instanceof Error ? error.message : "Unknown error"}
         </div>
       );
     } finally {
@@ -480,10 +484,11 @@ export default function UploadsPage({
             </CardHeader>
             <CardContent className="flex-1 flex flex-col p-4 md:p-6">
               <div
-                className={`border-2 border-dashed rounded-lg p-4 text-center flex-1 flex flex-col justify-center transition-colors mb-4 cursor-pointer ${dragActive
-                  ? "border-blue-500 bg-blue-50"
-                  : "border-gray-300 bg-gray-50"
-                  }`}
+                className={`border-2 border-dashed rounded-lg p-4 text-center flex-1 flex flex-col justify-center transition-colors mb-4 cursor-pointer ${
+                  dragActive
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-300 bg-gray-50"
+                }`}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
                 onDragOver={handleDrag}
@@ -598,18 +603,21 @@ export default function UploadsPage({
                     {messages.map((message) => (
                       <div
                         key={message.id}
-                        className={`flex ${message.isStaff ? "justify-end" : "justify-start"
-                          }`}
+                        className={`flex ${
+                          message.isStaff ? "justify-end" : "justify-start"
+                        }`}
                       >
                         <div
-                          className={`max-w-[80%] ${message.isStaff ? "order-2" : "order-1"
-                            }`}
+                          className={`max-w-[80%] ${
+                            message.isStaff ? "order-2" : "order-1"
+                          }`}
                         >
                           <div
-                            className={`rounded-lg p-3 ${message.isStaff
-                              ? "bg-gray-100 text-gray-900"
-                              : "bg-blue-500 text-white"
-                              }`}
+                            className={`rounded-lg p-3 ${
+                              message.isStaff
+                                ? "bg-gray-100 text-gray-900"
+                                : "bg-blue-500 text-white"
+                            }`}
                           >
                             <p className="text-sm">{message.text}</p>
                           </div>
@@ -691,8 +699,9 @@ export default function UploadsPage({
                   {uploadedFiles.map((file) => (
                     <tr
                       key={file.id}
-                      className={`border-b hover:bg-gray-50 ${selectedFileForShare === file.id ? "bg-blue-50" : ""
-                        }`}
+                      className={`border-b hover:bg-gray-50 ${
+                        selectedFileForShare === file.id ? "bg-blue-50" : ""
+                      }`}
                       onClick={() => setSelectedFileForShare(file.id)}
                     >
                       <td className="p-2 md:p-4">
