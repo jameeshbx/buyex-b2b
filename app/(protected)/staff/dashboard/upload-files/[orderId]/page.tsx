@@ -10,6 +10,13 @@ import {
   Paperclip,
   Send,
   X,
+  FileText,
+  Archive,
+  FileAudio,
+  FileSpreadsheet,
+  FileVideo,
+  ImageIcon,
+  File as FileIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -69,29 +76,52 @@ const fileUploadConstants = {
   currentUser: "Staff Member",
 };
 
-type DocumentFromAPI = {
-  id: string;
-  type: string;
-  role: string;
-  createdAt: string;
-  imageUrl?: string;
-};
+const getFileIcon = (fileType: string, fileName: string) => {
+  const extension = fileName.split(".").pop()?.toLowerCase();
 
-const getFileIcon = (type: string, name: string) => {
-  const extension = name.split(".").pop()?.toLowerCase();
-  if (type.startsWith("image/")) {
-    return <Image src="/file-image.svg" alt="Image" width={24} height={24} />;
-  } else if (type === "application/pdf" || extension === "pdf") {
-    return <Image src="/file-pdf.svg" alt="PDF" width={24} height={24} />;
-  } else if (
-    type.includes("word") ||
-    type.includes("document") ||
-    extension === "docx"
-  ) {
-    return <Image src="/file-doc.svg" alt="Document" width={24} height={24} />;
-  } else {
-    return <Image src="/file-generic.svg" alt="File" width={24} height={24} />;
+  // PDF files - red color
+  if (fileType === "application/pdf" || extension === "pdf") {
+    return <FileText className="h-4 w-4 text-red-500" />;
   }
+
+  // Excel files - blue color
+  if (
+    fileType.includes("spreadsheet") ||
+    ["xlsx", "xls", "csv"].includes(extension || "")
+  ) {
+    return <FileSpreadsheet className="h-4 w-4 text-blue-500" />;
+  }
+
+  // Image files - orange color
+  if (
+    fileType.startsWith("image/") ||
+    ["png", "jpg", "jpeg", "gif", "svg", "webp"].includes(extension || "")
+  ) {
+    return <ImageIcon className="h-4 w-4 text-orange-500" />;
+  }
+
+  // Video files - purple color
+  if (
+    fileType.startsWith("video/") ||
+    ["mp4", "avi", "mov", "wmv", "flv"].includes(extension || "")
+  ) {
+    return <FileVideo className="h-4 w-4 text-purple-500" />;
+  }
+
+  // Audio files - green color
+  if (
+    fileType.startsWith("audio/") ||
+    ["mp3", "wav", "flac", "aac"].includes(extension || "")
+  ) {
+    return <FileAudio className="h-4 w-4 text-green-500" />;
+  }
+
+  // Archive files - yellow color
+  if (["zip", "rar", "7z", "tar", "gz"].includes(extension || "")) {
+    return <Archive className="h-4 w-4 text-yellow-500" />;
+  }
+  // Default file icon - gray color
+  return <FileIcon className="h-4 w-4 text-gray-500" />;
 };
 
 const formatFileSize = (bytes: number) => {
@@ -100,6 +130,16 @@ const formatFileSize = (bytes: number) => {
   const sizes = ["Bytes", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+};
+
+type DocumentFromAPI = {
+  id: string;
+  name?: string;
+  type: string;
+  comment?: string;
+  uploadedBy?: string;
+  createdAt: string;
+  imageUrl: string;
 };
 
 export default function UploadsPage({
@@ -140,27 +180,32 @@ export default function UploadsPage({
     scrollToBottom();
   }, [messages]);
 
-  const fetchDocuments = async () => {
+  const fetchDocuments = useCallback(async () => {
     try {
       const response = await fetch(`/api/upload/document/${orderId}`);
-      console.log(orderId);
-
       if (!response.ok) {
         throw new Error("Failed to fetch documents");
       }
       const documents = await response.json();
-      const docsArray = Array.isArray(documents) ? documents : [];
-      const initialFiles = docsArray.map((doc: DocumentFromAPI) => ({
-        id: doc.id,
-        name: doc.type.split("/").pop() || doc.type,
-        type: doc.type,
-        size: 0,
-        comment: doc.type,
-        uploadedBy: doc.role,
-        uploadedAt: new Date(doc.createdAt).toLocaleString(),
-        url: doc.imageUrl,
-        file: undefined,
-      }));
+      const docsArray: DocumentFromAPI[] = Array.isArray(documents)
+        ? documents
+        : [];
+      const initialFiles = docsArray
+        .map((doc) => ({
+          id: doc.id,
+          name: doc.name || doc.type.split("/").pop() || doc.type,
+          type: doc.type,
+          size: 0,
+          comment: doc.comment || "",
+          uploadedBy: doc.uploadedBy || "-",
+          uploadedAt: new Date(doc.createdAt).toLocaleString(),
+          url: doc.imageUrl,
+          file: undefined,
+        }))
+        .sort(
+          (a, b) =>
+            new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
+        );
 
       setUploadedFiles(initialFiles);
     } catch (error) {
@@ -173,11 +218,11 @@ export default function UploadsPage({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [orderId, toast]);
 
   useEffect(() => {
     fetchDocuments();
-  }, [orderId, toast]);
+  }, [fetchDocuments]);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -388,38 +433,76 @@ export default function UploadsPage({
     setIsEditDialogOpen(true);
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!editingFile) return;
 
-    setUploadedFiles((prev) =>
-      prev.map((file) =>
-        file.id === editingFile.id
-          ? {
-              ...file,
-              name: editFileName.trim(),
-              comment: editComment.trim(),
-            }
-          : file
-      )
-    );
+    try {
+      const response = await fetch("/api/upload/document", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: editingFile.id,
+          name: editFileName.trim(),
+          comment: editComment.trim(),
+          uploadedBy: "Staff", // Always set as Staff
+        }),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to update document");
+      }
+      const updatedDoc = await response.json();
 
-    setIsEditDialogOpen(false);
-    setEditingFile(null);
+      setUploadedFiles((prev) =>
+        prev.map((file) =>
+          file.id === editingFile.id
+            ? {
+                ...file,
+                name: updatedDoc.name,
+                comment: updatedDoc.comment,
+                uploadedBy: updatedDoc.uploadedBy,
+              }
+            : file
+        )
+      );
 
-    toast.custom(
-      <div className="bg-green-100 text-green-800 p-2 rounded">
-        File updated successfully: {editFileName} has been updated
-      </div>
-    );
+      setIsEditDialogOpen(false);
+      setEditingFile(null);
+
+      toast.custom(
+        <div className="bg-green-100 text-green-800 p-2 rounded">
+          File updated successfully: {editFileName} has been updated
+        </div>
+      );
+    } catch {
+      toast.custom(
+        <div className="bg-red-100 text-red-800 p-2 rounded">
+          Failed to update file
+        </div>
+      );
+    }
   };
 
-  const handleDelete = (fileId: string) => {
-    setUploadedFiles((prev) => prev.filter((file) => file.id !== fileId));
-    toast.custom(
-      <div className="bg-green-100 text-green-800 p-2 rounded">
-        File deleted successfully
-      </div>
-    );
+  const handleDelete = async (fileId: string) => {
+    try {
+      const response = await fetch(`/api/upload/document?id=${fileId}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to delete document");
+      }
+      setUploadedFiles((prev) => prev.filter((file) => file.id !== fileId));
+      toast.custom(
+        <div className="bg-green-100 text-green-800 p-2 rounded">
+          File deleted successfully
+        </div>
+      );
+    } catch {
+      toast.custom(
+        <div className="bg-red-100 text-red-800 p-2 rounded">
+          Failed to delete file
+        </div>
+      );
+    }
   };
 
   const handleShareToStudent = () => {
@@ -464,8 +547,50 @@ export default function UploadsPage({
     setIsSharing(true);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // 1. Find the selected file object
+      const fileToSend = uploadedFiles.find(
+        (f) => f.id === selectedFileForShare
+      );
+      if (!fileToSend || !fileToSend.url) {
+        toast.custom(
+          <div className="bg-red-100 text-red-800 p-2 rounded">
+            File not found or missing URL
+          </div>
+        );
+        setIsSharing(false);
+        return;
+      }
+
+      // 2. Fetch the file as a Blob
+      const fileResponse = await fetch(fileToSend.url);
+      const fileBlob = await fileResponse.blob();
+
+      // 3. Build FormData
+      const formData = new FormData();
+      formData.append("studentEmail", studentEmail.trim());
+      formData.append("studentName", studentName.trim());
+      formData.append("fileName", fileToSend.name);
+      formData.append("fileComment", fileToSend.comment || "");
+      formData.append("uploadedBy", fileToSend.uploadedBy || "Staff");
+      formData.append(
+        "uploadedAt",
+        fileToSend.uploadedAt || new Date().toLocaleString()
+      );
+      formData.append(
+        "file",
+        new File([fileBlob], fileToSend.name, { type: fileBlob.type })
+      );
+
+      // 4. Send to your API
+      const response = await fetch("/api/email/share-file", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to send email");
+      }
+
       toast.custom(
         <div className="bg-green-100 text-green-800 p-2 rounded">
           File shared with student successfully
@@ -487,6 +612,36 @@ export default function UploadsPage({
       setIsSharing(false);
     }
   };
+
+  const fetchSenderDetails = useCallback(async () => {
+    try {
+      // Fetch the order to get senderId
+      const orderRes = await fetch(`/api/orders/${orderId}`);
+      if (!orderRes.ok) return;
+      const order = await orderRes.json();
+      if (!order.senderId) return;
+
+      // Fetch the sender details
+      const senderRes = await fetch(`/api/senders/${order.senderId}`);
+      if (!senderRes.ok) return;
+      const sender = await senderRes.json();
+
+      setStudentName(sender.studentName || "");
+      setStudentEmail(sender.studentEmailOriginal || "");
+    } catch {
+      // Optionally handle error
+    }
+  }, [orderId]);
+
+  useEffect(() => {
+    fetchSenderDetails();
+  }, [fetchSenderDetails]);
+
+  useEffect(() => {
+    if (isShareDialogOpen) {
+      fetchSenderDetails();
+    }
+  }, [isShareDialogOpen, fetchSenderDetails]);
 
   if (isLoading) {
     return (
@@ -763,15 +918,18 @@ export default function UploadsPage({
                               )
                             }
                           />
-                          {getFileIcon(file.type, file.name)}
-                          <>
+                          {/* File icon right after checkbox */}
+                          <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-gray-100 rounded">
+                            {getFileIcon(file.type, file.name)}
+                          </div>
+                          <div>
                             <div className="font-medium text-gray-900 text-xs sm:text-sm truncate max-w-[100px] sm:max-w-[200px]">
                               {file.name}
                             </div>
                             <div className="text-xs text-gray-500 hidden sm:block">
                               {formatFileSize(file.size)}
                             </div>
-                          </>
+                          </div>
                         </div>
                       </td>
                       <td className="p-2 md:p-4 text-gray-600 text-xs sm:text-sm truncate max-w-[100px] sm:max-w-[200px]">

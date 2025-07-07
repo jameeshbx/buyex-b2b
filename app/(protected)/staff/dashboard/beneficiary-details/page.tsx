@@ -21,6 +21,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import type { Beneficiary } from "@prisma/client";
 import { z } from "zod";
 
+
 // Loading component for Suspense fallback
 function LoadingSpinner() {
   return (
@@ -76,6 +77,9 @@ function BeneficiaryDetailsContent() {
   const receiverCountry = watch("receiverCountry");
   const receiverBankCountry = watch("receiverBankCountry");
   const anyIntermediaryBank = watch("anyIntermediaryBank");
+
+  // Track the last selected beneficiary
+  const [lastSelectedBeneficiary, setLastSelectedBeneficiary] = useState<Beneficiary | null>(null);
 
   // Fetch beneficiaries from API
   useEffect(() => {
@@ -243,8 +247,41 @@ function BeneficiaryDetailsContent() {
 
   const selectReceiver = (beneficiary: Beneficiary) => {
     setSelectedBeneficiary(beneficiary);
+    setLastSelectedBeneficiary(beneficiary); // Save for later
     setValue("selectedReceiverId", beneficiary.id);
+    // Do NOT reset the form here!
   };
+
+  // When "existingReceiver" changes to "NO", pre-fill the form if a receiver was selected
+  useEffect(() => {
+    if (existingReceiver === "NO" && lastSelectedBeneficiary) {
+      reset({
+        receiverFullName: lastSelectedBeneficiary.receiverFullName || "",
+        receiverCountry: lastSelectedBeneficiary.receiverCountry || "",
+        address: lastSelectedBeneficiary.address || "",
+        receiverBank: lastSelectedBeneficiary.receiverBank || "",
+        receiverBankAddress: lastSelectedBeneficiary.receiverBankAddress || "",
+        receiverBankCountry: lastSelectedBeneficiary.receiverBankCountry || "",
+        receiverAccount: lastSelectedBeneficiary.receiverAccount || "",
+        receiverBankSwiftCode: lastSelectedBeneficiary.receiverBankSwiftCode || "",
+        iban: lastSelectedBeneficiary.iban || "",
+        sortCode: lastSelectedBeneficiary.sortCode || "",
+        transitNumber: lastSelectedBeneficiary.transitNumber || "",
+        bsbCode: lastSelectedBeneficiary.bsbCode || "",
+        routingNumber: lastSelectedBeneficiary.routingNumber || "",
+        anyIntermediaryBank: lastSelectedBeneficiary.anyIntermediaryBank as "YES" | "NO" || "NO",
+        intermediaryBankName: lastSelectedBeneficiary.intermediaryBankName || "",
+        intermediaryBankAccountNo: lastSelectedBeneficiary.intermediaryBankAccountNo || "",
+        intermediaryBankIBAN: lastSelectedBeneficiary.intermediaryBankIBAN || "",
+        intermediaryBankSwiftCode: lastSelectedBeneficiary.intermediaryBankSwiftCode || "",
+        totalRemittance: "",
+        field70: "",
+        existingReceiver: "NO",
+        selectedReceiverId: lastSelectedBeneficiary.id || "",
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [existingReceiver]);
 
   const toggleStatus = async (beneficiaryId: string) => {
     try {
@@ -428,11 +465,10 @@ function BeneficiaryDetailsContent() {
                       )}
                     </span>
                     <span
-                      className={`ml-3 font-Inter text-base font-medium ${
-                        watch("existingReceiver") === "YES"
+                      className={`ml-3 font-Inter text-base font-medium ${watch("existingReceiver") === "YES"
                           ? "text-black"
                           : "text-light-gray"
-                      }`}
+                        }`}
                     >
                       YES
                     </span>
@@ -464,11 +500,10 @@ function BeneficiaryDetailsContent() {
                       )}
                     </span>
                     <span
-                      className={`ml-3 font-Inter text-base font-medium ${
-                        watch("existingReceiver") === "NO"
+                      className={`ml-3 font-Inter text-base font-medium ${watch("existingReceiver") === "NO"
                           ? "text-black"
                           : "text-light-gray"
-                      }`}
+                        }`}
                     >
                       NO
                     </span>
@@ -477,376 +512,140 @@ function BeneficiaryDetailsContent() {
               </div>
             )}
 
-            {existingReceiver === "YES" && !editId ? (
-              /* Existing receivers table */
-              <div className="mb-6">
-                <div className="flex flex-col sm:flex-row sm:justify-between mb-4 gap-2 sm:gap-4">
-                  <div className="relative country-filter-dropdown">
-                    <button
-                      type="button"
-                      className="flex items-center bg-dark-blue text-white font-jakarta px-3 sm:px-4 py-2 rounded-md text-sm sm:text-base w-full sm:w-auto justify-center sm:justify-start"
-                      onClick={() =>
-                        setShowCountryDropdown(!showCountryDropdown)
-                      }
-                    >
-                      <span className="truncate">
-                        {selectedCountry
-                          ? `Filtered: ${selectedCountry}`
-                          : "Filter by country"}
-                      </span>
-                      <ChevronDown className="ml-2 h-4 w-4 flex-shrink-0" />
-                    </button>
-                    {showCountryDropdown && (
-                      <div className="absolute top-full left-0 sm:left-20 mt-1 bg-white shadow-lg rounded-md z-30 w-full sm:w-48">
-                        <ul className="py-1 max-h-60 overflow-y-auto">
-                          <li>
-                            <button
-                              type="button"
-                              className="block w-full text-left px-4 py-2 hover:bg-gray-100 font-medium text-sm"
-                              onClick={() => handleCountryFilter(null)}
-                            >
-                              All Countries
-                            </button>
-                          </li>
-                          {countries.map((country) => (
-                            <li key={country.value}>
+            {existingReceiver === "YES" && !editId && (
+              <>
+                {/* Existing receivers table/list */}
+                <div className="mb-6">
+                  <div className="flex flex-col sm:flex-row sm:justify-between mb-4 gap-2 sm:gap-4">
+                    <div className="relative country-filter-dropdown">
+                      <button
+                        type="button"
+                        className="flex items-center bg-dark-blue text-white font-jakarta px-3 sm:px-4 py-2 rounded-md text-sm sm:text-base w-full sm:w-auto justify-center sm:justify-start"
+                        onClick={() =>
+                          setShowCountryDropdown(!showCountryDropdown)
+                        }
+                      >
+                        <span className="truncate">
+                          {selectedCountry
+                            ? `Filtered: ${selectedCountry}`
+                            : "Filter by country"}
+                        </span>
+                        <ChevronDown className="ml-2 h-4 w-4 flex-shrink-0" />
+                      </button>
+                      {showCountryDropdown && (
+                        <div className="absolute top-full left-0 sm:left-20 mt-1 bg-white shadow-lg rounded-md z-30 w-full sm:w-48">
+                          <ul className="py-1 max-h-60 overflow-y-auto">
+                            <li>
                               <button
                                 type="button"
-                                className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
-                                onClick={() =>
-                                  handleCountryFilter(country.value)
-                                }
+                                className="block w-full text-left px-4 py-2 hover:bg-gray-100 font-medium text-sm"
+                                onClick={() => handleCountryFilter(null)}
                               >
-                                {country.label}
+                                All Countries
                               </button>
                             </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="Search"
-                      className="pl-3 pr-10 py-2 border border-gray-300 rounded-lg font-jakarta bg-light-blue w-full sm:w-auto text-sm sm:text-base"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                    <button
-                      type="button"
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                    >
-                      <svg
-                        className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Show message if no beneficiaries */}
-                {beneficiaries.length === 0 ? (
-                  <div className="text-center py-8">
-                    <p className="text-gray-500">
-                      No beneficiaries found. Please add a new beneficiary.
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                    {/* Mobile Card View */}
-                    <div className="block sm:hidden space-y-4">
-                      {getSortedReceivers().map((beneficiary) => (
-                        <div
-                          key={beneficiary.id}
-                          className={`bg-light-blue rounded-lg p-4 border ${
-                            beneficiary.id === selectedBeneficiary?.id
-                              ? "border-blue-500 bg-blue-50"
-                              : "border-gray-200"
-                          }`}
-                        >
-                          <div className="flex items-start justify-between mb-3">
-                            <label className="flex items-center">
-                              <span className="relative w-5 h-5 flex items-center justify-center">
-                                <input
-                                  type="radio"
-                                  name="selectedReceiver"
-                                  className="appearance-none w-5 h-5 border-2 rounded-md checked:bg-dark-blue checked:border-dark-blue transition-all duration-150 focus:outline-none"
-                                  checked={
-                                    beneficiary.id === selectedBeneficiary?.id
+                            {countries.map((country) => (
+                              <li key={country.value}>
+                                <button
+                                  type="button"
+                                  className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
+                                  onClick={() =>
+                                    handleCountryFilter(country.value)
                                   }
-                                  onChange={() => selectReceiver(beneficiary)}
-                                />
-                                {beneficiary.id === selectedBeneficiary?.id && (
-                                  <span className="absolute inset-0 flex items-center justify-center">
-                                    <span className="bg-dark-blue checked:border-dark-blue rounded-md w-full h-full flex items-center justify-center">
-                                      <svg
-                                        className="w-3 h-3 text-white"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="white"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                      >
-                                        <polyline points="20 6 10.5 17 4 10.5" />
-                                      </svg>
-                                    </span>
-                                  </span>
-                                )}
-                              </span>
-                            </label>
-                            <div className="flex items-center space-x-2">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const isCurrentlyActive = beneficiary.status;
-                                  const message = isCurrentlyActive
-                                    ? "Are you sure you want to deactivate this receiver?"
-                                    : "Are you sure you want to activate this receiver?";
-                                  if (window.confirm(message)) {
-                                    toggleStatus(beneficiary.id);
-                                  }
-                                }}
-                                className={`h-5 w-10 rounded-full flex items-center transition-colors ${
-                                  beneficiary.status
-                                    ? "bg-blue-100 justify-end"
-                                    : "bg-gray-200 justify-start"
-                                }`}
-                              >
-                                <div
-                                  className={`h-4 w-4 rounded-full transition-all ${
-                                    beneficiary.status
-                                      ? "bg-blue-600 mr-0.5"
-                                      : "bg-gray-400 ml-0.5"
-                                  }`}
-                                ></div>
-                              </button>
-                              <button
-                                type="button"
-                                className="text-orange-500 hover:text-orange-700"
-                                onClick={() =>
-                                  handleViewDetails(beneficiary.id)
-                                }
-                              >
-                                <Eye className="h-4 w-4" />
-                              </button>
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            <div>
-                              <span className="text-xs text-gray-500 uppercase tracking-wide">
-                                ID
-                              </span>
-                              <p className="font-semibold font-jakarta">
-                                {beneficiary.id}
-                              </p>
-                            </div>
-                            <div>
-                              <span className="text-xs text-gray-500 uppercase tracking-wide">
-                                Name
-                              </span>
-                              <p className="font-semibold font-jakarta">
-                                {beneficiary.receiverFullName}
-                              </p>
-                            </div>
-                            <div>
-                              <span className="text-xs text-gray-500 uppercase tracking-wide">
-                                Country
-                              </span>
-                              <p className="text-light-gray font-jakarta">
-                                {beneficiary.receiverCountry}
-                              </p>
-                            </div>
-                            <div>
-                              <span className="text-xs text-gray-500 uppercase tracking-wide">
-                                Account No.
-                              </span>
-                              <p className="font-semibold font-jakarta">
-                                {beneficiary.receiverAccount}
-                              </p>
-                            </div>
-                          </div>
+                                >
+                                  {country.label}
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
                         </div>
-                      ))}
+                      )}
                     </div>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Search"
+                        className="pl-3 pr-10 py-2 border border-gray-300 rounded-lg font-jakarta bg-light-blue w-full sm:w-auto text-sm sm:text-base"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                      >
+                        <svg
+                          className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
 
-                    {/* Desktop Table View */}
-                    <div className="hidden sm:block overflow-auto max-h-[500px] rounded-lg border border-gray-200">
-                      <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-white sticky top-0 z-20">
-                          <tr>
-                            <th className="px-3 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
-                            <th
-                              className="px-3 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                              onClick={() => requestSort("id")}
-                            >
-                              <div className="flex items-center font-jakarta text-gray-700">
-                                Receiver ID
-                                <span className="ml-1">
-                                  {sortConfig?.key === "id" ? (
-                                    sortConfig.direction === "asc" ? (
-                                      <ChevronUp className="h-4 w-4" />
-                                    ) : (
-                                      <ChevronDown className="h-4 w-4" />
-                                    )
-                                  ) : (
-                                    <ChevronDown className="h-4 w-4 text-gray-300" />
-                                  )}
-                                </span>
-                              </div>
-                            </th>
-                            <th
-                              className="px-3 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                              onClick={() => requestSort("receiverFullName")}
-                            >
-                              <div className="flex items-center font-jakarta text-gray-700">
-                                Name
-                                <span className="ml-1">
-                                  {sortConfig?.key === "receiverFullName" ? (
-                                    sortConfig.direction === "asc" ? (
-                                      <ChevronUp className="h-4 w-4" />
-                                    ) : (
-                                      <ChevronDown className="h-4 w-4" />
-                                    )
-                                  ) : (
-                                    <ChevronDown className="h-4 w-4 text-gray-300" />
-                                  )}
-                                </span>
-                              </div>
-                            </th>
-                            <th className="hidden md:table-cell px-3 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
-                              <div className="flex items-center font-jakarta text-gray-700">
-                                Country
-                              </div>
-                            </th>
-                            <th className="hidden lg:table-cell px-3 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              <div className="flex items-center font-jakarta text-gray-700">
-                                Address
-                              </div>
-                            </th>
-                            <th className="hidden lg:table-cell px-3 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              <div className="flex items-center font-jakarta text-gray-700">
-                                Bank name
-                              </div>
-                            </th>
-                            <th className="hidden xl:table-cell px-3 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              <div className="flex items-center font-jakarta text-gray-700">
-                                Bank country
-                              </div>
-                            </th>
-                            <th
-                              className="px-3 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                              onClick={() => requestSort("receiverAccount")}
-                            >
-                              <div className="flex items-center font-jakarta text-gray-700">
-                                Account No.
-                                <span className="ml-1">
-                                  {sortConfig?.key === "receiverAccount" ? (
-                                    sortConfig.direction === "asc" ? (
-                                      <ChevronUp className="h-4 w-4" />
-                                    ) : (
-                                      <ChevronDown className="h-4 w-4" />
-                                    )
-                                  ) : (
-                                    <ChevronDown className="h-4 w-4 text-gray-300" />
-                                  )}
-                                </span>
-                              </div>
-                            </th>
-                            <th className="px-3 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              <div className="flex items-center font-jakarta text-gray-700">
-                                Status
-                              </div>
-                            </th>
-                            <th className="px-3 lg:px-6 py-3 text-left text-xs font-medium font-jakarta text-gray-700 uppercase tracking-wider">
-                              Action
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-light-blue divide-y-4 divide-white">
-                          {getSortedReceivers().map((beneficiary) => (
-                            <tr
-                              key={beneficiary.id}
-                              className={
-                                beneficiary.id === selectedBeneficiary?.id
-                                  ? "bg-blue-50"
-                                  : ""
-                              }
-                            >
-                              <td className="px-3 lg:px-6 py-4 whitespace-nowrap">
-                                <label className="flex items-center relative">
-                                  <span className="relative w-5 h-5 flex items-center justify-center">
-                                    <input
-                                      type="radio"
-                                      name="selectedReceiver"
-                                      className="appearance-none w-5 h-5 border-2 rounded-md checked:bg-dark-blue checked:border-dark-blue transition-all duration-150 focus:outline-none"
-                                      checked={
-                                        beneficiary.id ===
-                                        selectedBeneficiary?.id
-                                      }
-                                      onChange={() =>
-                                        selectReceiver(beneficiary)
-                                      }
-                                    />
-                                    {beneficiary.id ===
-                                      selectedBeneficiary?.id && (
-                                      <span className="absolute inset-0 flex items-center justify-center">
-                                        <span className="bg-dark-blue checked:border-dark-blue rounded-md w-full h-full flex items-center justify-center">
-                                          <svg
-                                            className="w-3 h-3 text-white"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="white"
-                                            strokeWidth="2"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                          >
-                                            <polyline points="20 6 10.5 17 4 10.5" />
-                                          </svg>
-                                        </span>
+                  {/* Show message if no beneficiaries */}
+                  {beneficiaries.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-gray-500">
+                        No beneficiaries found. Please add a new beneficiary.
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Mobile Card View */}
+                      <div className="block sm:hidden space-y-4">
+                        {getSortedReceivers().map((beneficiary) => (
+                          <div
+                            key={beneficiary.id}
+                            className={`bg-light-blue rounded-lg p-4 border ${beneficiary.id === selectedBeneficiary?.id
+                                ? "border-blue-500 bg-blue-50"
+                                : "border-gray-200"
+                              }`}
+                          >
+                            <div className="flex items-start justify-between mb-3">
+                              <label className="flex items-center">
+                                <span className="relative w-5 h-5 flex items-center justify-center">
+                                  <input
+                                    type="radio"
+                                    name="selectedReceiver"
+                                    className="appearance-none w-5 h-5 border-2 rounded-md checked:bg-dark-blue checked:border-dark-blue transition-all duration-150 focus:outline-none"
+                                    checked={
+                                      beneficiary.id === selectedBeneficiary?.id
+                                    }
+                                    onChange={() => selectReceiver(beneficiary)}
+                                  />
+                                  {beneficiary.id === selectedBeneficiary?.id && (
+                                    <span className="absolute inset-0 flex items-center justify-center">
+                                      <span className="bg-dark-blue checked:border-dark-blue rounded-md w-full h-full flex items-center justify-center">
+                                        <svg
+                                          className="w-3 h-3 text-white"
+                                          viewBox="0 0 24 24"
+                                          fill="none"
+                                          stroke="white"
+                                          strokeWidth="2"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                        >
+                                          <polyline points="20 6 10.5 17 4 10.5" />
+                                        </svg>
                                       </span>
-                                    )}
-                                  </span>
-                                </label>
-                              </td>
-                              <td className="px-3 lg:px-6 py-4 whitespace-nowrap text-sm font-medium font-jakarta font-semibold">
-                                {beneficiary.id}
-                              </td>
-                              <td className="px-3 lg:px-6 py-4 whitespace-nowrap text-sm font-jakarta font-semibold">
-                                {beneficiary.receiverFullName}
-                              </td>
-                              <td className="hidden md:table-cell px-3 lg:px-6 py-4 whitespace-nowrap text-sm font-jakarta text-light-gray">
-                                {beneficiary.receiverCountry}
-                              </td>
-                              <td className="hidden lg:table-cell px-3 lg:px-6 py-4 whitespace-nowrap text-sm font-jakarta text-light-gray">
-                                {beneficiary.address}
-                              </td>
-                              <td className="hidden lg:table-cell px-3 lg:px-6 py-4 whitespace-nowrap text-sm font-jakarta text-light-gray">
-                                {beneficiary.receiverBank}
-                              </td>
-                              <td className="hidden xl:table-cell px-3 lg:px-6 py-4 whitespace-nowrap text-sm font-jakarta text-light-gray">
-                                {beneficiary.receiverBankCountry}
-                              </td>
-                              <td className="px-3 lg:px-6 py-4 whitespace-nowrap text-sm font-jakarta font-semibold">
-                                {beneficiary.receiverAccount}
-                              </td>
-                              <td className="px-3 lg:px-6 py-4 whitespace-nowrap">
+                                    </span>
+                                  )}
+                                </span>
+                              </label>
+                              <div className="flex items-center space-x-2">
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    const isCurrentlyActive =
-                                      beneficiary.status;
+                                    const isCurrentlyActive = beneficiary.status;
                                     const message = isCurrentlyActive
                                       ? "Are you sure you want to deactivate this receiver?"
                                       : "Are you sure you want to activate this receiver?";
@@ -854,116 +653,354 @@ function BeneficiaryDetailsContent() {
                                       toggleStatus(beneficiary.id);
                                     }
                                   }}
-                                  className={`h-6 w-12 rounded-full flex items-center transition-colors ${
-                                    beneficiary.status
+                                  className={`h-5 w-10 rounded-full flex items-center transition-colors ${beneficiary.status
                                       ? "bg-blue-100 justify-end"
                                       : "bg-gray-200 justify-start"
-                                  }`}
+                                    }`}
                                 >
                                   <div
-                                    className={`h-5 w-5 rounded-full transition-all ${
-                                      beneficiary.status
+                                    className={`h-4 w-4 rounded-full transition-all ${beneficiary.status
                                         ? "bg-blue-600 mr-0.5"
                                         : "bg-gray-400 ml-0.5"
-                                    }`}
+                                      }`}
                                   ></div>
                                 </button>
-                              </td>
-                              <td className="px-3 lg:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                <div className="flex items-center space-x-3">
+                                <button
+                                  type="button"
+                                  className="text-orange-500 hover:text-orange-700"
+                                  onClick={() =>
+                                    handleViewDetails(beneficiary.id)
+                                  }
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </button>
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <div>
+                                <span className="text-xs text-gray-500 uppercase tracking-wide">
+                                  ID
+                                </span>
+                                <p className="font-semibold font-jakarta">
+                                  {beneficiary.id}
+                                </p>
+                              </div>
+                              <div>
+                                <span className="text-xs text-gray-500 uppercase tracking-wide">
+                                  Name
+                                </span>
+                                <p className="font-semibold font-jakarta">
+                                  {beneficiary.receiverFullName}
+                                </p>
+                              </div>
+                              <div>
+                                <span className="text-xs text-gray-500 uppercase tracking-wide">
+                                  Country
+                                </span>
+                                <p className="text-light-gray font-jakarta">
+                                  {beneficiary.receiverCountry}
+                                </p>
+                              </div>
+                              <div>
+                                <span className="text-xs text-gray-500 uppercase tracking-wide">
+                                  Account No.
+                                </span>
+                                <p className="font-semibold font-jakarta">
+                                  {beneficiary.receiverAccount}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Desktop Table View */}
+                      <div className="hidden sm:block overflow-auto max-h-[500px] rounded-lg border border-gray-200">
+                        <table className="min-w-full divide-y divide-gray-200">
+                          <thead className="bg-white sticky top-0 z-20">
+                            <tr>
+                              <th className="px-3 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
+                              <th
+                                className="px-3 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                                onClick={() => requestSort("id")}
+                              >
+                                <div className="flex items-center font-jakarta text-gray-700">
+                                  Receiver ID
+                                  <span className="ml-1">
+                                    {sortConfig?.key === "id" ? (
+                                      sortConfig.direction === "asc" ? (
+                                        <ChevronUp className="h-4 w-4" />
+                                      ) : (
+                                        <ChevronDown className="h-4 w-4" />
+                                      )
+                                    ) : (
+                                      <ChevronDown className="h-4 w-4 text-gray-300" />
+                                    )}
+                                  </span>
+                                </div>
+                              </th>
+                              <th
+                                className="px-3 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                                onClick={() => requestSort("receiverFullName")}
+                              >
+                                <div className="flex items-center font-jakarta text-gray-700">
+                                  Name
+                                  <span className="ml-1">
+                                    {sortConfig?.key === "receiverFullName" ? (
+                                      sortConfig.direction === "asc" ? (
+                                        <ChevronUp className="h-4 w-4" />
+                                      ) : (
+                                        <ChevronDown className="h-4 w-4" />
+                                      )
+                                    ) : (
+                                      <ChevronDown className="h-4 w-4 text-gray-300" />
+                                    )}
+                                  </span>
+                                </div>
+                              </th>
+                              <th className="hidden md:table-cell px-3 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
+                                <div className="flex items-center font-jakarta text-gray-700">
+                                  Country
+                                </div>
+                              </th>
+                              <th className="hidden lg:table-cell px-3 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <div className="flex items-center font-jakarta text-gray-700">
+                                  Address
+                                </div>
+                              </th>
+                              <th className="hidden lg:table-cell px-3 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <div className="flex items-center font-jakarta text-gray-700">
+                                  Bank name
+                                </div>
+                              </th>
+                              <th className="hidden xl:table-cell px-3 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <div className="flex items-center font-jakarta text-gray-700">
+                                  Bank country
+                                </div>
+                              </th>
+                              <th
+                                className="px-3 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                                onClick={() => requestSort("receiverAccount")}
+                              >
+                                <div className="flex items-center font-jakarta text-gray-700">
+                                  Account No.
+                                  <span className="ml-1">
+                                    {sortConfig?.key === "receiverAccount" ? (
+                                      sortConfig.direction === "asc" ? (
+                                        <ChevronUp className="h-4 w-4" />
+                                      ) : (
+                                        <ChevronDown className="h-4 w-4" />
+                                      )
+                                    ) : (
+                                      <ChevronDown className="h-4 w-4 text-gray-300" />
+                                    )}
+                                  </span>
+                                </div>
+                              </th>
+                              <th className="px-3 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <div className="flex items-center font-jakarta text-gray-700">
+                                  Status
+                                </div>
+                              </th>
+                              <th className="px-3 lg:px-6 py-3 text-left text-xs font-medium font-jakarta text-gray-700 uppercase tracking-wider">
+                                Action
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-light-blue divide-y-4 divide-white">
+                            {getSortedReceivers().map((beneficiary) => (
+                              <tr
+                                key={beneficiary.id}
+                                className={
+                                  beneficiary.id === selectedBeneficiary?.id
+                                    ? "bg-blue-50"
+                                    : ""
+                                }
+                              >
+                                <td className="px-3 lg:px-6 py-4 whitespace-nowrap">
+                                  <label className="flex items-center relative">
+                                    <span className="relative w-5 h-5 flex items-center justify-center">
+                                      <input
+                                        type="radio"
+                                        name="selectedReceiver"
+                                        className="appearance-none w-5 h-5 border-2 rounded-md checked:bg-dark-blue checked:border-dark-blue transition-all duration-150 focus:outline-none"
+                                        checked={
+                                          beneficiary.id ===
+                                          selectedBeneficiary?.id
+                                        }
+                                        onChange={() =>
+                                          selectReceiver(beneficiary)
+                                        }
+                                      />
+                                      {beneficiary.id ===
+                                        selectedBeneficiary?.id && (
+                                          <span className="absolute inset-0 flex items-center justify-center">
+                                            <span className="bg-dark-blue checked:border-dark-blue rounded-md w-full h-full flex items-center justify-center">
+                                              <svg
+                                                className="w-3 h-3 text-white"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="white"
+                                                strokeWidth="2"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                              >
+                                                <polyline points="20 6 10.5 17 4 10.5" />
+                                              </svg>
+                                            </span>
+                                          </span>
+                                        )}
+                                    </span>
+                                  </label>
+                                </td>
+                                <td className="px-3 lg:px-6 py-4 whitespace-nowrap text-sm font-medium font-jakarta font-semibold">
+                                  {beneficiary.id}
+                                </td>
+                                <td className="px-3 lg:px-6 py-4 whitespace-nowrap text-sm font-jakarta font-semibold">
+                                  {beneficiary.receiverFullName}
+                                </td>
+                                <td className="hidden md:table-cell px-3 lg:px-6 py-4 whitespace-nowrap text-sm font-jakarta text-light-gray">
+                                  {beneficiary.receiverCountry}
+                                </td>
+                                <td className="hidden lg:table-cell px-3 lg:px-6 py-4 whitespace-nowrap text-sm font-jakarta text-light-gray">
+                                  {beneficiary.address}
+                                </td>
+                                <td className="hidden lg:table-cell px-3 lg:px-6 py-4 whitespace-nowrap text-sm font-jakarta text-light-gray">
+                                  {beneficiary.receiverBank}
+                                </td>
+                                <td className="hidden xl:table-cell px-3 lg:px-6 py-4 whitespace-nowrap text-sm font-jakarta text-light-gray">
+                                  {beneficiary.receiverBankCountry}
+                                </td>
+                                <td className="px-3 lg:px-6 py-4 whitespace-nowrap text-sm font-jakarta font-semibold">
+                                  {beneficiary.receiverAccount}
+                                </td>
+                                <td className="px-3 lg:px-6 py-4 whitespace-nowrap">
                                   <button
                                     type="button"
-                                    className="text-orange-500 hover:text-orange-700"
-                                    onClick={() =>
-                                      handleViewDetails(beneficiary.id)
-                                    }
+                                    onClick={() => {
+                                      const isCurrentlyActive =
+                                        beneficiary.status;
+                                      const message = isCurrentlyActive
+                                        ? "Are you sure you want to deactivate this receiver?"
+                                        : "Are you sure you want to activate this receiver?";
+                                      if (window.confirm(message)) {
+                                        toggleStatus(beneficiary.id);
+                                      }
+                                    }}
+                                    className={`h-6 w-12 rounded-full flex items-center transition-colors ${beneficiary.status
+                                        ? "bg-blue-100 justify-end"
+                                        : "bg-gray-200 justify-start"
+                                      }`}
                                   >
-                                    <Eye className="h-5 w-5" />
+                                    <div
+                                      className={`h-5 w-5 rounded-full transition-all ${beneficiary.status
+                                          ? "bg-blue-600 mr-0.5"
+                                          : "bg-gray-400 ml-0.5"
+                                        }`}
+                                    ></div>
                                   </button>
-                                  <div className="relative">
+                                </td>
+                                <td className="px-3 lg:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  <div className="flex items-center space-x-3">
                                     <button
                                       type="button"
-                                      className="text-gray-600 hover:text-gray-800"
-                                      onClick={() => {
-                                        setActiveStaffInfo(
-                                          activeStaffInfo === beneficiary.id
-                                            ? null
-                                            : beneficiary.id
-                                        );
-                                      }}
+                                      className="text-orange-500 hover:text-orange-700"
+                                      onClick={() =>
+                                        handleViewDetails(beneficiary.id)
+                                      }
                                     >
-                                      ⋮
+                                      <Eye className="h-5 w-5" />
                                     </button>
-                                    {activeStaffInfo === beneficiary.id && (
-                                      <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg z-20 staff-info-popup">
-                                        <div className="p-3 flex flex-col space-y-2">
-                                          <button
-                                            type="button"
-                                            onClick={() =>
-                                              handleEditBeneficiary(
-                                                beneficiary.id
-                                              )
-                                            }
-                                            className="flex items-center space-x-3 w-full hover:bg-gray-50 p-2 rounded-md"
-                                          >
-                                            <div className="bg-blue-100 p-2 rounded-md">
-                                              <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                className="h-4 w-4 text-blue-600"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke="currentColor"
-                                              >
-                                                <path
-                                                  strokeLinecap="round"
-                                                  strokeLinejoin="round"
-                                                  strokeWidth={2}
-                                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                                />
-                                              </svg>
-                                            </div>
-                                            <div>
-                                              <div className="font-medium text-sm">
-                                                Edit Beneficiary
+                                    <div className="relative">
+                                      <button
+                                        type="button"
+                                        className="text-gray-600 hover:text-gray-800"
+                                        onClick={() => {
+                                          setActiveStaffInfo(
+                                            activeStaffInfo === beneficiary.id
+                                              ? null
+                                              : beneficiary.id
+                                          );
+                                        }}
+                                      >
+                                        ⋮
+                                      </button>
+                                      {activeStaffInfo === beneficiary.id && (
+                                        <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg z-20 staff-info-popup">
+                                          <div className="p-3 flex flex-col space-y-2">
+                                            <button
+                                              type="button"
+                                              onClick={() =>
+                                                handleEditBeneficiary(
+                                                  beneficiary.id
+                                                )
+                                              }
+                                              className="flex items-center space-x-3 w-full hover:bg-gray-50 p-2 rounded-md"
+                                            >
+                                              <div className="bg-blue-100 p-2 rounded-md">
+                                                <svg
+                                                  xmlns="http://www.w3.org/2000/svg"
+                                                  className="h-4 w-4 text-blue-600"
+                                                  fill="none"
+                                                  viewBox="0 0 24 24"
+                                                  stroke="currentColor"
+                                                >
+                                                  <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                                  />
+                                                </svg>
                                               </div>
-                                            </div>
-                                          </button>
-                                          <div className="flex items-start space-x-3">
-                                            <div className="bg-gray-100 p-2 rounded-md">
-                                              <Trash2 className="h-4 w-4" />
-                                            </div>
-                                            <div>
-                                              <div className="font-medium text-sm">
-                                                Added by : StaffA
+                                              <div>
+                                                <div className="font-medium text-sm">
+                                                  Edit Beneficiary
+                                                </div>
                                               </div>
-                                              <div className="text-xs text-gray-500 mt-1">
-                                                {new Date(
-                                                  beneficiary.createdAt
-                                                ).toLocaleDateString("en-US", {
-                                                  hour: "2-digit",
-                                                  minute: "2-digit",
-                                                  day: "2-digit",
-                                                  month: "short",
-                                                })}
+                                            </button>
+                                            <div className="flex items-start space-x-3">
+                                              <div className="bg-gray-100 p-2 rounded-md">
+                                                <Trash2 className="h-4 w-4" />
+                                              </div>
+                                              <div>
+                                                <div className="font-medium text-sm">
+                                                  Added by : StaffA
+                                                </div>
+                                                <div className="text-xs text-gray-500 mt-1">
+                                                  {new Date(
+                                                    beneficiary.createdAt
+                                                  ).toLocaleDateString("en-US", {
+                                                    hour: "2-digit",
+                                                    minute: "2-digit",
+                                                    day: "2-digit",
+                                                    month: "short",
+                                                  })}
+                                                </div>
                                               </div>
                                             </div>
                                           </div>
                                         </div>
-                                      </div>
-                                    )}
+                                      )}
+                                    </div>
                                   </div>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </>
-                )}
-              </div>
-            ) : (
-              /* New receiver form or edit mode - ALL FIELDS INCLUDED */
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
+                  )}
+                </div>
+               
+              </>
+            ) 
+            }
+
+            {/* Form for adding a new receiver */}
+            {existingReceiver === "NO" && (
+              // Show the form, which will be pre-filled if a receiver was selected
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 {/* Receiver's full Name */}
                 <div>
@@ -974,9 +1011,8 @@ function BeneficiaryDetailsContent() {
                     type="text"
                     placeholder="Beneficiary's name"
                     {...register("receiverFullName")}
-                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${
-                      errors.receiverFullName ? "border border-red-500" : ""
-                    }`}
+                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${errors.receiverFullName ? "border border-red-500" : ""
+                      }`}
                   />
                   {errors.receiverFullName && (
                     <p className="text-red-500 text-sm mt-1">
@@ -993,9 +1029,8 @@ function BeneficiaryDetailsContent() {
                   <div className="relative">
                     <select
                       {...register("receiverCountry")}
-                      className={`w-full p-3 bg-blue-50 rounded-md appearance-none pr-10 text-sm sm:text-base ${
-                        errors.receiverCountry ? "border border-red-500" : ""
-                      }`}
+                      className={`w-full p-3 bg-blue-50 rounded-md appearance-none pr-10 text-sm sm:text-base ${errors.receiverCountry ? "border border-red-500" : ""
+                        }`}
                       onChange={(e) => {
                         setValue("receiverCountry", e.target.value);
                         if (
@@ -1045,9 +1080,8 @@ function BeneficiaryDetailsContent() {
                     type="text"
                     placeholder="Address"
                     {...register("address")}
-                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${
-                      errors.address ? "border border-red-500" : ""
-                    }`}
+                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${errors.address ? "border border-red-500" : ""
+                      }`}
                   />
                   {errors.address && (
                     <p className="text-red-500 text-sm mt-1">
@@ -1065,9 +1099,8 @@ function BeneficiaryDetailsContent() {
                     type="text"
                     placeholder="Beneficiary's bank"
                     {...register("receiverBank")}
-                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${
-                      errors.receiverBank ? "border border-red-500" : ""
-                    }`}
+                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${errors.receiverBank ? "border border-red-500" : ""
+                      }`}
                   />
                   {errors.receiverBank && (
                     <p className="text-red-500 text-sm mt-1">
@@ -1085,9 +1118,8 @@ function BeneficiaryDetailsContent() {
                     type="text"
                     placeholder="Beneficiary's bank address"
                     {...register("receiverBankAddress")}
-                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${
-                      errors.receiverBankAddress ? "border border-red-500" : ""
-                    }`}
+                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${errors.receiverBankAddress ? "border border-red-500" : ""
+                      }`}
                   />
                   {errors.receiverBankAddress && (
                     <p className="text-red-500 text-sm mt-1">
@@ -1104,11 +1136,10 @@ function BeneficiaryDetailsContent() {
                   <div className="relative">
                     <select
                       {...register("receiverBankCountry")}
-                      className={`w-full p-3 bg-blue-50 rounded-md appearance-none pr-10 text-sm sm:text-base ${
-                        errors.receiverBankCountry
+                      className={`w-full p-3 bg-blue-50 rounded-md appearance-none pr-10 text-sm sm:text-base ${errors.receiverBankCountry
                           ? "border border-red-500"
                           : ""
-                      }`}
+                        }`}
                     >
                       {countries.map((country) => (
                         <option key={country.value} value={country.value}>
@@ -1148,9 +1179,8 @@ function BeneficiaryDetailsContent() {
                     type="text"
                     placeholder="Beneficiary's account"
                     {...register("receiverAccount")}
-                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${
-                      errors.receiverAccount ? "border border-red-500" : ""
-                    }`}
+                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${errors.receiverAccount ? "border border-red-500" : ""
+                      }`}
                   />
                   {errors.receiverAccount && (
                     <p className="text-red-500 text-sm mt-1">
@@ -1168,11 +1198,10 @@ function BeneficiaryDetailsContent() {
                     type="text"
                     placeholder="Beneficiary's bank Swift/BIC code"
                     {...register("receiverBankSwiftCode")}
-                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${
-                      errors.receiverBankSwiftCode
+                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${errors.receiverBankSwiftCode
                         ? "border border-red-500"
                         : ""
-                    }`}
+                      }`}
                   />
                   {errors.receiverBankSwiftCode && (
                     <p className="text-red-500 text-sm mt-1">
@@ -1191,9 +1220,8 @@ function BeneficiaryDetailsContent() {
                       type="text"
                       placeholder="IBAN"
                       {...register("iban")}
-                      className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${
-                        errors.iban ? "border border-red-500" : ""
-                      }`}
+                      className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${errors.iban ? "border border-red-500" : ""
+                        }`}
                     />
                     {errors.iban && (
                       <p className="text-red-500 text-sm mt-1">
@@ -1213,9 +1241,8 @@ function BeneficiaryDetailsContent() {
                       type="text"
                       placeholder="Sort code"
                       {...register("sortCode")}
-                      className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${
-                        errors.sortCode ? "border border-red-500" : ""
-                      }`}
+                      className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${errors.sortCode ? "border border-red-500" : ""
+                        }`}
                     />
                     {errors.sortCode && (
                       <p className="text-red-500 text-sm mt-1">
@@ -1235,9 +1262,8 @@ function BeneficiaryDetailsContent() {
                       type="text"
                       placeholder="Transit number"
                       {...register("transitNumber")}
-                      className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${
-                        errors.transitNumber ? "border border-red-500" : ""
-                      }`}
+                      className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${errors.transitNumber ? "border border-red-500" : ""
+                        }`}
                     />
                     {errors.transitNumber && (
                       <p className="text-red-500 text-sm mt-1">
@@ -1257,9 +1283,8 @@ function BeneficiaryDetailsContent() {
                       type="text"
                       placeholder="BSB code"
                       {...register("bsbCode")}
-                      className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${
-                        errors.bsbCode ? "border border-red-500" : ""
-                      }`}
+                      className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${errors.bsbCode ? "border border-red-500" : ""
+                        }`}
                     />
                     {errors.bsbCode && (
                       <p className="text-red-500 text-sm mt-1">
@@ -1279,9 +1304,8 @@ function BeneficiaryDetailsContent() {
                       type="text"
                       placeholder="Routing number"
                       {...register("routingNumber")}
-                      className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${
-                        errors.routingNumber ? "border border-red-500" : ""
-                      }`}
+                      className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${errors.routingNumber ? "border border-red-500" : ""
+                        }`}
                     />
                     {errors.routingNumber && (
                       <p className="text-red-500 text-sm mt-1">
@@ -1324,11 +1348,10 @@ function BeneficiaryDetailsContent() {
                         )}
                       </span>
                       <span
-                        className={`ml-3 font-Inter text-base font-medium ${
-                          watch("anyIntermediaryBank") === "YES"
+                        className={`ml-3 font-Inter text-base font-medium ${watch("anyIntermediaryBank") === "YES"
                             ? "text-black"
                             : "text-light-gray"
-                        }`}
+                          }`}
                       >
                         YES
                       </span>
@@ -1360,11 +1383,10 @@ function BeneficiaryDetailsContent() {
                         )}
                       </span>
                       <span
-                        className={`ml-3 font-Inter text-base font-medium ${
-                          watch("anyIntermediaryBank") === "NO"
+                        className={`ml-3 font-Inter text-base font-medium ${watch("anyIntermediaryBank") === "NO"
                             ? "text-black"
                             : "text-light-gray"
-                        }`}
+                          }`}
                       >
                         NO
                       </span>
@@ -1391,7 +1413,6 @@ function BeneficiaryDetailsContent() {
                     {/* Intermediary bank account no. */}
                     <div>
                       <label className="block text-gray-600 mb-2 font-jakarta text-sm sm:text-base">
-                        Intermediary bank account no. (if applicable)
                       </label>
                       <input
                         type="text"
@@ -1443,9 +1464,8 @@ function BeneficiaryDetailsContent() {
                     type="text"
                     placeholder="Current Financial year"
                     {...register("totalRemittance")}
-                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${
-                      errors.totalRemittance ? "border border-red-500" : ""
-                    } ${editId ? "border-blue-300 bg-blue-50" : ""}`}
+                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${errors.totalRemittance ? "border border-red-500" : ""
+                      } ${editId ? "border-blue-300 bg-blue-50" : ""}`}
                   />
                   {errors.totalRemittance && (
                     <p className="text-red-500 text-sm mt-1">
@@ -1467,9 +1487,8 @@ function BeneficiaryDetailsContent() {
                   <textarea
                     placeholder="Type here"
                     {...register("field70")}
-                    className={`w-full p-3 bg-blue-50 rounded-md h-24 text-sm sm:text-base ${
-                      editId ? "border-blue-300 bg-blue-50" : ""
-                    }`}
+                    className={`w-full p-3 bg-blue-50 rounded-md h-24 text-sm sm:text-base ${editId ? "border-blue-300 bg-blue-50" : ""
+                      }`}
                   ></textarea>
                 </div>
               </div>
@@ -1491,14 +1510,13 @@ function BeneficiaryDetailsContent() {
                     !selectedBeneficiary &&
                     !editId)
                 }
-                className={`bg-dark-blue text-white font-jakarta px-6 sm:px-8 py-3 rounded-md flex items-center justify-center text-sm sm:text-base ${
-                  isSubmitting ||
-                  (existingReceiver === "YES" &&
-                    !selectedBeneficiary &&
-                    !editId)
+                className={`bg-dark-blue text-white font-jakarta px-6 sm:px-8 py-3 rounded-md flex items-center justify-center text-sm sm:text-base ${isSubmitting ||
+                    (existingReceiver === "YES" &&
+                      !selectedBeneficiary &&
+                      !editId)
                     ? "opacity-70 cursor-not-allowed"
                     : ""
-                }`}
+                  }`}
               >
                 {isSubmitting ? (
                   <span className="flex items-center">
@@ -1554,6 +1572,15 @@ function BeneficiaryDetailsContent() {
               </button>
             </div>
           </form>
+
+          {/* Beneficiary form, pre-filled with selectedBeneficiary */}
+          {existingReceiver === "YES" && selectedBeneficiary && (
+            <div className="mt-8">
+              <form onSubmit={handleSubmit(onSubmit)}>
+                {/* ...all your beneficiary form fields... */}
+              </form>
+            </div>
+          )}
         </div>
       </div>
       <div className="text-xs text-gray-500 mt-8 pb-4">
@@ -1572,3 +1599,5 @@ export default function BeneficiaryDetailsPage() {
     </Suspense>
   );
 }
+
+

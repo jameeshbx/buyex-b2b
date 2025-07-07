@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Link from "next/link";
 import React from "react";
 import {
   Dialog,
@@ -66,6 +65,7 @@ const statusOptions = [
   "Received",
   "QuoteDownloaded",
   "Authorized",
+  "Blocked",
   "Documents placed",
   "Verified",
   "Pending",
@@ -75,6 +75,7 @@ const statusOptions = [
 const nonChangeableStatuses = [
   "QuoteDownloaded",
   "Documents placed",
+  "Blocked",
   "Verified",
   "Rejected",
   "Completed",
@@ -242,7 +243,7 @@ export default function Dashboard() {
         return "bg-green-100 text-green-800 hover:bg-green-200";
       case "documents placed":
         return "bg-yellow-100 text-yellow-800 hover:bg-yellow-200";
-      case "verified":
+      case "Blocked":
         return "bg-emerald-100 text-emerald-800 hover:bg-emerald-200";
       case "pending":
         return "bg-orange-100 text-orange-800 hover:bg-orange-200";
@@ -263,14 +264,11 @@ export default function Dashboard() {
         currentStatus === "QuoteDownloaded" ||
         currentStatus === "Documents placed"
       ) {
-        return (
-          <Link
-            href={`/staff/dashboard/sender-details?orderId=${order.id}`}
-            className="text-dark-blue hover:text-blue-800 underline text-sm"
-          >
-            {currentStatus}
-          </Link>
-        );
+       return (
+    <Badge className={getStatusBadgeColor(currentStatus)}>
+      {currentStatus}
+    </Badge>
+  );
       } else {
         return (
           <Badge className={getStatusBadgeColor(currentStatus)}>
