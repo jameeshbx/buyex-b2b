@@ -34,6 +34,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+// Removed direct import of sendEmailToForexPartner - now using API route
 
 type Order = {
   id: string;
@@ -362,6 +363,46 @@ export default function Dashboard() {
           order.id === selectedOrderForIbr.id ? updatedOrder : order
         )
       );
+
+      // Get documents by order ID
+      try {
+        const documentsRes = await fetch(
+          `/api/upload/document/${selectedOrderForIbr.id}`
+        );
+        if (documentsRes.ok) {
+          const documents = await documentsRes.json();
+          console.log("Documents for order:", documents);
+
+          // Send email to forex partner via API route
+          try {
+            const emailResponse = await fetch("/api/email/forex-partner", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                documents: documents.map(
+                  (doc: { imageUrl: string }) => doc.imageUrl
+                ),
+              }),
+            });
+
+            if (emailResponse.ok) {
+              console.log("Email sent successfully to forex partner");
+            } else {
+              console.error("Failed to send email to forex partner");
+            }
+          } catch (emailError) {
+            console.error("Error sending email to forex partner:", emailError);
+          }
+
+          // You can use the documents data here as needed
+        }
+      } catch (docError) {
+        console.error("Error fetching documents:", docError);
+      }
+
+      // Email sent via API route above
 
       // Close modal and reset state
       setShowIbrModal(false);
