@@ -231,6 +231,7 @@ export default function TransactionDetails({
         customerRate: calculatedValues.customerRate,
         totalAmount: calculatedValues.totalPayable,
         ibrRate: calculatedValues.customerRate - order.margin,
+        status: "Received",
       };
 
       await axios.patch(`/api/orders/${orderId}`, updateData);
