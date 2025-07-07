@@ -440,6 +440,11 @@ function Senderdetails() {
     setShowStatusPopup(open);
   };
 
+  useEffect(() => {
+    setShowStatusPopup(true);
+  }, []);
+
+
   return (
     <div>
       {/* Simplified Status Popup Dialog - Only Submit Button */}
@@ -462,7 +467,7 @@ function Senderdetails() {
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent className="text-sm sm:text-base z-50">
-                <SelectItem value="pending">Blocked</SelectItem>
+                <SelectItem value="Blocked">Blocked</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -639,7 +644,7 @@ function Senderdetails() {
                           name="addressLine1"
                           render={({ field }) => (
                             <FormItem className="space-y-1 sm:space-y-2">
-                              <FormLabel className="font-jakarta text-sm sm:text-base text-gray-500 text-gray-500">
+                              <FormLabel className="font-jakarta text-sm sm:text-base text-gray-500">
                                 Address
                               </FormLabel>
                               <FormControl>

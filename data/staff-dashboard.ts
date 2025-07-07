@@ -287,4 +287,4 @@ export const orders: Order[] = [
 ]
 
 export const statusOptions = ["Received", "Verified", , "Rejected", "Completed"]
-export const nonChangeableStatuses = ["QuoteDownloaded", "Authorize", "Documents placed","Pending", "Rate expired"]
+export const nonChangeableStatuses = ["QuoteDownloaded", "Authorize","Blocked", "Documents placed","Pending", "Rate expired"]
