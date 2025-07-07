@@ -25,14 +25,6 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
   orderDetailsFormSchema,
   type OrderDetailsFormValues,
 } from "@/schema/orderdetails";
@@ -171,9 +163,6 @@ export default function OrderDetailsForm() {
   const [showCalculation, setShowCalculation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isQuoteDownloaded, setIsQuoteDownloaded] = useState(false);
-  const [showStatusPopup, setShowStatusPopup] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState("Blocked"); // Default to blocked
-  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const { data: session, status } = useSession();
   const [orderId, setOrderId] = useState<string | null>(null);
   const router = useRouter();
@@ -228,61 +217,20 @@ export default function OrderDetailsForm() {
 
   // Modified onSubmit to show popup first
   function onSubmit() {
+    // ...any validation you want...
     if (!isQuoteDownloaded) {
       alert("Please download the quote first before proceeding.");
       return;
     }
-    setShowStatusPopup(true);
+    // Redirect to sender details page with orderId
+    if (orderId) {
+      router.push(`/staff/dashboard/sender-details?orderId=${orderId}`);
+    } else {
+      alert("Order ID not found. Please try again.");
+    }
   }
 
-  // Handle status confirmation and navigation
-  const handleStatusConfirm = async () => {
-    if (!orderId) {
-      alert("Order ID not found. Please try again.");
-      return;
-    }
-
-    setIsUpdatingStatus(true);
-
-    try {
-      console.log("Updating order status to:", selectedStatus);
-
-      // Update order status to blocked
-      const response = await axios.patch(`/api/orders/${orderId}`, {
-        status: selectedStatus, // This should be "blocked"
-      });
-
-      console.log("Order status updated successfully:", response.data);
-
-      setShowStatusPopup(false);
-      router.push(`/staff/dashboard/sender-details?orderId=${orderId}`);
-    } catch (error) {
-      console.error("Error updating order status:", error);
-
-      // More detailed error logging
-      if (axios.isAxiosError(error)) {
-        console.error("Response data:", error.response?.data);
-        console.error("Response status:", error.response?.status);
-        console.error("Response headers:", error.response?.headers);
-
-        if (error.response?.status === 500) {
-          alert(
-            `Server error: ${
-              error.response?.data || "Internal server error"
-            }. Please check if 'blocked' status is added to your OrderStatus enum.`
-          );
-        } else {
-          alert(
-            `Failed to update status: ${error.response?.data || error.message}`
-          );
-        }
-      } else {
-        alert("Failed to update status. Please try again.");
-      }
-    } finally {
-      setIsUpdatingStatus(false);
-    }
-  };
+  
 
   function resetForm() {
     form.reset();
@@ -463,48 +411,7 @@ export default function OrderDetailsForm() {
 
   return (
     <>
-      {/* Block Rate Status Popup */}
-      <Dialog open={showStatusPopup} onOpenChange={() => {}}>
-        <DialogContent className="w-[90vw] max-w-[425px] md:w-full">
-          <DialogHeader className="px-4 sm:px-6">
-            <DialogTitle className="text-lg sm:text-xl">
-              Block Rate Status
-            </DialogTitle>
-            <DialogDescription className="mt-2 sm:mt-3 text-sm sm:text-base">
-              Update rate status before proceeding
-            </DialogDescription>
-          </DialogHeader>
-          <div className="px-4 sm:px-6 py-2 sm:py-4">
-            <Select
-              value={selectedStatus}
-              onValueChange={(value) => setSelectedStatus(value)}
-            >
-              <SelectTrigger className="w-full h-10 sm:h-12 text-sm sm:text-base">
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent className="text-sm sm:text-base z-50">
-                <SelectItem value="Blocked">Blocked</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <DialogFooter className="px-4 sm:px-6 pb-4 sm:pb-6">
-            <Button
-              onClick={handleStatusConfirm}
-              disabled={isUpdatingStatus}
-              className="w-full h-10 sm:h-12 text-sm sm:text-base bg-dark-blue hover:bg-dark-blue"
-            >
-              {isUpdatingStatus ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Updating...
-                </>
-              ) : (
-                "Submit"
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      
 
       <Form {...form}>
         <form
