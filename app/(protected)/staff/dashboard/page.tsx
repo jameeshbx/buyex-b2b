@@ -90,7 +90,7 @@ export default function Dashboard() {
         return "bg-red-100 text-red-800 hover:bg-red-200"
       case "documents placed":
         return "bg-yellow-100 text-yellow-800 hover:bg-yellow-200"
-      case "verified":
+      case "blocked":
         return "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
       case "pending":
         return "bg-orange-100 text-orange-800 hover:bg-orange-200"
@@ -124,7 +124,7 @@ export default function Dashboard() {
     const normalizedStatus = currentStatus.replace(/\s+/g, '').toLowerCase();
 
     // List of statuses to show as link
-    const linkStatuses = ["quotedownloaded", "documentsplaced", "pending"];
+    const linkStatuses = ["quotedownloaded", "documentsplaced", "pending","blocked"];
 
     if (nonChangeableStatuses.includes(currentStatus)) {
       if (linkStatuses.includes(normalizedStatus)) {

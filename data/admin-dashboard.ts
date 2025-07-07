@@ -187,6 +187,7 @@ export const statusOptions = [
   "Received",
   "QuoteDownloaded",
   "Authorized",
+  "Blocked",
   "Documents placed",
   "Verified",
   "Pending",
@@ -196,6 +197,7 @@ export const statusOptions = [
 
 export const nonChangeableStatuses = [
   "QuoteDownloaded",
+  "Blocked",
   "Documents placed",
   "Authorized",
   "Verified",
