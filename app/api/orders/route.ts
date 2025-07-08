@@ -39,7 +39,8 @@ export async function POST(req: Request) {
       quote,
       calculations,
       generatedPDF,
-      status
+      status,
+      educationLoan
     } = body;
 
     if (
@@ -95,6 +96,7 @@ export async function POST(req: Request) {
         quote: quote,
         calculations: calculations,
         generatedPDF: generatedPDF,
+        educationLoan: educationLoan || "no" 
       },
     });
 
