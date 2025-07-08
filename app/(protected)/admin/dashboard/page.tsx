@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import {
   ChevronDown,
@@ -34,6 +33,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+// Types
 type Order = {
   id: string;
   purpose: string;
@@ -55,34 +55,57 @@ type Order = {
   margin?: number;
   foreignBankCharges?: number;
   createdBy?: string;
-  quote?: Record<string, unknown>; // Replaced any with Record<string, unknown>
-  calculations?: Record<string, unknown>; // Replaced any with Record<string, unknown>
-  generatedPDF?: Record<string, unknown>; // Replaced any with Record<string, unknown>
+  quote?: Record<string, unknown>;
+  calculations?: Record<string, unknown>;
+  generatedPDF?: Record<string, unknown>;
+  beneficiaryId?: string; // Add this if orders have beneficiary IDs
 };
 
-const statusOptions = [
-  "Received",
-  "QuoteDownloaded",
-  "Authorized",
-  "Blocked",
-  "Documents placed",
-  "Verified",
-  "Pending",
-  "Rejected",
-  "Completed",
-];
+type Beneficiary = {
+  id: string;
+  receiverFullName: string;
+  receiverCountry: string;
+  address: string;
+  receiverBank: string;
+  receiverBankAddress: string;
+  receiverBankCountry: string;
+  receiverAccount: string;
+  receiverBankSwiftCode: string;
+  iban?: string;
+  sortCode?: string;
+  transitNumber?: string;
+  bsbCode?: string;
+  routingNumber?: string;
+  anyIntermediaryBank: string;
+  intermediaryBankName?: string;
+  intermediaryBankAccountNo?: string;
+  intermediaryBankIBAN?: string;
+  intermediaryBankSwiftCode?: string;
+  totalRemittance: string;
+  field70?: string;
+  status: boolean;
+};
+
 const nonChangeableStatuses = [
   "QuoteDownloaded",
   "Documents placed",
-  "Blocked",
-  "Verified",
+  "Authorize",
+];
+const ChangeableStatuses = [
+  "Received",
+  "Pending",
   "Rejected",
   "Completed",
+  "Verified",
+  "Blocked",
 ];
 
 export default function Dashboard() {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [orders, setOrders] = useState<Order[]>([]);
+  const [beneficiaries, setBeneficiaries] = useState<
+    Record<string, Beneficiary>
+  >({});
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showRateModal, setShowRateModal] = useState(false);
   const [expandedAuthorize, setExpandedAuthorize] = useState<
@@ -99,13 +122,11 @@ export default function Dashboard() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   const [showIbrModal, setShowIbrModal] = useState(false);
   const [selectedOrderForIbr, setSelectedOrderForIbr] = useState<Order | null>(
     null
   );
   const [ibrModalRate, setIbrModalRate] = useState<string>("");
-
   const [formValidation, setFormValidation] = useState<
     Record<
       string,
@@ -114,13 +135,37 @@ export default function Dashboard() {
         fcyAmt?: string;
         purpose?: string;
         receiverAccount?: string;
+        receiverFullName?: string;
         isValid?: boolean;
       }
     >
   >({});
-  const [authorizedOrders, setAuthorizedOrders] = useState<Set<string>>(
+  const [AuthorizeOrders, setAuthorizeOrders] = useState<Set<string>>(
     new Set()
   );
+
+  // Fetch beneficiary details
+  const fetchBeneficiary = async (beneficiaryId: string) => {
+    if (beneficiaries[beneficiaryId]) {
+      return beneficiaries[beneficiaryId];
+    }
+
+    try {
+      const res = await fetch(`/api/beneficiaries/${beneficiaryId}`);
+      if (!res.ok) throw new Error("Failed to fetch beneficiary");
+      const beneficiary = await res.json();
+
+      setBeneficiaries((prev) => ({
+        ...prev,
+        [beneficiaryId]: beneficiary,
+      }));
+
+      return beneficiary;
+    } catch (err: unknown) {
+      console.error("Error fetching beneficiary:", err);
+      return null;
+    }
+  };
 
   // Fetch orders from API
   useEffect(() => {
@@ -132,6 +177,15 @@ export default function Dashboard() {
         if (!res.ok) throw new Error("Failed to fetch orders");
         const data = await res.json();
         setOrders(data);
+
+        // Fetch beneficiaries for all orders
+        const beneficiaryPromises = data.map((order: Order) => {
+          // Assuming order ID corresponds to beneficiary ID, or use order.beneficiaryId if available
+          const beneficiaryId = order.beneficiaryId || order.id;
+          return fetchBeneficiary(beneficiaryId);
+        });
+
+        await Promise.all(beneficiaryPromises);
       } catch (err: unknown) {
         let errorMessage = "Error fetching orders";
         if (err instanceof Error) {
@@ -145,23 +199,23 @@ export default function Dashboard() {
     fetchOrders();
   }, []);
 
-  const toggleRowExpansion = (orderId: string) => {
+  const toggleRowExpansion = async (orderId: string) => {
     const newExpanded = new Set(expandedRows);
     if (newExpanded.has(orderId)) {
       newExpanded.delete(orderId);
     } else {
       newExpanded.add(orderId);
+      // Fetch beneficiary when expanding if not already fetched
+      const order = orders.find((o) => o.id === orderId);
+      if (order) {
+        const beneficiaryId = order.beneficiaryId || order.id;
+        await fetchBeneficiary(beneficiaryId);
+      }
     }
     setExpandedRows(newExpanded);
   };
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
-    // If clicking on Pending status, navigate to sender details
-    if (newStatus === "Pending") {
-      window.location.href = `/staff/dashboard/sender-details?orderId=${orderId}`;
-      return;
-    }
-
     try {
       setLoading(true);
       const res = await fetch(`/api/orders/${orderId}`, {
@@ -209,7 +263,7 @@ export default function Dashboard() {
           ibrRate: ibrRateValue,
           customerRate: customerRateValue,
           fxRate: customerRateValue,
-          fxRateUpdated: true, // Add this line
+          fxRateUpdated: true,
         }),
       });
       if (!res.ok) throw new Error("Failed to update rates");
@@ -238,7 +292,7 @@ export default function Dashboard() {
         return "bg-blue-100 text-blue-800 hover:bg-blue-200";
       case "QuoteDownloaded":
         return "bg-green-100 text-green-800 hover:bg-green-200";
-      case "authorized":
+      case "Authorize":
         return "bg-green-100 text-green-800 hover:bg-green-200";
       case "documents placed":
         return "bg-yellow-100 text-yellow-800 hover:bg-yellow-200";
@@ -259,22 +313,11 @@ export default function Dashboard() {
     const currentStatus = order.status;
 
     if (nonChangeableStatuses.includes(currentStatus)) {
-      if (
-        currentStatus === "QuoteDownloaded" ||
-        currentStatus === "Documents placed"
-      ) {
-       return (
-    <Badge className={getStatusBadgeColor(currentStatus)}>
-      {currentStatus}
-    </Badge>
-  );
-      } else {
-        return (
-          <Badge className={getStatusBadgeColor(currentStatus)}>
-            {currentStatus}
-          </Badge>
-        );
-      }
+      return (
+        <Badge className={getStatusBadgeColor(currentStatus)}>
+          {currentStatus}
+        </Badge>
+      );
     } else {
       return (
         <Select
@@ -292,11 +335,15 @@ export default function Dashboard() {
             </Badge>
           </SelectTrigger>
           <SelectContent>
-            {statusOptions.map((status) => (
-              <SelectItem key={status} value={status}>
-                {status}
-              </SelectItem>
-            ))}
+            {ChangeableStatuses.map(
+              (
+                status // Changed from statusOptions to ChangeableStatuses
+              ) => (
+                <SelectItem key={status} value={status}>
+                  {status}
+                </SelectItem>
+              )
+            )}
           </SelectContent>
         </Select>
       );
@@ -326,18 +373,15 @@ export default function Dashboard() {
       order.studentName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.purpose.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.currency.toLowerCase().includes(searchTerm.toLowerCase());
-
     return matchesPurpose && matchesSearch;
   });
 
   // Fixed IBR submit function to prevent page refresh
   const handleIbrSubmit = async (e?: React.FormEvent) => {
-    // Prevent default form submission behavior
     if (e) {
       e.preventDefault();
       e.stopPropagation();
     }
-
     if (!selectedOrderForIbr || !ibrModalRate.trim()) return;
 
     try {
@@ -347,21 +391,48 @@ export default function Dashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ibrRate: Number.parseFloat(ibrModalRate) }),
       });
-
       if (!res.ok) {
         throw new Error("Failed to update IBR rate");
       }
-
       const updatedOrder = await res.json();
-
-      // Update the orders state without causing a page refresh
       setOrders((prevOrders) =>
         prevOrders.map((order) =>
           order.id === selectedOrderForIbr.id ? updatedOrder : order
         )
       );
 
-      // Close modal and reset state
+      try {
+        const documentsRes = await fetch(
+          `/api/upload/document/${selectedOrderForIbr.id}`
+        );
+        if (documentsRes.ok) {
+          const documents = await documentsRes.json();
+          console.log("Documents for order:", documents);
+          try {
+            const emailResponse = await fetch("/api/email/forex-partner", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                documents: documents.map(
+                  (doc: { imageUrl: string }) => doc.imageUrl
+                ),
+              }),
+            });
+            if (emailResponse.ok) {
+              console.log("Email sent successfully to forex partner");
+            } else {
+              console.error("Failed to send email to forex partner");
+            }
+          } catch (emailError) {
+            console.error("Error sending email to forex partner:", emailError);
+          }
+        }
+      } catch (docError) {
+        console.error("Error fetching documents:", docError);
+      }
+
       setShowIbrModal(false);
       setIbrModalRate("");
       setSelectedOrderForIbr(null);
@@ -378,14 +449,16 @@ export default function Dashboard() {
 
   const validateOrderForm = (
     order: Order,
+    beneficiary: Beneficiary | null,
     formData: {
       currency?: string;
       fcyAmt?: string;
       purpose?: string;
       receiverAccount?: string;
+      receiverFullName?: string;
     }
   ) => {
-    if (!formData) return false;
+    if (!formData || !beneficiary) return false;
 
     const currencyValid =
       !formData.currency || formData.currency === order.currency;
@@ -395,17 +468,22 @@ export default function Dashboard() {
       !formData.purpose || formData.purpose === order.purpose;
     const accountValid =
       !formData.receiverAccount ||
-      formData.receiverAccount === order.receiverAccount;
+      formData.receiverAccount === beneficiary.receiverAccount;
+    const nameValid =
+      !formData.receiverFullName ||
+      formData.receiverFullName === beneficiary.receiverFullName;
 
-    return currencyValid && amountValid && purposeValid && accountValid;
+    return (
+      currencyValid && amountValid && purposeValid && accountValid && nameValid
+    );
   };
 
   if (loading) return <div className="p-8 text-center">Loading...</div>;
   if (error) return <div className="p-8 text-center text-red-500">{error}</div>;
 
   return (
-    <div className="min-h-screen  bg-gray-50">
-      <div className="max-w-7xl mx-auto  py-8">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto py-8">
         {/* Header */}
         <div className="mb-8 pt-6">
           <h1 className="text-2xl sm:text-3xl font-bold font-jakarta text-gray-900 mb-2">
@@ -444,7 +522,6 @@ export default function Dashboard() {
                 )}
               </div>
             </div>
-
             {/* Filter and Search Section */}
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
               <DropdownMenu>
@@ -484,7 +561,6 @@ export default function Dashboard() {
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-
               <div className="relative w-full sm:w-80">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
@@ -512,624 +588,733 @@ export default function Dashboard() {
                 <div>Status</div>
                 <div>Action</div>
               </div>
-
               {/* Order Rows - Only show visibleRows */}
-              {filteredOrders.slice(0, visibleRows).map((order) => (
-                <React.Fragment key={order.id}>
-                  {/* Main Row */}
-                  <div
-                    className="border-b hover:bg-gray-50 cursor-pointer transition-colors"
-                    onClick={() => toggleRowExpansion(order.id)}
-                  >
-                    {/* Desktop Layout */}
-                    <div className="hidden lg:grid lg:grid-cols-9 py-2 px-4 gap-4 items-center">
-                      <div className="flex items-center gap-2">
-                        {expandedRows.has(order.id) ? (
-                          <ChevronDown className="h-4 w-4 text-gray-400" />
-                        ) : (
-                          <ChevronRight className="h-4 w-4 text-gray-400" />
-                        )}
-                        <span className="font-semibold text-sm font-jakarta text-gray-900">
-                          {order.id}
-                        </span>
-                      </div>
-                      <div className="text-gray-600 text-sm font-jakarta">
-                        {new Date(order.createdAt).toLocaleDateString()}
-                      </div>
-                      <div className="text-gray-600 text-sm font-jakarta">
-                        {order.purpose}
-                      </div>
-                      <div className="text-gray-600 text-sm font-jakarta">
-                        {order.studentName}
-                      </div>
-                      <div className="text-gray-600 text-sm font-jakarta">
-                        {order.currency}
-                      </div>
-                      <div className="font-semibold text-sm font-jakarta text-gray-900">
-                        {order.amount}
-                      </div>
-                      <div>
-                        <button
-                          className={`w-24 h-7 rounded-sm text-xs font-medium border ${
-                            order.fxRateUpdated
-                              ? "bg-white border-gray-800 text-gray-800 font-bold cursor-default"
-                              : "bg-white text-red-600 border-red-600 font-bold hover:bg-red-50 cursor-pointer"
-                          }`}
-                          onClick={(e) => {
-                            if (!order.fxRateUpdated) {
-                              e.stopPropagation();
-                              handleUpdateRateClick(order);
-                            }
-                          }}
-                          disabled={order.fxRateUpdated}
-                        >
-                          {order.fxRateUpdated ? "UPDATED" : "UPDATE RATE"}
-                        </button>
-                      </div>
-                      <div onClick={(e) => e.stopPropagation()}>
-                        {renderStatusElement(order)}
-                      </div>
-                      <div onClick={(e) => e.stopPropagation()}>
-                        <Button
-                          size="sm"
-                          className="bg-dark-blue text-white px-2 py-2 text-xs h-7"
-                        >
-                          <Upload className="h-3 w-3" />
-                          Uploads
-                        </Button>
-                      </div>
-                    </div>
+              {filteredOrders.slice(0, visibleRows).map((order) => {
+                const beneficiaryId = order.beneficiaryId || order.id;
+                const beneficiary = beneficiaries[beneficiaryId];
+                const showAuthorizeButton = order.status === "Received";
 
-                    {/* Mobile/Tablet Layout */}
-                    <div className="lg:hidden p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-3">
+                return (
+                  <React.Fragment key={order.id}>
+                    {/* Main Row */}
+                    <div
+                      className="border-b hover:bg-gray-50 cursor-pointer transition-colors"
+                      onClick={() => toggleRowExpansion(order.id)}
+                    >
+                      {/* Desktop Layout */}
+                      <div className="hidden lg:grid lg:grid-cols-9 py-2 px-4 gap-4 items-center">
+                        <div className="flex items-center gap-2">
                           {expandedRows.has(order.id) ? (
                             <ChevronDown className="h-4 w-4 text-gray-400" />
                           ) : (
                             <ChevronRight className="h-4 w-4 text-gray-400" />
                           )}
-                          <div>
-                            <div className="font-medium font-jakarta text-gray-900">
-                              #{order.id}
-                            </div>
-                          </div>
+                          <span className="font-semibold text-sm font-jakarta text-gray-900">
+                            #{order.id.slice(0, 7)}{" "}
+                            {/* Trim to first 8 characters */}
+                          </span>
                         </div>
-                        <div className="text-right">
-                          <div className="font-medium font-jakarta text-gray-900">
-                            {new Date(order.createdAt).toLocaleDateString()}
-                          </div>
-                          <div className="text-xs sm:text-sm font-jakarta text-gray-600">
-                            {order.purpose}
-                          </div>
+                        <div className="text-gray-600 text-sm font-jakarta">
+                          {new Date(order.createdAt).toLocaleDateString()}
                         </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-y-3 text-sm mb-3">
+                        <div className="text-gray-600 text-sm font-jakarta">
+                          {order.purpose}
+                        </div>
+                        <div className="text-gray-600 text-sm font-jakarta">
+                          {order.studentName}
+                        </div>
+                        <div className="text-gray-600 text-sm font-jakarta">
+                          {order.currency}
+                        </div>
+                        <div className="font-semibold text-sm font-jakarta text-gray-900">
+                          {order.amount}
+                        </div>
                         <div>
-                          <span className="text-xs sm:text-sm text-gray-600 font-jakarta">
-                            Name:
-                          </span>
-                          <div className="font-medium font-jakarta text-gray-900 text-sm sm:text-base">
-                            {order.studentName}
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-xs sm:text-sm text-gray-600 font-jakarta">
-                            Status:
-                          </span>
-                          <div
-                            className="flex justify-end"
-                            onClick={(e) => e.stopPropagation()}
+                          <button
+                            className={`w-24 h-7 rounded-sm text-xs font-medium border ${
+                              order.fxRateUpdated
+                                ? "bg-white border-gray-800 text-gray-800 font-bold cursor-default"
+                                : "bg-white text-red-600 border-red-600 font-bold hover:bg-red-50 cursor-pointer"
+                            }`}
+                            onClick={(e) => {
+                              if (!order.fxRateUpdated) {
+                                e.stopPropagation();
+                                handleUpdateRateClick(order);
+                              }
+                            }}
+                            disabled={order.fxRateUpdated}
                           >
-                            {renderStatusElement(order)}
-                          </div>
+                            {order.fxRateUpdated ? "UPDATED" : "UPDATE RATE"}
+                          </button>
                         </div>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <button
-                          className={`w-24 sm:w-28 h-7 rounded-sm text-xs font-medium border ${
-                            order.fxRateUpdated
-                              ? "bg-white border-gray-800 text-gray-800 font-bold cursor-default"
-                              : "bg-white text-red-600 border-red-600 font-bold hover:bg-red-50 cursor-pointer"
-                          }`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleUpdateRateClick(order);
-                          }}
-                        >
-                          {order.fxRateUpdated ? "UPDATED" : "UPDATE RATE"}
-                        </button>
+                        <div onClick={(e) => e.stopPropagation()}>
+                          {renderStatusElement(order)}
+                        </div>
                         <div onClick={(e) => e.stopPropagation()}>
                           <Button
                             size="sm"
-                            className="bg-dark-blue text-white h-7 px-3"
+                            className="bg-dark-blue text-white px-2 py-2 text-xs h-7"
                           >
-                            <Upload className="h-3 w-3 mr-1" />
+                            <Upload className="h-3 w-3" />
                             Uploads
                           </Button>
                         </div>
                       </div>
-                    </div>
-                  </div>
-
-                  {/* Expanded Details */}
-                  {expandedRows.has(order.id) && (
-                    <div className="border-b">
-                      <div className="py-4 sm:py-6 px-4 sm:px-6">
-                        {/* Initial Details Grid */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-4xl">
-                          <div>
-                            <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
-                              Purpose
-                            </h4>
-                            <p className="text-gray-600 text-sm sm:text-base font-jakarta bg-gray-50 p-2 sm:p-3 rounded-sm">
+                      {/* Mobile/Tablet Layout */}
+                      <div className="lg:hidden p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            {expandedRows.has(order.id) ? (
+                              <ChevronDown className="h-4 w-4 text-gray-400" />
+                            ) : (
+                              <ChevronRight className="h-4 w-4 text-gray-400" />
+                            )}
+                            <div>
+                              <div className="font-medium font-jakarta text-gray-900">
+                                #{order.id}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-medium font-jakarta text-gray-900">
+                              {new Date(order.createdAt).toLocaleDateString()}
+                            </div>
+                            <div className="text-xs sm:text-sm font-jakarta text-gray-600">
                               {order.purpose}
-                            </p>
-                          </div>
-                          <div>
-                            <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
-                              Receiver&apos;s full name
-                            </h4>
-                            <p className="text-gray-600 text-sm sm:text-base font-jakarta bg-gray-50 p-2 sm:p-3 rounded-sm">
-                              {order.studentName}
-                            </p>
-                          </div>
-                          <div>
-                            <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
-                              Receiver&apos;s account
-                            </h4>
-                            <p className="text-gray-600 text-xs sm:text-sm font-jakarta break-all bg-gray-50 p-2 sm:p-3 rounded-sm">
-                              {order.receiverAccount || "-"}
-                            </p>
-                          </div>
-                          <div>
-                            <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
-                              Receiver Country
-                            </h4>
-                            <p className="text-gray-600 text-sm sm:text-base font-jakarta bg-gray-50 p-2 sm:p-3 rounded-sm">
-                              {order.receiverBankCountry || "-"}
-                            </p>
-                          </div>
-                          <div>
-                            <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
-                              Forex Partner
-                            </h4>
-                            <p className="text-gray-600 text-sm sm:text-base font-jakarta bg-gray-50 p-2 sm:p-3 rounded-sm">
-                              {order.forexPartner || "-"}
-                            </p>
+                            </div>
                           </div>
                         </div>
+                        <div className="grid grid-cols-2 gap-y-3 text-sm mb-3">
+                          <div>
+                            <span className="text-xs sm:text-sm text-gray-600 font-jakarta">
+                              Name:
+                            </span>
+                            <div className="font-medium font-jakarta text-gray-900 text-sm sm:text-base">
+                              {order.studentName}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-xs sm:text-sm text-gray-600 font-jakarta">
+                              Status:
+                            </span>
+                            <div
+                              className="flex justify-end"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {renderStatusElement(order)}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <button
+                            className={`w-24 sm:w-28 h-7 rounded-sm text-xs font-medium border ${
+                              order.fxRateUpdated
+                                ? "bg-white border-gray-800 text-gray-800 font-bold cursor-default"
+                                : "bg-white text-red-600 border-red-600 font-bold hover:bg-red-50 cursor-pointer"
+                            }`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleUpdateRateClick(order);
+                            }}
+                          >
+                            {order.fxRateUpdated ? "UPDATED" : "UPDATE RATE"}
+                          </button>
+                          <div onClick={(e) => e.stopPropagation()}>
+                            <Button
+                              size="sm"
+                              className="bg-dark-blue text-white h-7 px-3"
+                            >
+                              <Upload className="h-3 w-3 mr-1" />
+                              Uploads
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Expanded Details */}
+                    {expandedRows.has(order.id) && (
+                      <div className="border-b">
+                        <div className="py-4 sm:py-6 px-4 sm:px-6">
+                          {/* Initial Details Grid */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-4xl">
+                            <div>
+                              <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
+                                Purpose
+                              </h4>
+                              <p className="text-gray-600 text-sm sm:text-base font-jakarta bg-gray-50 p-2 sm:p-3 rounded-sm">
+                                {order.purpose}
+                              </p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
+                                Receiver&apos;s full name
+                              </h4>
+                              <p className="text-gray-600 text-sm sm:text-base font-jakarta bg-gray-50 p-2 sm:p-3 rounded-sm">
+                                {beneficiary?.receiverFullName ||
+                                  order.studentName ||
+                                  "-"}
+                              </p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
+                                Receiver&apos;s account
+                              </h4>
+                              <p className="text-gray-600 text-xs sm:text-sm font-jakarta break-all bg-gray-50 p-2 sm:p-3 rounded-sm">
+                                {beneficiary?.receiverAccount ||
+                                  order.receiverAccount ||
+                                  "-"}
+                              </p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
+                                Receiver Country
+                              </h4>
+                              <p className="text-gray-600 text-sm sm:text-base font-jakarta bg-gray-50 p-2 sm:p-3 rounded-sm">
+                                {beneficiary?.receiverBankCountry ||
+                                  order.receiverBankCountry ||
+                                  "-"}
+                              </p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
+                                Forex Partner
+                              </h4>
+                              <p className="text-gray-600 text-sm sm:text-base font-jakarta bg-gray-50 p-2 sm:p-3 rounded-sm">
+                                {order.forexPartner || "-"}
+                              </p>
+                            </div>
+                          </div>
 
-                        {/* Authorization Section */}
-                        {order.status !== "Authorized" && (
-                          <div className="mt-4 sm:mt-6">
-                            {!expandedAuthorize[order.id] ? (
-                              // Initial Authorize Button (Blue)
-                              <div className="flex justify-center sm:justify-end mt-[-62px] mr-[-33px]">
-                                <Button
-                                  type="button"
-                                  onClick={() =>
-                                    setExpandedAuthorize((prev) => ({
-                                      ...prev,
-                                      [order.id]: true,
-                                    }))
-                                  }
-                                  className="text-white hover:opacity-90 flex items-center gap-2 h-10 sm:h-12 rounded-md px-4 sm:px-6 mt-2 sm:mt-0 sm:mr-[275px]"
-                                  style={{
-                                    background:
-                                      "linear-gradient(to right, #614385, #516395)",
-                                  }}
+                          {/* Authorization Section - Only show if status is "Received" */}
+                          {showAuthorizeButton && (
+                            <div className="mt-4 sm:mt-6">
+                              {!expandedAuthorize[order.id] ? (
+                                // Initial Authorize Button (Blue) - Dynamic spacing
+                                <div
+                                  className={`flex ${
+                                    expandedRows.has(order.id)
+                                      ? "justify-end"
+                                      : "justify-center sm:justify-end"
+                                  } mt-[-70px] mr-[-33px]`}
                                 >
-                                  <Image
-                                    src="/Frames.png"
-                                    alt=""
-                                    width={47}
-                                    height={35}
-                                    className="w-8 h-8 sm:w-6 sm:h-6"
-                                  />
-                                  <span className="text-sm sm:text-base">
-                                    Authorize
-                                  </span>
-                                  <div className="flex ml-1">
-                                    <span className="text-white font-bold">
-                                      &gt;&gt;&gt;
-                                    </span>
-                                  </div>
-                                </Button>
-                              </div>
-                            ) : (
-                              // Expanded Authorization Form
-                              <div className="relative text-black">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-4xl">
-                                  {/* Foreign Currency */}
-                                  <div>
-                                    <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
-                                      Foreign currency
-                                    </h4>
-                                    <Select
-                                      value={
-                                        formValidation[order.id]?.currency || ""
-                                      }
-                                      onValueChange={(value) => {
-                                        setFormValidation((prev) => ({
-                                          ...prev,
-                                          [order.id]: {
-                                            ...prev[order.id],
-                                            currency: value,
-                                            isValid: validateOrderForm(order, {
-                                              ...prev[order.id],
-                                              currency: value,
-                                            }),
-                                          },
-                                        }));
-                                      }}
-                                    >
-                                      <SelectTrigger
-                                        className={`bg-white border h-10 sm:h-12 ${
-                                          formValidation[order.id]?.currency &&
-                                          formValidation[order.id]?.currency !==
-                                            order.currency
-                                            ? "border-red-500"
-                                            : "border-gray-200"
-                                        }`}
-                                      >
-                                        <SelectValue placeholder="Select currency" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="USD">USD</SelectItem>
-                                        <SelectItem value="EUR">EUR</SelectItem>
-                                        <SelectItem value="GBP">GBP</SelectItem>
-                                        <SelectItem value="CAD">CAD</SelectItem>
-                                        <SelectItem value="AUD">AUD</SelectItem>
-                                        <SelectItem value="CHF">CHF</SelectItem>
-                                        <SelectItem value="AED">AED</SelectItem>
-                                        <SelectItem value="NZD">NZD</SelectItem>
-                                        <SelectItem value="SEK">SEK</SelectItem>
-                                        <SelectItem value="GEL">GEL</SelectItem>
-                                        <SelectItem value="BGN">BGN</SelectItem>
-                                        <SelectItem value="UZS">UZS</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                    {formValidation[order.id]?.currency &&
-                                      formValidation[order.id]?.currency !==
-                                        order.currency && (
-                                        <p className="text-red-500 text-xs mt-1">
-                                          Currency must match order currency:{" "}
-                                          {order.currency}
-                                        </p>
-                                      )}
-                                  </div>
-
-                                  {/* FC Volume */}
-                                  <div>
-                                    <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
-                                      FC Volume
-                                    </h4>
-                                    <div
-                                      className={`bg-white p-2 sm:p-3 rounded-sm border ${
-                                        formValidation[order.id]?.fcyAmt &&
-                                        Number.parseFloat(
-                                          formValidation[order.id]?.fcyAmt ||
-                                            "0"
-                                        ) !== order.amount
-                                          ? "border-red-500"
-                                          : "border-gray-200"
-                                      }`}
-                                    >
-                                      <input
-                                        type="text"
-                                        name="fcyAmt"
-                                        value={
-                                          formValidation[order.id]?.fcyAmt || ""
-                                        }
-                                        onChange={(e) => {
-                                          setFormValidation((prev) => ({
-                                            ...prev,
-                                            [order.id]: {
-                                              ...prev[order.id],
-                                              fcyAmt: e.target.value,
-                                              isValid: validateOrderForm(
-                                                order,
-                                                {
-                                                  ...prev[order.id],
-                                                  fcyAmt: e.target.value,
-                                                }
-                                              ),
-                                            },
-                                          }));
-                                        }}
-                                        className="w-full font-medium text-sm sm:text-base text-black focus:outline-none bg-transparent"
-                                        placeholder="Enter amount"
-                                      />
-                                    </div>
-                                    {formValidation[order.id]?.fcyAmt &&
-                                      Number.parseFloat(
-                                        formValidation[order.id]?.fcyAmt || "0"
-                                      ) !== order.amount && (
-                                        <p className="text-red-500 text-xs mt-1">
-                                          Amount must match order amount:{" "}
-                                          {order.amount}
-                                        </p>
-                                      )}
-                                  </div>
-
-                                  {/* Purpose */}
-                                  <div>
-                                    <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
-                                      Purpose
-                                    </h4>
-                                    <Select
-                                      value={
-                                        formValidation[order.id]?.purpose || ""
-                                      }
-                                      onValueChange={(value) => {
-                                        setFormValidation((prev) => ({
-                                          ...prev,
-                                          [order.id]: {
-                                            ...prev[order.id],
-                                            purpose: value,
-                                            isValid: validateOrderForm(order, {
-                                              ...prev[order.id],
-                                              purpose: value,
-                                            }),
-                                          },
-                                        }));
-                                      }}
-                                    >
-                                      <SelectTrigger
-                                        className={`bg-white border h-10 sm:h-12 ${
-                                          formValidation[order.id]?.purpose &&
-                                          formValidation[order.id]?.purpose !==
-                                            order.purpose
-                                            ? "border-red-500"
-                                            : "border-gray-200"
-                                        }`}
-                                      >
-                                        <SelectValue placeholder="Select purpose" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="University fee transfer">
-                                          University fee transfer
-                                        </SelectItem>
-                                        <SelectItem value="Student Living expenses transfer">
-                                          Student Living expenses transfer
-                                        </SelectItem>
-                                        <SelectItem value="Student Visa fee payment">
-                                          Student Visa fee payment
-                                        </SelectItem>
-                                        <SelectItem value="Convera registered payment">
-                                          Convera registered payment
-                                        </SelectItem>
-                                        <SelectItem value="Flywire registered payment">
-                                          Flywire registered payment
-                                        </SelectItem>
-                                        <SelectItem value="Blocked account transfer">
-                                          Blocked account transfer
-                                        </SelectItem>
-                                        <SelectItem value="Application fee">
-                                          Application fee
-                                        </SelectItem>
-                                        <SelectItem value="Accomodation fee">
-                                          Accomodation fee
-                                        </SelectItem>
-                                        <SelectItem value="GIC Canada fee deposite">
-                                          GIC Canada fee deposite
-                                        </SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                    {formValidation[order.id]?.purpose &&
-                                      formValidation[order.id]?.purpose !==
-                                        order.purpose && (
-                                        <p className="text-red-500 text-xs mt-1">
-                                          Purpose must match order purpose:{" "}
-                                          {order.purpose}
-                                        </p>
-                                      )}
-                                  </div>
-
-                                  {/* Account Number */}
-                                  <div>
-                                    <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
-                                      Account no.
-                                    </h4>
-                                    <div
-                                      className={`bg-white p-2 sm:p-3 rounded-sm border ${
-                                        formValidation[order.id]
-                                          ?.receiverAccount &&
-                                        formValidation[order.id]
-                                          ?.receiverAccount !==
-                                          order.receiverAccount
-                                          ? "border-red-500"
-                                          : "border-gray-200"
-                                      }`}
-                                    >
-                                      <input
-                                        type="text"
-                                        name="receiverAccount"
-                                        value={
-                                          formValidation[order.id]
-                                            ?.receiverAccount || ""
-                                        }
-                                        onChange={(e) => {
-                                          setFormValidation((prev) => ({
-                                            ...prev,
-                                            [order.id]: {
-                                              ...prev[order.id],
-                                              receiverAccount: e.target.value,
-                                              isValid: validateOrderForm(
-                                                order,
-                                                {
-                                                  ...prev[order.id],
-                                                  receiverAccount:
-                                                    e.target.value,
-                                                }
-                                              ),
-                                            },
-                                          }));
-                                        }}
-                                        className="w-full font-medium text-sm sm:text-base text-black focus:outline-none bg-transparent"
-                                        placeholder="Enter account number"
-                                      />
-                                    </div>
-                                    {formValidation[order.id]
-                                      ?.receiverAccount &&
-                                      formValidation[order.id]
-                                        ?.receiverAccount !==
-                                        order.receiverAccount && (
-                                        <p className="text-red-500 text-xs mt-1">
-                                          Account number must match order
-                                          account: {order.receiverAccount}
-                                        </p>
-                                      )}
-                                  </div>
-
-                                  {/* Rate Block Status */}
-                                  <div className="sm:col-span-2 lg:col-span-1">
-                                    <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
-                                      Rate block status
-                                    </h4>
-                                    <div className="flex flex-col sm:flex-row gap-4">
-                                      <Select
-                                        value={statusSelections[order.id] || ""}
-                                        onValueChange={(value) => {
-                                          setStatusSelections((prev) => ({
-                                            ...prev,
-                                            [order.id]: value,
-                                          }));
-                                          if (value === "Blocked") {
-                                            setSelectedOrderForIbr(order);
-                                            setIbrModalRate("");
-                                            setShowIbrModal(true);
-                                          }
-                                        }}
-                                      >
-                                        <SelectTrigger className="bg-gray-50 h-10 sm:h-12">
-                                          <SelectValue placeholder="Select status" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="pending">
-                                            Pending
-                                          </SelectItem>
-                                          <SelectItem value="Blocked">
-                                            Blocked
-                                          </SelectItem>
-                                        </SelectContent>
-                                      </Select>
-
-                                      <Button
-                                        className={`h-10 sm:h-12 px-4 sm:px-6 ${
-                                          !formValidation[order.id]?.isValid &&
-                                          statusSelections[order.id] ===
-                                            "Blocked"
-                                            ? "bg-gray-400 cursor-not-allowed"
-                                            : "bg-dark-blue hover:bg-dark-blue"
-                                        } text-white`}
-                                        disabled={
-                                          !formValidation[order.id]?.isValid &&
-                                          statusSelections[order.id] ===
-                                            "Blocked"
-                                        }
-                                        onClick={() => {
-                                          if (
-                                            statusSelections[order.id] ===
-                                              "Blocked" &&
-                                            formValidation[order.id]?.isValid
-                                          ) {
-                                            setAuthorizedOrders(
-                                              (prev) =>
-                                                new Set([
-                                                  ...Array.from(prev),
-                                                  order.id,
-                                                ])
-                                            );
-                                            handleStatusChange(
-                                              order.id,
-                                              "Authorized"
-                                            );
-                                            setExpandedAuthorize((prev) => ({
-                                              ...prev,
-                                              [order.id]: false,
-                                            }));
-                                          } else if (
-                                            statusSelections[order.id] !==
-                                            "Blocked"
-                                          ) {
-                                            handleStatusChange(
-                                              order.id,
-                                              "Authorized"
-                                            );
-                                            setExpandedAuthorize((prev) => ({
-                                              ...prev,
-                                              [order.id]: false,
-                                            }));
-                                          }
-                                        }}
-                                      >
-                                        Submit
-                                      </Button>
-                                    </div>
-                                  </div>
-                                </div>
-
-                                {/* Authorize Button - Changes color based on status */}
-                                <div className="flex justify-center sm:justify-end sm:absolute sm:top-[-87px] sm:right-[275px] mt-4 sm:mt-0">
                                   <Button
-                                    className={`text-white flex items-center gap-2 h-10 sm:h-12 rounded-md px-4 sm:px-6 ${
-                                      authorizedOrders.has(order.id)
-                                        ? "cursor-default"
-                                        : "cursor-pointer"
-                                    }`}
-                                    onClick={() => {
-                                      if (!authorizedOrders.has(order.id)) {
-                                        handleStatusChange(
-                                          order.id,
-                                          "Authorized"
-                                        );
-                                        setExpandedAuthorize((prev) => ({
-                                          ...prev,
-                                          [order.id]: false,
-                                        }));
-                                      }
-                                    }}
+                                    type="button"
+                                    onClick={() =>
+                                      setExpandedAuthorize((prev) => ({
+                                        ...prev,
+                                        [order.id]: true,
+                                      }))
+                                    }
+                                    className="text-white hover:opacity-90 flex items-center gap-2 h-10 sm:h-12 rounded-md px-4 sm:px-6 sm:mt-0 sm:mr-[135px]"
                                     style={{
                                       background:
-                                        authorizedOrders.has(order.id) ||
-                                        order.status === "Authorized"
-                                          ? "linear-gradient(to right, #61C454, #414143)"
-                                          : "linear-gradient(to right, #614385, #516395)",
+                                        "linear-gradient(to right, #614385, #516395)",
                                     }}
                                   >
                                     <Image
                                       src="/Frames.png"
                                       alt=""
-                                      width={20}
-                                      height={20}
-                                      className="w-5 h-5 sm:w-6 sm:h-6"
+                                      width={47}
+                                      height={35}
+                                      className="w-8 h-8 sm:w-6 sm:h-6"
                                     />
                                     <span className="text-sm sm:text-base">
-                                      {authorizedOrders.has(order.id) ||
-                                      order.status === "Authorized"
-                                        ? "Authorized"
-                                        : "Authorize"}
+                                      Authorize
                                     </span>
                                     <div className="flex ml-1">
-                                      <span className="text-white font-bold animate-bounce-slower">
+                                      <span className="text-white font-bold">
                                         &gt;&gt;&gt;
                                       </span>
                                     </div>
                                   </Button>
                                 </div>
-                              </div>
-                            )}
-                          </div>
-                        )}
+                              ) : (
+                                // Expanded Authorization Form
+                                <div className="relative text-black">
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-4xl">
+                                    {/* Foreign Currency */}
+                                    <div>
+                                      <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
+                                        Foreign currency
+                                      </h4>
+                                      <Select
+                                        value={
+                                          formValidation[order.id]?.currency ||
+                                          ""
+                                        }
+                                        onValueChange={(value) => {
+                                          setFormValidation((prev) => ({
+                                            ...prev,
+                                            [order.id]: {
+                                              ...prev[order.id],
+                                              currency: value,
+                                              isValid: validateOrderForm(
+                                                order,
+                                                beneficiary,
+                                                {
+                                                  ...prev[order.id],
+                                                  currency: value,
+                                                }
+                                              ),
+                                            },
+                                          }));
+                                        }}
+                                      >
+                                        <SelectTrigger
+                                          className={`bg-white border h-10 sm:h-12 ${
+                                            formValidation[order.id]
+                                              ?.currency &&
+                                            formValidation[order.id]
+                                              ?.currency !== order.currency
+                                              ? "border-red-500"
+                                              : "border-gray-200"
+                                          }`}
+                                        >
+                                          <SelectValue placeholder="Select currency" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="USD">
+                                            USD
+                                          </SelectItem>
+                                          <SelectItem value="EUR">
+                                            EUR
+                                          </SelectItem>
+                                          <SelectItem value="GBP">
+                                            GBP
+                                          </SelectItem>
+                                          <SelectItem value="CAD">
+                                            CAD
+                                          </SelectItem>
+                                          <SelectItem value="AUD">
+                                            AUD
+                                          </SelectItem>
+                                          <SelectItem value="CHF">
+                                            CHF
+                                          </SelectItem>
+                                          <SelectItem value="AED">
+                                            AED
+                                          </SelectItem>
+                                          <SelectItem value="NZD">
+                                            NZD
+                                          </SelectItem>
+                                          <SelectItem value="SEK">
+                                            SEK
+                                          </SelectItem>
+                                          <SelectItem value="GEL">
+                                            GEL
+                                          </SelectItem>
+                                          <SelectItem value="BGN">
+                                            BGN
+                                          </SelectItem>
+                                          <SelectItem value="UZS">
+                                            UZS
+                                          </SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                      {formValidation[order.id]?.currency &&
+                                        formValidation[order.id]?.currency !==
+                                          order.currency && (
+                                          <p className="text-red-500 text-xs mt-1">
+                                            Currency must match order currency:{" "}
+                                            {order.currency}
+                                          </p>
+                                        )}
+                                    </div>
+                                    {/* FC Volume */}
+                                    <div>
+                                      <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
+                                        FC Volume
+                                      </h4>
+                                      <div
+                                        className={`bg-white p-2 sm:p-3 rounded-sm border ${
+                                          formValidation[order.id]?.fcyAmt &&
+                                          Number.parseFloat(
+                                            formValidation[order.id]?.fcyAmt ||
+                                              "0"
+                                          ) !== order.amount
+                                            ? "border-red-500"
+                                            : "border-gray-200"
+                                        }`}
+                                      >
+                                        <input
+                                          type="text"
+                                          name="fcyAmt"
+                                          value={
+                                            formValidation[order.id]?.fcyAmt ||
+                                            ""
+                                          }
+                                          onChange={(e) => {
+                                            setFormValidation((prev) => ({
+                                              ...prev,
+                                              [order.id]: {
+                                                ...prev[order.id],
+                                                fcyAmt: e.target.value,
+                                                isValid: validateOrderForm(
+                                                  order,
+                                                  beneficiary,
+                                                  {
+                                                    ...prev[order.id],
+                                                    fcyAmt: e.target.value,
+                                                  }
+                                                ),
+                                              },
+                                            }));
+                                          }}
+                                          className="w-full font-medium text-sm sm:text-base text-black focus:outline-none bg-transparent"
+                                          placeholder="Enter amount"
+                                        />
+                                      </div>
+                                      {formValidation[order.id]?.fcyAmt &&
+                                        Number.parseFloat(
+                                          formValidation[order.id]?.fcyAmt ||
+                                            "0"
+                                        ) !== order.amount && (
+                                          <p className="text-red-500 text-xs mt-1">
+                                            Amount must match order amount:{" "}
+                                            {order.amount}
+                                          </p>
+                                        )}
+                                    </div>
+                                    {/* Purpose */}
+                                    <div>
+                                      <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
+                                        Purpose
+                                      </h4>
+                                      <Select
+                                        value={
+                                          formValidation[order.id]?.purpose ||
+                                          ""
+                                        }
+                                        onValueChange={(value) => {
+                                          setFormValidation((prev) => ({
+                                            ...prev,
+                                            [order.id]: {
+                                              ...prev[order.id],
+                                              purpose: value,
+                                              isValid: validateOrderForm(
+                                                order,
+                                                beneficiary,
+                                                {
+                                                  ...prev[order.id],
+                                                  purpose: value,
+                                                }
+                                              ),
+                                            },
+                                          }));
+                                        }}
+                                      >
+                                        <SelectTrigger
+                                          className={`bg-white border h-10 sm:h-12 ${
+                                            formValidation[order.id]?.purpose &&
+                                            formValidation[order.id]
+                                              ?.purpose !== order.purpose
+                                              ? "border-red-500"
+                                              : "border-gray-200"
+                                          }`}
+                                        >
+                                          <SelectValue placeholder="Select purpose" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="University fee transfer">
+                                            University fee transfer
+                                          </SelectItem>
+                                          <SelectItem value="Student Living expenses transfer">
+                                            Student Living expenses transfer
+                                          </SelectItem>
+                                          <SelectItem value="Student Visa fee payment">
+                                            Student Visa fee payment
+                                          </SelectItem>
+                                          <SelectItem value="Convera registered payment">
+                                            Convera registered payment
+                                          </SelectItem>
+                                          <SelectItem value="Flywire registered payment">
+                                            Flywire registered payment
+                                          </SelectItem>
+                                          <SelectItem value="Blocked account transfer">
+                                            Blocked account transfer
+                                          </SelectItem>
+                                          <SelectItem value="Application fee">
+                                            Application fee
+                                          </SelectItem>
+                                          <SelectItem value="Accomodation fee">
+                                            Accomodation fee
+                                          </SelectItem>
+                                          <SelectItem value="GIC Canada fee deposite">
+                                            GIC Canada fee deposite
+                                          </SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                      {formValidation[order.id]?.purpose &&
+                                        formValidation[order.id]?.purpose !==
+                                          order.purpose && (
+                                          <p className="text-red-500 text-xs mt-1">
+                                            Purpose must match order purpose:{" "}
+                                            {order.purpose}
+                                          </p>
+                                        )}
+                                    </div>
+                                    {/* Receiver Full Name */}
+                                    <div>
+                                      <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
+                                        Receiver&apos;s full name
+                                      </h4>
+                                      <div
+                                        className={`bg-white p-2 sm:p-3 rounded-sm border ${
+                                          formValidation[order.id]
+                                            ?.receiverFullName &&
+                                          formValidation[order.id]
+                                            ?.receiverFullName !==
+                                            beneficiary?.receiverFullName
+                                            ? "border-red-500"
+                                            : "border-gray-200"
+                                        }`}
+                                      >
+                                        <input
+                                          type="text"
+                                          name="receiverFullName"
+                                          value={
+                                            formValidation[order.id]
+                                              ?.receiverFullName || ""
+                                          }
+                                          onChange={(e) => {
+                                            setFormValidation((prev) => ({
+                                              ...prev,
+                                              [order.id]: {
+                                                ...prev[order.id],
+                                                receiverFullName:
+                                                  e.target.value,
+                                                isValid: validateOrderForm(
+                                                  order,
+                                                  beneficiary,
+                                                  {
+                                                    ...prev[order.id],
+                                                    receiverFullName:
+                                                      e.target.value,
+                                                  }
+                                                ),
+                                              },
+                                            }));
+                                          }}
+                                          className="w-full font-medium text-sm sm:text-base text-black focus:outline-none bg-transparent"
+                                          placeholder="Enter receiver's full name"
+                                        />
+                                      </div>
+                                      {formValidation[order.id]
+                                        ?.receiverFullName &&
+                                        formValidation[order.id]
+                                          ?.receiverFullName !==
+                                          beneficiary?.receiverFullName && (
+                                          <p className="text-red-500 text-xs mt-1">
+                                            Name must match beneficiary name:{" "}
+                                            {beneficiary?.receiverFullName}
+                                          </p>
+                                        )}
+                                    </div>
+                                    {/* Account Number */}
+                                    <div>
+                                      <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
+                                        Account no.
+                                      </h4>
+                                      <div
+                                        className={`bg-white p-2 sm:p-3 rounded-sm border ${
+                                          formValidation[order.id]
+                                            ?.receiverAccount &&
+                                          formValidation[order.id]
+                                            ?.receiverAccount !==
+                                            beneficiary?.receiverAccount
+                                            ? "border-red-500"
+                                            : "border-gray-200"
+                                        }`}
+                                      >
+                                        <input
+                                          type="text"
+                                          name="receiverAccount"
+                                          value={
+                                            formValidation[order.id]
+                                              ?.receiverAccount || ""
+                                          }
+                                          onChange={(e) => {
+                                            setFormValidation((prev) => ({
+                                              ...prev,
+                                              [order.id]: {
+                                                ...prev[order.id],
+                                                receiverAccount: e.target.value,
+                                                isValid: validateOrderForm(
+                                                  order,
+                                                  beneficiary,
+                                                  {
+                                                    ...prev[order.id],
+                                                    receiverAccount:
+                                                      e.target.value,
+                                                  }
+                                                ),
+                                              },
+                                            }));
+                                          }}
+                                          className="w-full font-medium text-sm sm:text-base text-black focus:outline-none bg-transparent"
+                                          placeholder="Enter account number"
+                                        />
+                                      </div>
+                                      {formValidation[order.id]
+                                        ?.receiverAccount &&
+                                        formValidation[order.id]
+                                          ?.receiverAccount !==
+                                          beneficiary?.receiverAccount && (
+                                          <p className="text-red-500 text-xs mt-1">
+                                            Account number must match
+                                            beneficiary account:{" "}
+                                            {beneficiary?.receiverAccount}
+                                          </p>
+                                        )}
+                                    </div>
+                                    {/* Rate Block Status */}
+                                    <div className="sm:col-span-2 lg:col-span-1">
+                                      <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
+                                        Rate block status
+                                      </h4>
+                                      <div className="flex flex-col sm:flex-row gap-4">
+                                        <Select
+                                          value={
+                                            statusSelections[order.id] || ""
+                                          }
+                                          onValueChange={(value) => {
+                                            setStatusSelections((prev) => ({
+                                              ...prev,
+                                              [order.id]: value,
+                                            }));
+                                            if (value === "Blocked") {
+                                              setSelectedOrderForIbr(order);
+                                              setIbrModalRate("");
+                                              setShowIbrModal(true);
+                                            }
+                                          }}
+                                        >
+                                          <SelectTrigger className="bg-gray-50 h-10 sm:h-12">
+                                            <SelectValue placeholder="Select status" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="pending">
+                                              Pending
+                                            </SelectItem>
+                                            <SelectItem value="Blocked">
+                                              Blocked
+                                            </SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                        <Button
+                                          className={`h-10 sm:h-12 px-4 sm:px-6 ${
+                                            !formValidation[order.id]
+                                              ?.isValid &&
+                                            statusSelections[order.id] ===
+                                              "Blocked"
+                                              ? "bg-gray-400 cursor-not-allowed"
+                                              : "bg-dark-blue hover:bg-dark-blue"
+                                          } text-white`}
+                                          disabled={
+                                            !formValidation[order.id]
+                                              ?.isValid &&
+                                            statusSelections[order.id] ===
+                                              "Blocked"
+                                          }
+                                          onClick={() => {
+                                            if (
+                                              statusSelections[order.id] ===
+                                                "Blocked" &&
+                                              formValidation[order.id]?.isValid
+                                            ) {
+                                              setAuthorizeOrders(
+                                                (prev) =>
+                                                  new Set([
+                                                    ...Array.from(prev),
+                                                    order.id,
+                                                  ])
+                                              );
+                                              handleStatusChange(
+                                                order.id,
+                                                "Authorize"
+                                              );
+                                              setExpandedAuthorize((prev) => ({
+                                                ...prev,
+                                                [order.id]: false,
+                                              }));
+                                            } else if (
+                                              statusSelections[order.id] !==
+                                              "Blocked"
+                                            ) {
+                                              handleStatusChange(
+                                                order.id,
+                                                "Authorize"
+                                              );
+                                              setExpandedAuthorize((prev) => ({
+                                                ...prev,
+                                                [order.id]: false,
+                                              }));
+                                            }
+                                          }}
+                                        >
+                                          Submit
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  {/* Authorize Button - Changes color based on status */}
+                                  <div className="flex justify-center sm:justify-end sm:absolute sm:top-[-87px] sm:right-[275px] mt-4 sm:mt-0">
+                                    <Button
+                                      className={`text-white flex items-center gap-2 h-10 sm:h-12 rounded-md px-4 sm:px-6 ${
+                                        AuthorizeOrders.has(order.id)
+                                          ? "cursor-default"
+                                          : "cursor-pointer"
+                                      }`}
+                                      onClick={() => {
+                                        if (!AuthorizeOrders.has(order.id)) {
+                                          handleStatusChange(
+                                            order.id,
+                                            "Authorize"
+                                          );
+                                          setExpandedAuthorize((prev) => ({
+                                            ...prev,
+                                            [order.id]: false,
+                                          }));
+                                        }
+                                      }}
+                                      style={{
+                                        background:
+                                          AuthorizeOrders.has(order.id) ||
+                                          order.status === "Authorize"
+                                            ? "linear-gradient(to right, #61C454, #414143)"
+                                            : "linear-gradient(to right, #614385, #516395)",
+                                      }}
+                                    >
+                                      <Image
+                                        src="/Frames.png"
+                                        alt=""
+                                        width={20}
+                                        height={20}
+                                        className="w-5 h-5 sm:w-6 sm:h-6"
+                                      />
+                                      <span className="text-sm sm:text-base">
+                                        {AuthorizeOrders.has(order.id) ||
+                                        order.status === "Authorize"
+                                          ? "Authorize"
+                                          : "Authorize"}
+                                      </span>
+                                      <div className="flex ml-1">
+                                        <span className="text-white font-bold animate-bounce-slower">
+                                          &gt;&gt;&gt;
+                                        </span>
+                                      </div>
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </React.Fragment>
-              ))}
+                    )}
+                  </React.Fragment>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
@@ -1150,31 +1335,24 @@ export default function Dashboard() {
                 #{selectedOrder?.id}
               </span>
             </div>
-
             <div className="grid grid-cols-3 gap-4 text-sm font-medium">
               <span>IBR rate</span>
               <span>Customer rate</span>
               <span>Settlement rate</span>
             </div>
-
             <div className="grid grid-cols-3 gap-4">
-              {/* IBR Rate - Editable */}
               <input
                 type="text"
                 className="bg-gray-50 rounded p-2 text-sm"
                 value={ibrRate || ""}
                 onChange={(e) => setIbrRate(e.target.value)}
               />
-
-              {/* Customer Rate - Now Editable */}
               <input
                 type="text"
                 className="bg-gray-50 rounded p-2 text-sm"
                 value={customerRate || selectedOrder?.fxRate?.toFixed(2) || ""}
                 onChange={(e) => setCustomerRate(e.target.value)}
               />
-
-              {/* Settlement Rate - Editable */}
               <input
                 type="text"
                 className="bg-gray-50 rounded p-2 text-sm"
@@ -1183,7 +1361,6 @@ export default function Dashboard() {
               />
             </div>
           </div>
-
           <div className="flex justify-end mr-24">
             <button
               className="bg-dark-blue hover:bg-dark-blue text-white px-14 py-2 rounded-sm text-sm flex items-center"
@@ -1211,7 +1388,7 @@ export default function Dashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* IBR Rate Modal - Fixed to prevent page refresh */}
+      {/* IBR Rate Modal */}
       <Dialog open={showIbrModal} onOpenChange={setShowIbrModal}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
@@ -1227,7 +1404,6 @@ export default function Dashboard() {
                   #{selectedOrderForIbr?.id}
                 </span>
               </div>
-
               <div className="space-y-2">
                 <label className="text-sm font-medium">IBR Rate</label>
                 <input
@@ -1245,7 +1421,6 @@ export default function Dashboard() {
                 />
               </div>
             </div>
-
             <div className="flex justify-end gap-2">
               <Button
                 type="button"

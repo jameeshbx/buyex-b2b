@@ -170,6 +170,7 @@ export default function UploadsPage({
   const [studentEmail, setStudentEmail] = useState("");
   const [studentName, setStudentName] = useState("");
   const [isSharing, setIsSharing] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -186,22 +187,25 @@ export default function UploadsPage({
         throw new Error("Failed to fetch documents");
       }
       const documents = await response.json();
-      const docsArray: DocumentFromAPI[] = Array.isArray(documents) ? documents : [];
-      const initialFiles = docsArray.map((doc) => ({
-        id: doc.id,
-        name: doc.name || doc.type.split("/").pop() || doc.type,
-        type: doc.type,
-        size: 0,
-        comment: doc.comment || "",
-        uploadedBy: doc.uploadedBy || "-",
-        uploadedAt: new Date(doc.createdAt).toLocaleString(),
-        url: doc.imageUrl,
-        file: undefined,
-      })).sort(
-        (a, b) =>
-          new Date(b.uploadedAt).getTime() -
-          new Date(a.uploadedAt).getTime()
-      );
+      const docsArray: DocumentFromAPI[] = Array.isArray(documents)
+        ? documents
+        : [];
+      const initialFiles = docsArray
+        .map((doc) => ({
+          id: doc.id,
+          name: doc.name || doc.type.split("/").pop() || doc.type,
+          type: doc.type,
+          size: 0,
+          comment: doc.comment || "",
+          uploadedBy: doc.uploadedBy || "-",
+          uploadedAt: new Date(doc.createdAt).toLocaleString(),
+          url: doc.imageUrl,
+          file: undefined,
+        }))
+        .sort(
+          (a, b) =>
+            new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
+        );
 
       setUploadedFiles(initialFiles);
     } catch (error) {
@@ -297,23 +301,49 @@ export default function UploadsPage({
 
   const handleUpload = async () => {
     setValidationErrors([]);
+    setIsUploading(true);
 
     try {
       const uploadPromises = selectedFiles.map(async (selectedFile) => {
-        const fileReader = new FileReader();
-        const fileData = await new Promise<string>((resolve) => {
-          fileReader.onload = () => resolve(fileReader.result as string);
-          fileReader.readAsDataURL(selectedFile.file);
-        });
-
-        const response = await fetch("/api/upload/document", {
+        // Step 1: Get presigned URL from S3 API
+        const presignedResponse = await fetch("/api/upload/s3", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            role: "ORDER", // <-- must match your enum
-            userId: "current-user-id",
-            type: "OTHER", // <-- must match your enum
-            imageUrl: fileData,
+            fileName: selectedFile.file.name,
+            fileType: selectedFile.file.type,
+            folder: `orders/${orderId}/documents`,
+          }),
+        });
+
+        if (!presignedResponse.ok) {
+          throw new Error("Failed to get upload URL");
+        }
+
+        const { presignedUrl, cloudFrontUrl } = await presignedResponse.json();
+
+        // Step 2: Upload file directly to S3 using presigned URL
+        const uploadResponse = await fetch(presignedUrl, {
+          method: "PUT",
+          body: selectedFile.file,
+          headers: {
+            "Content-Type": selectedFile.file.type,
+          },
+        });
+
+        if (!uploadResponse.ok) {
+          throw new Error("Failed to upload file to S3");
+        }
+
+        // Step 3: Save document record with CloudFront URL
+        const documentResponse = await fetch("/api/upload/document", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            role: "ORDER",
+            userId: "",
+            type: "OTHER",
+            imageUrl: cloudFrontUrl, // Save CloudFront URL instead of file data
             orderId: orderId,
             name: selectedFile.file.name,
             uploadedBy: "Staff",
@@ -321,11 +351,11 @@ export default function UploadsPage({
           }),
         });
 
-        if (!response.ok) {
-          throw new Error("Failed to create document");
+        if (!documentResponse.ok) {
+          throw new Error("Failed to create document record");
         }
 
-        const document = await response.json();
+        const document = await documentResponse.json();
 
         return {
           id: document.id,
@@ -336,7 +366,7 @@ export default function UploadsPage({
           uploadedBy: "Staff",
           uploadedAt: new Date().toLocaleString(),
           file: selectedFile.file,
-          url: selectedFile.preview || document.imageUrl,
+          url: cloudFrontUrl, // Use CloudFront URL
         };
       });
 
@@ -350,18 +380,27 @@ export default function UploadsPage({
       setComment("");
 
       toast.custom(
-        <div className="bg-green-100 text-green-800 p-2 rounded">Success!</div>
+        <div className="bg-green-100 text-green-800 p-2 rounded">
+          Files uploaded successfully!
+        </div>
       );
-      await fetchDocuments(); // <--- Refresh the list after upload
+
+      // Refresh the list after upload
+      await fetchDocuments();
     } catch (error) {
       console.error("Error uploading files:", error);
       if (error instanceof z.ZodError) {
         setValidationErrors(error.errors.map((err) => err.message));
       } else {
         toast.custom(
-          <div className="bg-red-100 text-red-800 p-2 rounded"></div>
+          <div className="bg-red-100 text-red-800 p-2 rounded">
+            Failed to upload files:{" "}
+            {error instanceof Error ? error.message : "Unknown error"}
+          </div>
         );
       }
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -434,7 +473,7 @@ export default function UploadsPage({
           File updated successfully: {editFileName} has been updated
         </div>
       );
-    } catch  {
+    } catch {
       toast.custom(
         <div className="bg-red-100 text-red-800 p-2 rounded">
           Failed to update file
@@ -457,7 +496,7 @@ export default function UploadsPage({
           File deleted successfully
         </div>
       );
-    } catch  {
+    } catch {
       toast.custom(
         <div className="bg-red-100 text-red-800 p-2 rounded">
           Failed to delete file
@@ -533,8 +572,14 @@ export default function UploadsPage({
       formData.append("fileName", fileToSend.name);
       formData.append("fileComment", fileToSend.comment || "");
       formData.append("uploadedBy", fileToSend.uploadedBy || "Staff");
-      formData.append("uploadedAt", fileToSend.uploadedAt || new Date().toLocaleString());
-      formData.append("file", new File([fileBlob], fileToSend.name, { type: fileBlob.type }));
+      formData.append(
+        "uploadedAt",
+        fileToSend.uploadedAt || new Date().toLocaleString()
+      );
+      formData.append(
+        "file",
+        new File([fileBlob], fileToSend.name, { type: fileBlob.type })
+      );
 
       // 4. Send to your API
       const response = await fetch("/api/email/share-file", {
@@ -583,7 +628,7 @@ export default function UploadsPage({
 
       setStudentName(sender.studentName || "");
       setStudentEmail(sender.studentEmailOriginal || "");
-    } catch  {
+    } catch {
       // Optionally handle error
     }
   }, [orderId]);
@@ -732,11 +777,20 @@ export default function UploadsPage({
               />
               <Button
                 onClick={handleUpload}
-                disabled={selectedFiles.length === 0}
+                disabled={selectedFiles.length === 0 || isUploading}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
               >
-                <Upload className="h-4 w-4 mr-2" />
-                {fileUploadConstants.uploadButtonText}
+                {isUploading ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                    Uploading...
+                  </div>
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4 mr-2" />
+                    {fileUploadConstants.uploadButtonText}
+                  </>
+                )}
               </Button>
             </CardContent>
           </Card>
@@ -858,7 +912,9 @@ export default function UploadsPage({
                             checked={selectedFileForShare === file.id}
                             onChange={() =>
                               setSelectedFileForShare(
-                                file.id === selectedFileForShare ? null : file.id
+                                file.id === selectedFileForShare
+                                  ? null
+                                  : file.id
                               )
                             }
                           />
@@ -1035,5 +1091,3 @@ export default function UploadsPage({
     </div>
   );
 }
-
-
