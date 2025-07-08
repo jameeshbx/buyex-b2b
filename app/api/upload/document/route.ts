@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { DocumentRole, DocumentType } from "@/types/prisma";
+import { DocumentRole} from "@/types/prisma";
+import {  Prisma } from "@prisma/client";
+import { DocumentType } from "@prisma/client";
 
 // GET all documents
 export async function GET() {
@@ -68,7 +70,7 @@ export async function PUT(request: Request) {
       where: { id },
       data: {
         role: role as DocumentRole,
-        type: type as DocumentType,
+       type: { set: type } as Prisma.DocumentUpdateInput['type'],
         imageUrl,
         isVerified,
         name,

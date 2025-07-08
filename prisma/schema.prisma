@@ -182,6 +182,7 @@ model Order {
   beneficiary         Beneficiary? @relation(fields: [beneficiaryId], references: [id])
   sender              Sender?      @relation(fields: [senderId], references: [id])
   documents           Document[]
+  educationLoan       String?
 
   @@map("orders")
 }
@@ -228,13 +229,16 @@ enum UserRole {
 
 enum DocumentType {
   PAN
-  AADHAR_FRONT
-  AADHAR_BACK
-  PASSPORT_FRONT
-  PASSPORT_BACK
-  UNIVERSITY_FEE_RECEIPT
-  LOAN_SANCTION_LETTER
+  IDENTITY // For Aadhaar/Passport/Driving license of Remitter
   UNIVERSITY_OFFER_LETTER
+  PASSPORT_FRONT
+  VISA_PRP
+  VISA_INVOICE
+  FLYWIRE_INSTRUCTION
+  BLOCKED_ACCOUNT_LETTER
+  INVOICE
+  GIC_LETTER
+  LOAN_SANCTION_LETTER
   OTHER
 }
 
