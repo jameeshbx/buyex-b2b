@@ -76,6 +76,7 @@
     "@types/axios": "^0.14.4",
     "@types/bcrypt": "^5.0.2",
     "@types/cypress": "^1.1.6",
+    "@types/jszip": "^3.4.1",
     "@types/node": "^20.17.47",
     "@types/react": "^19",
     "@types/react-dom": "^19",

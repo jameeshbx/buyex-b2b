@@ -29,26 +29,23 @@ const beneficiarySchema = z.object({
   status: z.boolean().default(true),
 });
 
-// GET single beneficiary
+// GET single beneficiary - returns empty object if not found
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
+    
     const beneficiary = await db.beneficiary.findUnique({
       where: {
-        id: (await params).id,
+        id: id,
       },
     });
 
-    if (!beneficiary) {
-      return NextResponse.json(
-        { error: "Beneficiary not found" },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json(beneficiary);
+    // Return empty object if no beneficiary found
+    return NextResponse.json(beneficiary || {});
+    
   } catch (error) {
     console.error("Error fetching beneficiary:", error);
     return NextResponse.json(
@@ -67,12 +64,13 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
     const validatedData = beneficiarySchema.parse(body);
 
     const beneficiary = await db.beneficiary.update({
       where: {
-        id: (await params).id,
+        id: id,
       },
       data: validatedData,
     });
@@ -98,9 +96,11 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
+    
     await db.beneficiary.delete({
       where: {
-        id: (await params).id,
+        id: id,
       },
     });
 
