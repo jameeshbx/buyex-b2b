@@ -179,9 +179,9 @@ model Order {
   quote               Json
   beneficiaryId       String?
   senderId            String?
+  documents           Document[]
   beneficiary         Beneficiary? @relation(fields: [beneficiaryId], references: [id])
   sender              Sender?      @relation(fields: [senderId], references: [id])
-  documents           Document[]
   educationLoan       String?
 
   @@map("orders")
@@ -192,15 +192,15 @@ model Document {
   role       DocumentRole
   userId     String
   type       DocumentType
-  name       String?
-  uploadedBy String?
-  comment    String?
   imageUrl   String
   isVerified Boolean      @default(false)
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
-  order      Order?       @relation(fields: [orderId], references: [id])
   orderId    String?
+  comment    String?
+  name       String?
+  uploadedBy String?
+  order      Order?       @relation(fields: [orderId], references: [id])
 
   @@map("documents")
 }
@@ -229,7 +229,7 @@ enum UserRole {
 
 enum DocumentType {
   PAN
-  IDENTITY // For Aadhaar/Passport/Driving license of Remitter
+  IDENTITY
   UNIVERSITY_OFFER_LETTER
   PASSPORT_FRONT
   VISA_PRP
@@ -256,8 +256,8 @@ enum OrderStatus {
   Rejected
   Completed
   QuoteDownloaded
-  Blocked
   Authorize
   DocumentsPlaced
   RateExpired
+  Blocked
 }
