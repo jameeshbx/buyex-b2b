@@ -59,6 +59,7 @@ export async function PATCH(
         customerRate: body.customerRate !== undefined ? parseFloat(body.customerRate) : undefined,
         senderId: body.senderId,
         beneficiaryId: body.beneficiaryId,
+        educationLoan: body.educationLoan
       }).filter(([, v]) => v !== undefined && v !== null)
     );
 
