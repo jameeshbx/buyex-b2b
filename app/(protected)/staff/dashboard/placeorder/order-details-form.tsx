@@ -347,6 +347,7 @@ export default function OrderDetailsForm() {
         createdAt: new Date(),
         updatedAt: new Date(),
         createdBy: session.user.name,
+        educationLoan: formData.educationLoan,
         quote: {
           ...formData,
           currency:
