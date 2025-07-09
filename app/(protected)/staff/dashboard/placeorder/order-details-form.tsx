@@ -37,6 +37,8 @@ import {
 } from "@/lib/financial";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { ForexPartner, forexPartnerData } from "@/data/forex-partner";
+
 
 interface CalculatedValues {
   inrAmount: string;
@@ -56,6 +58,7 @@ interface JsPDFWithAutoTable extends jsPDF {
 async function generateQuotePDF(
   formData: OrderDetailsFormValues,
   calculatedValues: CalculatedValues,
+  forexPartner: ForexPartner,
   orderId?: string
 ) {
   const doc = new jsPDF() as JsPDFWithAutoTable;
@@ -101,11 +104,11 @@ async function generateQuotePDF(
     styles: { fontSize: 10 },
     headStyles: { fillColor: [240, 240, 240] },
     body: [
-      ["Bank Name", "HDFC BANK"],
-      ["Account Name", "Wsfx Global Pay Ltd"],
-      ["Account Number", "WALLST17960000"],
-      ["IFSC Code", "HDFC0001372"],
-      ["Branch", "MUMBAI"],
+      ["Bank Name", forexPartner.bankName],
+      ["Account Name", forexPartner.accountName],
+      ["Account Number", forexPartner.accountNumber],
+      ["IFSC Code", forexPartner.ifscCode],
+      ["Branch", forexPartner.branch],
     ],
   });
 
@@ -329,11 +332,16 @@ export default function OrderDetailsForm() {
 
     try {
       // First, create the order to get the orderId
+      const forexPartnerObj = forexPartnerData.find(
+        (partner) =>
+          partner.accountName.toLowerCase() ===
+          formData.forexPartner.toLowerCase()
+      );
       const order = await axios.post("/api/orders", {
         purpose: formData.purpose,
         foreignBankCharges: formData.foreignBankCharges,
         payer: formData.payer,
-        forexPartner: formData.forexPartner,
+        forexPartner: forexPartnerObj,
         margin: formData.margin,
         receiverBankCountry: formData.receiverBankCountry,
         studentName: formData.studentName,
@@ -367,6 +375,7 @@ export default function OrderDetailsForm() {
       const pdfUrl = await generateQuotePDF(
         formData,
         calculatedValues,
+        forexPartnerObj as ForexPartner,
         orderId
       );
 
