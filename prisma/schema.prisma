@@ -160,7 +160,6 @@ model Order {
   purpose             String
   foreignBankCharges  Float
   payer               String
-  forexPartner        String
   margin              Float
   receiverBankCountry String
   studentName         String
@@ -179,10 +178,11 @@ model Order {
   quote               Json
   beneficiaryId       String?
   senderId            String?
+  educationLoan       String?
+  forexPartner        Json?
   documents           Document[]
   beneficiary         Beneficiary? @relation(fields: [beneficiaryId], references: [id])
   sender              Sender?      @relation(fields: [senderId], references: [id])
-  educationLoan       String?
 
   @@map("orders")
 }
