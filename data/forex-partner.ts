@@ -8,10 +8,10 @@ export interface ForexPartner {
 }
 
 
-export const forexPartner = [
+export const forexPartnerData = [
   {
     accountNumber: "35544886567",
-    accountName: "Ebix Cash World Money Pvt Ltd",
+    accountName: "Ebix Cash World Money Ltd",
     bankName: "State Bank of India",
     ifscCode: "SBIN0014914",
     branch: "Kalina, Mumbai",
@@ -19,7 +19,7 @@ export const forexPartner = [
   },
   {
     accountNumber: "WALLST17960000",
-    accountName: "Wsfx Global Pay Ltd",
+    accountName: "WSFX Global Pay Ltd",
     bankName: "HDFC BANK",
     ifscCode: "HDFC0001372",
     branch: "Mumbai",
