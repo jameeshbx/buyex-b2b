@@ -37,6 +37,7 @@ import {
 } from "@/lib/financial";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { forexPartner, ForexPartner } from "@/data/forex-partner";
 
 interface CalculatedValues {
   inrAmount: string;
@@ -230,8 +231,6 @@ export default function OrderDetailsForm() {
     }
   }
 
-  
-
   function resetForm() {
     form.reset();
     setShowCalculation(false);
@@ -333,7 +332,9 @@ export default function OrderDetailsForm() {
         purpose: formData.purpose,
         foreignBankCharges: formData.foreignBankCharges,
         payer: formData.payer,
-        forexPartner: formData.forexPartner,
+        forexPartner: forexPartner.find(
+          (partner) => partner.accountName === formData.forexPartner
+        ) as ForexPartner,
         margin: formData.margin,
         receiverBankCountry: formData.receiverBankCountry,
         studentName: formData.studentName,
@@ -347,6 +348,7 @@ export default function OrderDetailsForm() {
         createdAt: new Date(),
         updatedAt: new Date(),
         createdBy: session.user.name,
+        educationLoan: formData.educationLoan,
         quote: {
           ...formData,
           currency:
@@ -411,8 +413,6 @@ export default function OrderDetailsForm() {
 
   return (
     <>
-      
-
       <Form {...form}>
         <form
           onSubmit={(e) => {

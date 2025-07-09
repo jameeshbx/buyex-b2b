@@ -11,84 +11,50 @@ import { Sender } from "@prisma/client";
 import axios from "axios";
 
 type FormState = {
-  senderDetails: {
-    payerPAN: File | null;
-    payerPANUrl?: string;
-    payerPANS3Key?: string;
-    aadhaar: File | null;
-    aadhaarUrl?: string;
-    aadhaarS3Key?: string;
-    passport: File | null;
-    passportUrl?: string;
-    passportS3Key?: string;
+  kyc: {
+    pan: File | null;
+    panUrl?: string;
+    panS3Key?: string;
+    identity: File | null;
+    identityUrl?: string;
+    identityS3Key?: string;
   };
-  studentDetails: {
-    payerPAN: File | null;
-    payerPANUrl?: string;
-    payerPANS3Key?: string;
-    aadhaar: File | null;
-    aadhaarUrl?: string;
-    aadhaarS3Key?: string;
-    passport: File | null;
-    passportUrl?: string;
-    passportS3Key?: string;
-  };
-  universityDocuments: {
-    feeReceipt: File | null;
-    feeReceiptUrl?: string;
-    feeReceiptS3Key?: string;
-    loanSanctionLetter: File | null;
-    loanSanctionLetterUrl?: string;
-    loanSanctionLetterS3Key?: string;
-    offerLetter: File | null;
-    offerLetterUrl?: string;
-    offerLetterS3Key?: string;
-  };
+  checklist: Record<string, File | null>;
 };
 
 export default function DocumentUploadForm({ orderID }: { orderID: string }) {
   const router = useRouter();
   const [formState, setFormState] = useState<FormState>({
-    senderDetails: {
-      payerPAN: null,
-      aadhaar: null,
-      passport: null,
+    kyc: {
+      pan: null,
+      panUrl: "",
+      panS3Key: "",
+      identity: null,
+      identityUrl: "",
+      identityS3Key: "",
     },
-    studentDetails: {
-      payerPAN: null,
-      aadhaar: null,
-      passport: null,
-    },
-    universityDocuments: {
-      feeReceipt: null,
-      loanSanctionLetter: null,
-      offerLetter: null,
-    },
+    checklist: {},
   });
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-  const [payer, setPayer] = useState<string | null>(null);
+  const [purpose, setPurpose] = useState<string | null>(null);
   const [educationLoan, setEducationLoan] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const [senderDetails, setSenderDetails] = useState<Sender | null>(null);
   const [orderId] = useState<string | null>(orderID);
 
   useEffect(() => {
     const fetchOrder = async () => {
-      console.log(orderId);
       if (orderId) {
         const order = await axios.get(`/api/orders/${orderId}`);
+        setPurpose(order.data.purpose);
+        setEducationLoan(order.data.educationLoan); // assuming this field exists
 
         if (order.data.senderId) {
           const sender = await axios.get(`/api/senders/${order.data.senderId}`);
           if (sender.data) {
             setSenderDetails(sender.data);
           }
-
-          // router.push(
-          //   `/staff/dashboard/beneficiary-details?orderId=${orderId}`
-          // );
         } else {
           router.push(`/staff/dashboard/sender-details?orderId=${orderId}`);
         }
@@ -98,16 +64,9 @@ export default function DocumentUploadForm({ orderID }: { orderID: string }) {
     };
     fetchOrder();
   }, [orderId]);
-  // Get values from localStorage
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      setPayer(localStorage.getItem("selectedPayer"));
-      setEducationLoan(localStorage.getItem("educationLoan"));
-    }
-  }, []);
 
   const handleFileUpload = (
-    section: keyof FormState,
+    section: "kyc" | "checklist",
     field: string,
     file: File | null,
     s3Url?: string,
@@ -122,7 +81,6 @@ export default function DocumentUploadForm({ orderID }: { orderID: string }) {
         [`${field}S3Key`]: s3Key,
       },
     }));
-    // Clear error when file is uploaded
     setFormErrors((prev) => {
       const newErrors = { ...prev };
       delete newErrors[`${section}.${field}`];
@@ -130,70 +88,17 @@ export default function DocumentUploadForm({ orderID }: { orderID: string }) {
     });
   };
 
-  const handleReset = async () => {
-    // Delete all uploaded files from S3 before resetting the form
-    const s3KeysToDelete = [
-      formState.senderDetails.payerPANS3Key,
-      formState.senderDetails.aadhaarS3Key,
-      formState.senderDetails.passportS3Key,
-      formState.studentDetails.payerPANS3Key,
-      formState.studentDetails.aadhaarS3Key,
-      formState.studentDetails.passportS3Key,
-      formState.universityDocuments.feeReceiptS3Key,
-      formState.universityDocuments.loanSanctionLetterS3Key,
-      formState.universityDocuments.offerLetterS3Key,
-    ].filter(Boolean) as string[];
-
-    // Delete files from S3 in parallel
-    if (s3KeysToDelete.length > 0) {
-      try {
-        const deletePromises = s3KeysToDelete.map(async (key) => {
-          const response = await fetch("/api/upload/s3/delete", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ key }),
-          });
-          return response.ok;
-        });
-
-        const results = await Promise.allSettled(deletePromises);
-        const successCount = results.filter(
-          (result) => result.status === "fulfilled" && result.value
-        ).length;
-
-        if (successCount === s3KeysToDelete.length) {
-          toast.success("All files deleted from S3 successfully");
-        } else if (successCount > 0) {
-          toast.warning(
-            `${successCount}/${s3KeysToDelete.length} files deleted from S3`
-          );
-        } else {
-          toast.error("Failed to delete files from S3");
-        }
-      } catch (error) {
-        console.error("Error deleting files from S3:", error);
-        toast.error("Failed to delete files from S3");
-      }
-    }
-
+  const handleReset = () => {
     setFormState({
-      senderDetails: {
-        payerPAN: null,
-        aadhaar: null,
-        passport: null,
+      kyc: {
+        pan: null,
+        panUrl: "",
+        panS3Key: "",
+        identity: null,
+        identityUrl: "",
+        identityS3Key: "",
       },
-      studentDetails: {
-        payerPAN: null,
-        aadhaar: null,
-        passport: null,
-      },
-      universityDocuments: {
-        feeReceipt: null,
-        loanSanctionLetter: null,
-        offerLetter: null,
-      },
+      checklist: {},
     });
     setFormErrors({});
     toast.info("Form has been reset");
@@ -203,132 +108,52 @@ export default function DocumentUploadForm({ orderID }: { orderID: string }) {
     const errors: Record<string, string> = {};
     let isValid = true;
 
-    // Validate sender details
-    const senderPanError = validateFile(
-      formState.senderDetails.payerPAN,
-      "Payer PAN",
+    // Validate KYC documents
+    const panError = validateFile(
+      formState.kyc.pan,
+      "Pancard",
       5,
       [".jpg", ".jpeg", ".png", ".pdf"]
     );
-    if (senderPanError) {
-      errors["senderDetails.payerPAN"] = senderPanError;
+    if (panError) {
+      errors["kyc.pan"] = panError;
       isValid = false;
-    } else if (!formState.senderDetails.payerPAN) {
-      errors["senderDetails.payerPAN"] = "Payer PAN is required";
+    } else if (!formState.kyc.pan) {
+      errors["kyc.pan"] = "Pancard is required";
       isValid = false;
     }
 
-    const senderAadhaarError = validateFile(
-      formState.senderDetails.aadhaar,
-      "Aadhaar",
+    const identityError = validateFile(
+      formState.kyc.identity,
+      "Identity Document",
       5,
       [".jpg", ".jpeg", ".png", ".pdf"]
     );
-    if (senderAadhaarError) {
-      errors["senderDetails.aadhaar"] = senderAadhaarError;
+    if (identityError) {
+      errors["kyc.identity"] = identityError;
       isValid = false;
-    } else if (!formState.senderDetails.aadhaar) {
-      errors["senderDetails.aadhaar"] = "Aadhaar is required";
-      isValid = false;
-    }
-
-    const senderPassportError = validateFile(
-      formState.senderDetails.passport,
-      "Passport",
-      5,
-      [".jpg", ".jpeg", ".png", ".pdf"]
-    );
-    if (senderPassportError) {
-      errors["senderDetails.passport"] = senderPassportError;
+    } else if (!formState.kyc.identity) {
+      errors["kyc.identity"] = "Identity document is required";
       isValid = false;
     }
 
-    // Required fields validation for student (only if payer is not self)
-    if (payer !== "Self") {
-      const studentPanError = validateFile(
-        formState.studentDetails.payerPAN,
-        "Student PAN",
-        5,
-        [".jpg", ".jpeg", ".png", ".pdf"]
-      );
-      if (studentPanError) {
-        errors["studentDetails.payerPAN"] = studentPanError;
-        isValid = false;
-      } else if (!formState.studentDetails.payerPAN) {
-        errors["studentDetails.payerPAN"] = "Student PAN is required";
-        isValid = false;
-      }
-
-      const studentAadhaarError = validateFile(
-        formState.studentDetails.aadhaar,
-        "Student Aadhaar",
-        5,
-        [".jpg", ".jpeg", ".png", ".pdf"]
-      );
-      if (studentAadhaarError) {
-        errors["studentDetails.aadhaar"] = studentAadhaarError;
-        isValid = false;
-      } else if (!formState.studentDetails.aadhaar) {
-        errors["studentDetails.aadhaar"] = "Student Aadhaar is required";
-        isValid = false;
-      }
-
-      const studentPassportError = validateFile(
-        formState.studentDetails.passport,
-        "Student Passport",
-        5,
-        [".jpg", ".jpeg", ".png", ".pdf"]
-      );
-      if (studentPassportError) {
-        errors["studentDetails.passport"] = studentPassportError;
-        isValid = false;
+    // Validate checklist documents
+    if (purpose && CHECKLIST_FIELDS[purpose]) {
+      for (const item of CHECKLIST_FIELDS[purpose]) {
+        const file = formState.checklist?.[item.type];
+        if (!file) {
+          errors[`checklist.${item.type}`] = `${item.label} is required`;
+          isValid = false;
+        }
       }
     }
-
-    // Validate university documents
-    const feeReceiptError = validateFile(
-      formState.universityDocuments.feeReceipt,
-      "Fee Receipt",
-      5,
-      [".pdf"]
-    );
-    if (feeReceiptError) {
-      errors["universityDocuments.feeReceipt"] = feeReceiptError;
-      isValid = false;
-    } else if (!formState.universityDocuments.feeReceipt) {
-      errors["universityDocuments.feeReceipt"] = "Fee receipt is required";
-      isValid = false;
-    }
-
+    // Loan sanction letter if educationLoan is yes
     if (educationLoan === "yes") {
-      const loanLetterError = validateFile(
-        formState.universityDocuments.loanSanctionLetter,
-        "Loan Sanction Letter",
-        5,
-        [".pdf"]
-      );
-      if (loanLetterError) {
-        errors["universityDocuments.loanSanctionLetter"] = loanLetterError;
-        isValid = false;
-      } else if (!formState.universityDocuments.loanSanctionLetter) {
-        errors["universityDocuments.loanSanctionLetter"] =
-          "Loan sanction letter is required when education loan is selected";
+      const file = formState.checklist?.["LOAN_SANCTION_LETTER"];
+      if (!file) {
+        errors["checklist.LOAN_SANCTION_LETTER"] = "Loan Sanction Letter is required";
         isValid = false;
       }
-    }
-
-    const offerLetterError = validateFile(
-      formState.universityDocuments.offerLetter,
-      "Offer Letter",
-      5,
-      [".pdf"]
-    );
-    if (offerLetterError) {
-      errors["universityDocuments.offerLetter"] = offerLetterError;
-      isValid = false;
-    } else if (!formState.universityDocuments.offerLetter) {
-      errors["universityDocuments.offerLetter"] = "Offer letter is required";
-      isValid = false;
     }
 
     setFormErrors(errors);
@@ -347,117 +172,68 @@ export default function DocumentUploadForm({ orderID }: { orderID: string }) {
 
     try {
       const filesArray = [];
-      if (formState.senderDetails?.aadhaar) {
-        filesArray.push({
-          role: "SENDER",
-          type: "AADHAR_FRONT",
-          imageUrl: formState.senderDetails.aadhaarUrl,
-          userId: senderDetails?.id,
-          orderId,
-          name: "Aadhaar Document",
-          uploadedBy: "Staff",
-          comment: "Sender Aadhaar document",
-        });
-      }
-      if (formState.senderDetails?.passport) {
-        filesArray.push({
-          role: "SENDER",
-          type: "PASSPORT_FRONT",
-          imageUrl: formState.senderDetails.passportUrl,
-          userId: senderDetails?.id,
-          orderId,
-          name: "Passport Document",
-          uploadedBy: "Staff",
-          comment: "Sender Passport document",
-        });
-      }
-      if (formState.senderDetails?.payerPAN) {
+
+      // Add KYC files
+      if (formState.kyc.pan) {
         filesArray.push({
           role: "SENDER",
           type: "PAN",
-          imageUrl: formState.senderDetails.payerPANUrl,
+          imageUrl: formState.kyc.panUrl,
           userId: senderDetails?.id,
           orderId,
-          name: "PAN Document",
+          name: "Pancard",
           uploadedBy: "Staff",
-          comment: "Sender PAN document",
+          comment: "Sender Pancard",
+        });
+      }
+      if (formState.kyc.identity) {
+        filesArray.push({
+          role: "SENDER",
+          type: "IDENTITY",
+          imageUrl: formState.kyc.identityUrl,
+          userId: senderDetails?.id,
+          orderId,
+          name: "Identity Document",
+          uploadedBy: "Staff",
+          comment: "Sender Identity document",
         });
       }
 
-      if (payer !== "Self") {
-        if (formState.studentDetails?.aadhaar) {
-          filesArray.push({
-            role: "STUDENT",
-            type: "AADHAR_FRONT",
-            imageUrl: formState.studentDetails.aadhaarUrl,
-            userId: senderDetails?.id,
-            orderId,
-            name: "Student Aadhaar Document",
-            uploadedBy: "Staff",
-            comment: "Student Aadhaar document",
-          });
-        }
-        if (formState.studentDetails?.passport) {
-          filesArray.push({
-            role: "STUDENT",
-            type: "PASSPORT_FRONT",
-            imageUrl: formState.studentDetails.passportUrl,
-            userId: senderDetails?.id,
-            orderId,
-            name: "Student Passport Document",
-            uploadedBy: "Staff",
-            comment: "Student Passport document",
-          });
-        }
-        if (formState.studentDetails?.payerPAN) {
-          filesArray.push({
-            role: "STUDENT",
-            type: "PAN",
-            imageUrl: formState.studentDetails.payerPANUrl,
-            userId: senderDetails?.id,
-            orderId,
-            name: "Student PAN Document",
-            uploadedBy: "Staff",
-            comment: "Student PAN document",
-          });
+      // Add checklist files
+      if (purpose && CHECKLIST_FIELDS[purpose]) {
+        for (const item of CHECKLIST_FIELDS[purpose]) {
+          const file = formState.checklist?.[item.type];
+          const fileUrl = formState.checklist?.[`${item.type}Url`];
+          if (file) {
+            filesArray.push({
+              role: "SENDER",
+              type: item.type,
+              imageUrl: fileUrl,
+              userId: senderDetails?.id,
+              orderId,
+              name: item.label,
+              uploadedBy: "Staff",
+              comment: `Sender ${item.label}`,
+            });
+          }
         }
       }
-
-      if (formState.universityDocuments?.feeReceipt) {
-        filesArray.push({
-          role: "STUDENT",
-          type: "UNIVERSITY_FEE_RECEIPT",
-          imageUrl: formState.universityDocuments.feeReceiptUrl,
-          userId: senderDetails?.id,
-          orderId,
-          name: "University Fee Receipt",
-          uploadedBy: "Staff",
-          comment: "University fee receipt document",
-        });
-      }
-      if (formState.universityDocuments?.loanSanctionLetter) {
-        filesArray.push({
-          role: "STUDENT",
-          type: "LOAN_SANCTION_LETTER",
-          imageUrl: formState.universityDocuments.loanSanctionLetterUrl,
-          userId: senderDetails?.id,
-          orderId,
-          name: "Loan Sanction Letter",
-          uploadedBy: "Staff",
-          comment: "Education loan sanction letter",
-        });
-      }
-      if (formState.universityDocuments?.offerLetter) {
-        filesArray.push({
-          role: "STUDENT",
-          type: "UNIVERSITY_OFFER_LETTER",
-          imageUrl: formState.universityDocuments.offerLetterUrl,
-          userId: senderDetails?.id,
-          orderId,
-          name: "University Offer Letter",
-          uploadedBy: "Staff",
-          comment: "University offer letter document",
-        });
+      // Loan sanction letter if educationLoan is yes
+      if (educationLoan === "yes") {
+        const file = formState.checklist?.["LOAN_SANCTION_LETTER"];
+        const fileUrl = formState.checklist?.["LOAN_SANCTION_LETTERUrl"];
+        if (file) {
+          filesArray.push({
+            role: "SENDER",
+            type: "LOAN_SANCTION_LETTER",
+            imageUrl: fileUrl,
+            userId: senderDetails?.id,
+            orderId,
+            name: "Loan Sanction Letter",
+            uploadedBy: "Staff",
+            comment: "Loan Sanction Letter",
+          });
+        }
       }
 
       for (const file of filesArray) {
@@ -486,13 +262,6 @@ export default function DocumentUploadForm({ orderID }: { orderID: string }) {
           ? error.message
           : "Failed to upload documents. Please try again."
       );
-
-      // Additional error logging if needed
-      if (process.env.NODE_ENV === "development") {
-        console.group("Detailed error info");
-        console.error("Error object:", error);
-        console.groupEnd();
-      }
     } finally {
       setIsSubmitting(false);
     }
@@ -500,276 +269,127 @@ export default function DocumentUploadForm({ orderID }: { orderID: string }) {
 
   return (
     <form onSubmit={handleSubmit} className="max-w-5xl mx-auto">
-      {/* Sender Details Section */}
+      {/* KYC Section */}
       <div className="mb-8">
-        <h2 className="text-xl font-semibold font-jakarta mb-4">
-          Sender Details
-        </h2>
+        <h2 className="text-xl font-semibold font-jakarta mb-4">KYC Documents</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block font-jakarta text-sm mb-2">
-              Payer&apos;s PAN*
+              PanCard of Remitter*
             </label>
             <S3FileUploader
               onFileUpload={(file, s3Url, s3Key) =>
-                handleFileUpload(
-                  "senderDetails",
-                  "payerPAN",
-                  file,
-                  s3Url,
-                  s3Key
-                )
+                handleFileUpload("kyc", "pan", file, s3Url, s3Key)
               }
-              currentFile={formState.senderDetails.payerPAN}
-              currentS3Url={formState.senderDetails.payerPANUrl}
-              currentS3Key={formState.senderDetails.payerPANS3Key}
+              currentFile={formState.kyc.pan}
+              currentS3Url={formState.kyc.panUrl}
+              currentS3Key={formState.kyc.panS3Key}
               acceptedFileTypes={[".jpg", ".jpeg", ".png", ".pdf"]}
               maxSizeMB={5}
-              fieldName="Payer PAN"
+              fieldName="PanCard"
               folder="buyex-documents"
             />
-            {formErrors["senderDetails.payerPAN"] && (
+            {formErrors["kyc.pan"] && (
               <p className="text-red-500 text-xs mt-1">
-                {formErrors["senderDetails.payerPAN"]}
+                {formErrors["kyc.pan"]}
               </p>
             )}
           </div>
           <div>
             <label className="block font-jakarta text-sm mb-2">
-              Aadhaar (front and back)*
+              Aadhaar/Passport/Driving license of Remitter*
             </label>
             <S3FileUploader
               onFileUpload={(file, s3Url, s3Key) =>
-                handleFileUpload("senderDetails", "aadhaar", file, s3Url, s3Key)
+                handleFileUpload("kyc", "identity", file, s3Url, s3Key)
               }
-              currentFile={formState.senderDetails.aadhaar}
-              currentS3Url={formState.senderDetails.aadhaarUrl}
-              currentS3Key={formState.senderDetails.aadhaarS3Key}
+              currentFile={formState.kyc.identity}
+              currentS3Url={formState.kyc.identityUrl}
+              currentS3Key={formState.kyc.identityS3Key}
               acceptedFileTypes={[".jpg", ".jpeg", ".png", ".pdf"]}
               maxSizeMB={5}
-              fieldName="Aadhaar"
+              fieldName="Identity Document"
               folder="buyex-documents"
             />
-            {formErrors["senderDetails.aadhaar"] && (
+            {formErrors["kyc.identity"] && (
               <p className="text-red-500 text-xs mt-1">
-                {formErrors["senderDetails.aadhaar"]}
+                {formErrors["kyc.identity"]}
               </p>
             )}
-          </div>
-          <div>
-            <label className="block font-jakarta text-sm mb-2">
-              Passport (front and back)
-            </label>
-            <S3FileUploader
-              onFileUpload={(file, s3Url, s3Key) =>
-                handleFileUpload(
-                  "senderDetails",
-                  "passport",
-                  file,
-                  s3Url,
-                  s3Key
-                )
-              }
-              currentFile={formState.senderDetails.passport}
-              currentS3Url={formState.senderDetails.passportUrl}
-              currentS3Key={formState.senderDetails.passportS3Key}
-              acceptedFileTypes={[".jpg", ".jpeg", ".png", ".pdf"]}
-              maxSizeMB={5}
-              fieldName="Passport"
-              folder="buyex-documents"
-            />
           </div>
         </div>
       </div>
 
-      {/* Student Details Section */}
-      {payer !== "Self" && (
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold font-jakarta mb-4">
-            Student Details
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-jakarta mb-2">
-                Student&apos;s PAN*
-              </label>
-              <S3FileUploader
-                onFileUpload={(file, s3Url, s3Key) =>
-                  handleFileUpload(
-                    "studentDetails",
-                    "payerPAN",
-                    file,
-                    s3Url,
-                    s3Key
-                  )
-                }
-                currentFile={formState.studentDetails.payerPAN}
-                currentS3Url={formState.studentDetails.payerPANUrl}
-                currentS3Key={formState.studentDetails.payerPANS3Key}
-                acceptedFileTypes={[".jpg", ".jpeg", ".png", ".pdf"]}
-                maxSizeMB={5}
-                fieldName="Student PAN"
-                folder="buyex-documents"
-              />
-              {formErrors["studentDetails.payerPAN"] && (
-                <p className="text-red-500 text-xs mt-1">
-                  {formErrors["studentDetails.payerPAN"]}
-                </p>
-              )}
-            </div>
-            <div>
-              <label className="block text-sm font-jakarta mb-2">
-                Aadhaar (front and back)*
-              </label>
-              <S3FileUploader
-                onFileUpload={(file, s3Url, s3Key) =>
-                  handleFileUpload(
-                    "studentDetails",
-                    "aadhaar",
-                    file,
-                    s3Url,
-                    s3Key
-                  )
-                }
-                currentFile={formState.studentDetails.aadhaar}
-                currentS3Url={formState.studentDetails.aadhaarUrl}
-                currentS3Key={formState.studentDetails.aadhaarS3Key}
-                acceptedFileTypes={[".jpg", ".jpeg", ".png", ".pdf"]}
-                maxSizeMB={5}
-                fieldName="Aadhaar"
-                folder="buyex-documents"
-              />
-              {formErrors["studentDetails.aadhaar"] && (
-                <p className="text-red-500 text-xs mt-1">
-                  {formErrors["studentDetails.aadhaar"]}
-                </p>
-              )}
-            </div>
-            <div>
-              <label className="block text-sm font-jakarta mb-2">
-                Passport (front and back)
-              </label>
-              <S3FileUploader
-                onFileUpload={(file, s3Url, s3Key) =>
-                  handleFileUpload(
-                    "studentDetails",
-                    "passport",
-                    file,
-                    s3Url,
-                    s3Key
-                  )
-                }
-                currentFile={formState.studentDetails.passport}
-                currentS3Url={formState.studentDetails.passportUrl}
-                currentS3Key={formState.studentDetails.passportS3Key}
-                acceptedFileTypes={[".jpg", ".jpeg", ".png", ".pdf"]}
-                maxSizeMB={5}
-                fieldName="Passport"
-                folder="buyex-documents"
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* University related documents Section */}
+      {/* Checklist Section */}
       <div className="mb-8">
-        <h2 className="text-xl font-semibold font-jakarta mb-4">
-          University related documents
-        </h2>
+        <h2 className="text-xl font-semibold font-jakarta mb-4">Checklist</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-jakarta mb-2">
-              University fee receipt*
-            </label>
-            <S3FileUploader
-              onFileUpload={(file, s3Url, s3Key) =>
-                handleFileUpload(
-                  "universityDocuments",
-                  "feeReceipt",
-                  file,
-                  s3Url,
-                  s3Key
-                )
-              }
-              currentFile={formState.universityDocuments.feeReceipt}
-              currentS3Url={formState.universityDocuments.feeReceiptUrl}
-              currentS3Key={formState.universityDocuments.feeReceiptS3Key}
-              acceptedFileTypes={[".pdf"]}
-              maxSizeMB={5}
-              fieldName="Fee receipt"
-              folder="buyex-documents"
-            />
-            {formErrors["universityDocuments.feeReceipt"] && (
-              <p className="text-red-500 text-xs mt-1">
-                {formErrors["universityDocuments.feeReceipt"]}
-              </p>
-            )}
-          </div>
-
+          {purpose &&
+            CHECKLIST_FIELDS[purpose]?.map((item) => (
+              <div key={item.type}>
+                <label className="block text-sm font-jakarta mb-2">
+                  {item.label}*
+                </label>
+                <S3FileUploader
+                  onFileUpload={(file, s3Url, s3Key) =>
+                    handleFileUpload("checklist", item.type, file, s3Url, s3Key)
+                  }
+                  currentFile={formState.checklist?.[item.type] ?? null}
+                  currentS3Url={
+                    typeof formState.checklist?.[`${item.type}Url`] === "string"
+                      ? (formState.checklist?.[`${item.type}Url`] as unknown as string)
+                      : undefined
+                  }
+                  currentS3Key={
+                    typeof formState.checklist?.[`${item.type}S3Key`] === "string"
+                      ? (formState.checklist?.[`${item.type}S3Key`] as unknown as string)
+                      : undefined
+                  }
+                  acceptedFileTypes={[".pdf", ".jpg", ".jpeg", ".png"]}
+                  maxSizeMB={5}
+                  fieldName={item.label}
+                  folder="buyex-documents"
+                />
+                {formErrors[`checklist.${item.type}`] && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {formErrors[`checklist.${item.type}`]}
+                  </p>
+                )}
+              </div>
+            ))}
+          {/* Add Loan Sanction Letter if educationLoan is yes */}
           {educationLoan === "yes" && (
             <div>
               <label className="block text-sm font-jakarta mb-2">
-                Education loan sanction letter*
+                Loan Sanction Letter*
               </label>
               <S3FileUploader
                 onFileUpload={(file, s3Url, s3Key) =>
-                  handleFileUpload(
-                    "universityDocuments",
-                    "loanSanctionLetter",
-                    file,
-                    s3Url,
-                    s3Key
-                  )
+                  handleFileUpload("checklist", "LOAN_SANCTION_LETTER", file, s3Url, s3Key)
                 }
-                currentFile={formState.universityDocuments.loanSanctionLetter}
+                currentFile={formState.checklist?.LOAN_SANCTION_LETTER ?? null}
                 currentS3Url={
-                  formState.universityDocuments.loanSanctionLetterUrl
+                  typeof formState.checklist?.LOAN_SANCTION_LETTERUrl === "string"
+                    ? formState.checklist?.LOAN_SANCTION_LETTERUrl
+                    : undefined
                 }
                 currentS3Key={
-                  formState.universityDocuments.loanSanctionLetterS3Key
+                  typeof formState.checklist?.LOAN_SANCTION_LETTERS3Key === "string"
+                    ? formState.checklist?.LOAN_SANCTION_LETTERS3Key
+                    : undefined
                 }
                 acceptedFileTypes={[".pdf"]}
                 maxSizeMB={5}
-                fieldName="Loan sanction letter"
+                fieldName="Loan Sanction Letter"
                 folder="buyex-documents"
               />
-              {formErrors["universityDocuments.loanSanctionLetter"] && (
+              {formErrors["checklist.LOAN_SANCTION_LETTER"] && (
                 <p className="text-red-500 text-xs mt-1">
-                  {formErrors["universityDocuments.loanSanctionLetter"]}
+                  {formErrors["checklist.LOAN_SANCTION_LETTER"]}
                 </p>
               )}
             </div>
           )}
-
-          <div>
-            <label className="block text-sm font-jakarta mb-2">
-              University offer letter*
-            </label>
-            <S3FileUploader
-              onFileUpload={(file, s3Url, s3Key) =>
-                handleFileUpload(
-                  "universityDocuments",
-                  "offerLetter",
-                  file,
-                  s3Url,
-                  s3Key
-                )
-              }
-              currentFile={formState.universityDocuments.offerLetter}
-              currentS3Url={formState.universityDocuments.offerLetterUrl}
-              currentS3Key={formState.universityDocuments.offerLetterS3Key}
-              acceptedFileTypes={[".pdf"]}
-              maxSizeMB={5}
-              fieldName="Offer letter"
-              folder="buyex-documents"
-            />
-            {formErrors["universityDocuments.offerLetter"] && (
-              <p className="text-red-500 text-xs mt-1">
-                {formErrors["universityDocuments.offerLetter"]}
-              </p>
-            )}
-          </div>
         </div>
       </div>
 
@@ -837,3 +457,49 @@ function validateFile(
   }
   return undefined;
 }
+
+const CHECKLIST_FIELDS: Record<string, { label: string; type: string }[]> = {
+  "University fee transfer": [
+    { label: "Offer Letter", type: "UNIVERSITY_OFFER_LETTER" },
+    { label: "Student Passport", type: "PASSPORT_FRONT" },
+  ],
+  "Convera registered payment": [
+    { label: "Offer Letter", type: "UNIVERSITY_OFFER_LETTER" },
+    { label: "Student Passport", type: "PASSPORT_FRONT" },
+  ],
+  "Student Living expenses transfer": [
+    { label: "Offer Letter", type: "UNIVERSITY_OFFER_LETTER" },
+    { label: "Student Passport", type: "PASSPORT_FRONT" },
+    { label: "Visa/PRP", type: "VISA_PRP" },
+  ],
+  "Student Visa fee payment": [
+    { label: "Offer Letter", type: "UNIVERSITY_OFFER_LETTER" },
+    { label: "Student Passport", type: "PASSPORT_FRONT" },
+    { label: "Visa Invoice", type: "VISA_INVOICE" },
+  ],
+  "Flywire registered payment": [
+    { label: "Offer Letter", type: "UNIVERSITY_OFFER_LETTER" },
+    { label: "Student Passport", type: "PASSPORT_FRONT" },
+    { label: "Flywire Instruction", type: "FLYWIRE_INSTRUCTION" },
+  ],
+  "Blocked account transfer": [
+    { label: "Offer Letter", type: "UNIVERSITY_OFFER_LETTER" },
+    { label: "Student Passport", type: "PASSPORT_FRONT" },
+    { label: "Blocked Account Letter", type: "BLOCKED_ACCOUNT_LETTER" },
+  ],
+  "Application fee": [
+    { label: "Offer Letter", type: "UNIVERSITY_OFFER_LETTER" },
+    { label: "Student Passport", type: "PASSPORT_FRONT" },
+    { label: "Invoice", type: "INVOICE" },
+  ],
+  "Accomodation fee": [
+    { label: "Offer Letter", type: "UNIVERSITY_OFFER_LETTER" },
+    { label: "Student Passport", type: "PASSPORT_FRONT" },
+    { label: "Invoice", type: "INVOICE" },
+  ],
+  "GIC Canada fee deposite": [
+    { label: "Offer Letter", type: "UNIVERSITY_OFFER_LETTER" },
+    { label: "Student Passport", type: "PASSPORT_FRONT" },
+    { label: "GIC Letter", type: "GIC_LETTER" },
+  ],
+};

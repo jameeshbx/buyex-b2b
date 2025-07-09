@@ -160,7 +160,6 @@ model Order {
   purpose             String
   foreignBankCharges  Float
   payer               String
-  forexPartner        String
   margin              Float
   receiverBankCountry String
   studentName         String
@@ -179,9 +178,11 @@ model Order {
   quote               Json
   beneficiaryId       String?
   senderId            String?
+  educationLoan       String?
+  forexPartner        Json?
+  documents           Document[]
   beneficiary         Beneficiary? @relation(fields: [beneficiaryId], references: [id])
   sender              Sender?      @relation(fields: [senderId], references: [id])
-  documents           Document[]
 
   @@map("orders")
 }
@@ -191,15 +192,15 @@ model Document {
   role       DocumentRole
   userId     String
   type       DocumentType
-  name       String?
-  uploadedBy String?
-  comment    String?
   imageUrl   String
   isVerified Boolean      @default(false)
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
-  order      Order?       @relation(fields: [orderId], references: [id])
   orderId    String?
+  comment    String?
+  name       String?
+  uploadedBy String?
+  order      Order?       @relation(fields: [orderId], references: [id])
 
   @@map("documents")
 }
@@ -228,13 +229,16 @@ enum UserRole {
 
 enum DocumentType {
   PAN
-  AADHAR_FRONT
-  AADHAR_BACK
-  PASSPORT_FRONT
-  PASSPORT_BACK
-  UNIVERSITY_FEE_RECEIPT
-  LOAN_SANCTION_LETTER
+  IDENTITY
   UNIVERSITY_OFFER_LETTER
+  PASSPORT_FRONT
+  VISA_PRP
+  VISA_INVOICE
+  FLYWIRE_INSTRUCTION
+  BLOCKED_ACCOUNT_LETTER
+  INVOICE
+  GIC_LETTER
+  LOAN_SANCTION_LETTER
   OTHER
 }
 
@@ -252,8 +256,8 @@ enum OrderStatus {
   Rejected
   Completed
   QuoteDownloaded
-  Blocked
   Authorize
   DocumentsPlaced
   RateExpired
+  Blocked
 }
