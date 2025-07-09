@@ -39,6 +39,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { ForexPartner, forexPartnerData } from "@/data/forex-partner";
 
+
 interface CalculatedValues {
   inrAmount: string;
   bankFee: string;
@@ -232,6 +233,8 @@ export default function OrderDetailsForm() {
     }
   }
 
+  
+
   function resetForm() {
     form.reset();
     setShowCalculation(false);
@@ -418,6 +421,8 @@ export default function OrderDetailsForm() {
 
   return (
     <>
+      
+
       <Form {...form}>
         <form
           onSubmit={(e) => {
@@ -472,7 +477,7 @@ export default function OrderDetailsForm() {
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger className="bg-blue-50/50 border-blue-100 h-12 w-full">
+                        <SelectTrigger className="bg-blue-50/50 border-blue-200 shadow-lg h-12 w-full">
                           <SelectValue placeholder="Select purpose" />
                         </SelectTrigger>
                       </FormControl>
@@ -565,11 +570,11 @@ export default function OrderDetailsForm() {
                   />
                   {form.watch("educationLoan") === "yes" ? (
                     <p className="text-xs text-green-600 mt-1">
-                      *No TCS applicable
+                      No TCS applicable
                     </p>
                   ) : (
                     <p className="text-xs text-green-600 mt-1">
-                      *5% TCS applicable
+                      5% TCS applicable
                     </p>
                   )}
                 </div>
@@ -608,11 +613,11 @@ export default function OrderDetailsForm() {
                   />
                   {form.watch("foreignBankCharges") === "OUR" ? (
                     <p className="text-xs text-green-600 mt-1">
-                      *Zero foreign bank charges{" "}
+                      Zero foreign bank charges{" "}
                     </p>
                   ) : (
                     <p className="text-xs text-green-600 mt-1">
-                      *Receiver bank charges applicable
+                      Receiver bank charges applicable
                     </p>
                   )}
                 </div>
@@ -631,7 +636,7 @@ export default function OrderDetailsForm() {
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger className="bg-blue-50/50 border-blue-100 h-12 w-full">
+                        <SelectTrigger className="bg-blue-50/50 border-blue-200 shadow-lg h-12 w-full">
                           <SelectValue placeholder="Select payer" />
                         </SelectTrigger>
                       </FormControl>
@@ -659,7 +664,7 @@ export default function OrderDetailsForm() {
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger className="bg-blue-50/50 border-blue-100 h-12 w-full">
+                        <SelectTrigger className="bg-blue-50/50 border-blue-200 shadow-lg h-12 w-full">
                           <SelectValue placeholder="Select forex partner" />
                         </SelectTrigger>
                       </FormControl>
@@ -690,7 +695,7 @@ export default function OrderDetailsForm() {
                     <FormControl>
                       <Input
                         {...field}
-                        className="bg-blue-50/50 border-blue-100 h-12"
+                        className="bg-blue-50/50 border-blue-200 shadow-lg h-12"
                         placeholder="Enter margin"
                       />
                     </FormControl>
@@ -727,7 +732,7 @@ export default function OrderDetailsForm() {
                       }
                     >
                       <FormControl>
-                        <SelectTrigger className="bg-blue-50/50 border-blue-100 h-12 w-full">
+                        <SelectTrigger className="bg-blue-50/50 border-blue-200 shadow-lg h-12 w-full">
                           <SelectValue placeholder="Select country" />
                         </SelectTrigger>
                       </FormControl>
@@ -775,7 +780,7 @@ export default function OrderDetailsForm() {
                     <FormControl>
                       <Input
                         {...field}
-                        className="bg-blue-50/50 border-blue-100 h-12"
+                        className="bg-blue-50/50 border-blue-200 shadow-lg h-12"
                         placeholder="Enter name"
                       />
                     </FormControl>
@@ -796,7 +801,7 @@ export default function OrderDetailsForm() {
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger className="bg-blue-50/50 border-blue-100 h-12 w-full">
+                        <SelectTrigger className="bg-blue-50/50 border-blue-200 shadow-lg h-12 w-full">
                           <SelectValue placeholder="Select consultancy" />
                         </SelectTrigger>
                       </FormControl>
@@ -836,7 +841,7 @@ export default function OrderDetailsForm() {
                     <FormControl>
                       <Input
                         {...field}
-                        className="bg-blue-50/50 border-blue-100 h-12"
+                        className="bg-blue-50/50 border-blue-200 shadow-lg h-12"
                         readOnly
                       />
                     </FormControl>
@@ -857,7 +862,7 @@ export default function OrderDetailsForm() {
                         <FormControl>
                           <Input
                             {...field}
-                            className="bg-blue-50/50 border-blue-100 h-12"
+                            className="bg-blue-50/50 border-blue-200 shadow-lg h-12"
                             placeholder="Enter amount"
                           />
                         </FormControl>
@@ -1032,7 +1037,7 @@ export default function OrderDetailsForm() {
                         {...field}
                         readOnly
                         placeholder="Total amount"
-                        className="rounded-r-none bg-blue-50/50 border-blue-100 h-12"
+                        className="rounded-r-none bg-gray-150 shadow-lg border-blue-100 h-12"
                       />
                     </FormControl>
                   )}
@@ -1056,7 +1061,7 @@ export default function OrderDetailsForm() {
                       {...field}
                       readOnly
                       placeholder=" customer rate"
-                      className="bg-blue-50/50 border-blue-100 h-12"
+                      className="bg-gray-150 border-blue-100  shadow-lg h-12"
                     />
                   </FormControl>
                 )}
