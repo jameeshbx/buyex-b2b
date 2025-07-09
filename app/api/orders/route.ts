@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-
 // GET /api/orders - Get all orders
 export async function GET() {
   try {
@@ -42,7 +41,8 @@ export async function POST(req: Request) {
       status,
       educationLoan
     } = body;
-
+    
+    
     if (
       !purpose ||
       !payer ||
