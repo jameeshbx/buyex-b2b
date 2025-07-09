@@ -8,7 +8,7 @@ export interface ForexPartner {
 }
 
 
-export const forexPartner = [
+export const forexPartnerData = [
   {
     accountNumber: "35544886567",
     accountName: "Ebix Cash World Money Pvt Ltd",
