@@ -336,12 +336,24 @@ export default function UploadsPage({
         }
 
         // Step 3: Save document record with CloudFront URL
+        // Fetch userId from /api/users/me
+        let userId = "";
+        try {
+          const userRes = await fetch("/api/users/me");
+          if (userRes.ok) {
+            const user = await userRes.json();
+            userId = user.id || "";
+          }
+        } catch  {
+          // fallback: leave userId as empty string
+        }
+
         const documentResponse = await fetch("/api/upload/document", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             role: "ORDER",
-            userId: "",
+            userId,
             type: "OTHER",
             imageUrl: cloudFrontUrl, // Save CloudFront URL instead of file data
             orderId: orderId,
