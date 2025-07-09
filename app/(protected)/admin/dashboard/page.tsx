@@ -48,7 +48,14 @@ type Order = {
   status: string;
   createdAt: string;
   receiverBankCountry?: string;
-  forexPartner?: string;
+  forexPartner?: {
+    accountNumber: string;
+    accountName: string;
+    bankName: string;
+    ifscCode: string;
+    branch: string;
+    email: string;
+  };
   receiverAccount?: string;
   payer?: string;
   consultancy?: string;
@@ -86,11 +93,7 @@ type Beneficiary = {
   status: boolean;
 };
 
-const nonChangeableStatuses = [
-  "QuoteDownloaded",
-  "Documents placed",
-
-];
+const nonChangeableStatuses = ["QuoteDownloaded", "Documents placed"];
 const ChangeableStatuses = [
   "Received",
   "Pending",
@@ -141,9 +144,7 @@ export default function Dashboard() {
       }
     >
   >({});
-  const [AuthorizeOrders] = useState<Set<string>>(
-    new Set()
-  );
+  const [AuthorizeOrders] = useState<Set<string>>(new Set());
 
   // Fetch beneficiary details
   const fetchBeneficiary = async (beneficiaryId: string) => {
@@ -180,13 +181,13 @@ export default function Dashboard() {
         setOrders(data);
 
         // Fetch beneficiaries for all orders
-        const beneficiaryPromises = data.map((order: Order) => {
-          // Assuming order ID corresponds to beneficiary ID, or use order.beneficiaryId if available
-          const beneficiaryId = order.beneficiaryId || order.id;
-          return fetchBeneficiary(beneficiaryId);
-        });
+        // const beneficiaryPromises = data.map((order: Order) => {
+        //   // Assuming order ID corresponds to beneficiary ID, or use order.beneficiaryId if available
+        //   const beneficiaryId = order.beneficiaryId || order.id;
+        //   return fetchBeneficiary(beneficiaryId);
+        // });
 
-        await Promise.all(beneficiaryPromises);
+        // await Promise.all(beneficiaryPromises);
       } catch (err: unknown) {
         let errorMessage = "Error fetching orders";
         if (err instanceof Error) {
@@ -217,21 +218,21 @@ export default function Dashboard() {
   };
 
   // Update the status change handler in the authorization section
-const handleStatusSelection = (orderId: string, value: string) => {
-  setStatusSelections((prev) => ({
-    ...prev,
-    [orderId]: value,
-  }));
-  
-  if (value === "Blocked") {
-    const order = orders.find(o => o.id === orderId);
-    if (order) {
-      setSelectedOrderForIbr(order);
-      setIbrModalRate(order.ibrRate?.toString() || ""); // Pre-fill current IBR rate
-      setShowIbrModal(true);
+  const handleStatusSelection = (orderId: string, value: string) => {
+    setStatusSelections((prev) => ({
+      ...prev,
+      [orderId]: value,
+    }));
+
+    if (value === "Blocked") {
+      const order = orders.find((o) => o.id === orderId);
+      if (order) {
+        setSelectedOrderForIbr(order);
+        setIbrModalRate(order.ibrRate?.toString() || ""); // Pre-fill current IBR rate
+        setShowIbrModal(true);
+      }
     }
-  }
-};
+  };
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
     try {
@@ -328,63 +329,62 @@ const handleStatusSelection = (orderId: string, value: string) => {
   };
 
   // Modify the main submit button handler in the authorization section
-const handleAuthorizeSubmit = async (orderId: string) => {
-  try {
-    setLoading(true);
-    
-    // First update status to Authorize
-    const statusRes = await fetch(`/api/orders/${orderId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "Authorize" }),
-    });
-    
-    if (!statusRes.ok) throw new Error("Failed to update status");
-    const updatedOrder = await statusRes.json();
-    
-    setOrders((prevOrders) =>
-      prevOrders.map((order) => 
-        order.id === orderId ? updatedOrder : order
-      )
-    );
-    
-    // Then send email to forex partner
+  const handleAuthorizeSubmit = async (orderId: string) => {
     try {
-      const documentsRes = await fetch(`/api/upload/document/${orderId}`);
-      if (documentsRes.ok) {
-        const documents = await documentsRes.json();
-        const emailResponse = await fetch("/api/email/forex-partner", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            orderId,
-            documents: documents.map((doc: { imageUrl: string }) => doc.imageUrl),
-          }),
-        });
-        
-        if (!emailResponse.ok) {
-          console.error("Failed to send email to forex partner");
+      setLoading(true);
+
+      // First update status to Authorize
+      const statusRes = await fetch(`/api/orders/${orderId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "Authorize" }),
+      });
+
+      if (!statusRes.ok) throw new Error("Failed to update status");
+      const updatedOrder = await statusRes.json();
+
+      setOrders((prevOrders) =>
+        prevOrders.map((order) => (order.id === orderId ? updatedOrder : order))
+      );
+
+      // Then send email to forex partner
+      try {
+        const documentsRes = await fetch(`/api/upload/document/${orderId}`);
+        if (documentsRes.ok) {
+          const documents = await documentsRes.json();
+          const emailResponse = await fetch("/api/email/forex-partner", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              orderId,
+              documents: documents.map(
+                (doc: { imageUrl: string }) => doc.imageUrl
+              ),
+            }),
+          });
+
+          if (!emailResponse.ok) {
+            console.error("Failed to send email to forex partner");
+          }
         }
+      } catch (docError) {
+        console.error("Error sending documents email:", docError);
       }
-    } catch (docError) {
-      console.error("Error sending documents email:", docError);
+
+      setExpandedAuthorize((prev) => ({
+        ...prev,
+        [orderId]: false,
+      }));
+    } catch (err: unknown) {
+      let errorMessage = "Error authorizing order";
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
     }
-    
-    setExpandedAuthorize((prev) => ({
-      ...prev,
-      [orderId]: false,
-    }));
-    
-  } catch (err: unknown) {
-    let errorMessage = "Error authorizing order";
-    if (err instanceof Error) {
-      errorMessage = err.message;
-    }
-    setError(errorMessage);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const renderStatusElement = (order: Order) => {
     const currentStatus = order.status;
@@ -454,45 +454,45 @@ const handleAuthorizeSubmit = async (orderId: string) => {
   });
 
   // Modify the IBR submit handler to only update the rate
-const handleIbrSubmit = async (e?: React.FormEvent) => {
-  if (e) {
-    e.preventDefault();
-    e.stopPropagation();
-  }
-  if (!selectedOrderForIbr || !ibrModalRate.trim()) return;
-
-  try {
-    setLoading(true);
-    const res = await fetch(`/api/orders/${selectedOrderForIbr.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ 
-        ibrRate: Number.parseFloat(ibrModalRate)
-      }),
-    });
-    if (!res.ok) {
-      throw new Error("Failed to update IBR rate");
+  const handleIbrSubmit = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
     }
-    const updatedOrder = await res.json();
-    setOrders((prevOrders) =>
-      prevOrders.map((order) =>
-        order.id === selectedOrderForIbr.id ? updatedOrder : order
-      )
-    );
+    if (!selectedOrderForIbr || !ibrModalRate.trim()) return;
 
-    setShowIbrModal(false);
-    setIbrModalRate("");
-    setSelectedOrderForIbr(null);
-  } catch (err: unknown) {
-    let errorMessage = "Failed to update IBR rate";
-    if (err instanceof Error) {
-      errorMessage = err.message;
+    try {
+      setLoading(true);
+      const res = await fetch(`/api/orders/${selectedOrderForIbr.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ibrRate: Number.parseFloat(ibrModalRate),
+        }),
+      });
+      if (!res.ok) {
+        throw new Error("Failed to update IBR rate");
+      }
+      const updatedOrder = await res.json();
+      setOrders((prevOrders) =>
+        prevOrders.map((order) =>
+          order.id === selectedOrderForIbr.id ? updatedOrder : order
+        )
+      );
+
+      setShowIbrModal(false);
+      setIbrModalRate("");
+      setSelectedOrderForIbr(null);
+    } catch (err: unknown) {
+      let errorMessage = "Failed to update IBR rate";
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
     }
-    setError(errorMessage);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const validateOrderForm = (
     order: Order,
@@ -678,10 +678,11 @@ const handleIbrSubmit = async (e?: React.FormEvent) => {
                         </div>
                         <div>
                           <button
-                            className={`w-24 h-7 rounded-sm text-xs font-medium border ${order.fxRateUpdated
+                            className={`w-24 h-7 rounded-sm text-xs font-medium border ${
+                              order.fxRateUpdated
                                 ? "bg-white border-gray-800 text-gray-800 font-bold cursor-default"
                                 : "bg-white text-red-600 border-red-600 font-bold hover:bg-red-50 cursor-pointer"
-                              }`}
+                            }`}
                             onClick={(e) => {
                               if (!order.fxRateUpdated) {
                                 e.stopPropagation();
@@ -753,10 +754,11 @@ const handleIbrSubmit = async (e?: React.FormEvent) => {
                         </div>
                         <div className="flex items-center justify-between">
                           <button
-                            className={`w-24 sm:w-28 h-7 rounded-sm text-xs font-medium border ${order.fxRateUpdated
+                            className={`w-24 sm:w-28 h-7 rounded-sm text-xs font-medium border ${
+                              order.fxRateUpdated
                                 ? "bg-white border-gray-800 text-gray-800 font-bold cursor-default"
                                 : "bg-white text-red-600 border-red-600 font-bold hover:bg-red-50 cursor-pointer"
-                              }`}
+                            }`}
                             onClick={(e) => {
                               e.stopPropagation();
                               handleUpdateRateClick(order);
@@ -825,7 +827,7 @@ const handleIbrSubmit = async (e?: React.FormEvent) => {
                                 Forex Partner
                               </h4>
                               <p className="text-gray-600 text-sm sm:text-base font-jakarta bg-gray-50 p-2 sm:p-3 rounded-sm">
-                                {order.forexPartner || "-"}
+                                {order.forexPartner?.bankName || "-"}
                               </p>
                             </div>
                           </div>
@@ -836,10 +838,11 @@ const handleIbrSubmit = async (e?: React.FormEvent) => {
                               {!expandedAuthorize[order.id] ? (
                                 // Initial Authorize Button (Blue) - Dynamic spacing
                                 <div
-                                  className={`flex ${expandedRows.has(order.id)
+                                  className={`flex ${
+                                    expandedRows.has(order.id)
                                       ? "justify-end"
                                       : "justify-center sm:justify-end"
-                                    } mt-[-70px] mr-[-33px]`}
+                                  } mt-[-70px] mr-[-33px]`}
                                 >
                                   <Button
                                     type="button"
@@ -905,13 +908,14 @@ const handleIbrSubmit = async (e?: React.FormEvent) => {
                                         }}
                                       >
                                         <SelectTrigger
-                                          className={`bg-white border h-10 sm:h-12 ${formValidation[order.id]
+                                          className={`bg-white border h-10 sm:h-12 ${
+                                            formValidation[order.id]
                                               ?.currency &&
-                                              formValidation[order.id]
-                                                ?.currency !== order.currency
+                                            formValidation[order.id]
+                                              ?.currency !== order.currency
                                               ? "border-red-500"
                                               : "border-gray-200"
-                                            }`}
+                                          }`}
                                         >
                                           <SelectValue placeholder="Select currency" />
                                         </SelectTrigger>
@@ -956,7 +960,7 @@ const handleIbrSubmit = async (e?: React.FormEvent) => {
                                       </Select>
                                       {formValidation[order.id]?.currency &&
                                         formValidation[order.id]?.currency !==
-                                        order.currency && (
+                                          order.currency && (
                                           <p className="text-red-500 text-xs mt-1">
                                             Currency must match order currency:{" "}
                                             {order.currency}
@@ -969,14 +973,15 @@ const handleIbrSubmit = async (e?: React.FormEvent) => {
                                         FC Volume
                                       </h4>
                                       <div
-                                        className={`bg-white p-2 sm:p-3 rounded-sm border ${formValidation[order.id]?.fcyAmt &&
-                                            Number.parseFloat(
-                                              formValidation[order.id]?.fcyAmt ||
+                                        className={`bg-white p-2 sm:p-3 rounded-sm border ${
+                                          formValidation[order.id]?.fcyAmt &&
+                                          Number.parseFloat(
+                                            formValidation[order.id]?.fcyAmt ||
                                               "0"
-                                            ) !== order.amount
+                                          ) !== order.amount
                                             ? "border-red-500"
                                             : "border-gray-200"
-                                          }`}
+                                        }`}
                                       >
                                         <input
                                           type="text"
@@ -1009,7 +1014,7 @@ const handleIbrSubmit = async (e?: React.FormEvent) => {
                                       {formValidation[order.id]?.fcyAmt &&
                                         Number.parseFloat(
                                           formValidation[order.id]?.fcyAmt ||
-                                          "0"
+                                            "0"
                                         ) !== order.amount && (
                                           <p className="text-red-500 text-xs mt-1">
                                             Amount must match order amount:{" "}
@@ -1046,12 +1051,13 @@ const handleIbrSubmit = async (e?: React.FormEvent) => {
                                         }}
                                       >
                                         <SelectTrigger
-                                          className={`bg-white border h-10 sm:h-12 ${formValidation[order.id]?.purpose &&
-                                              formValidation[order.id]
-                                                ?.purpose !== order.purpose
+                                          className={`bg-white border h-10 sm:h-12 ${
+                                            formValidation[order.id]?.purpose &&
+                                            formValidation[order.id]
+                                              ?.purpose !== order.purpose
                                               ? "border-red-500"
                                               : "border-gray-200"
-                                            }`}
+                                          }`}
                                         >
                                           <SelectValue placeholder="Select purpose" />
                                         </SelectTrigger>
@@ -1087,7 +1093,7 @@ const handleIbrSubmit = async (e?: React.FormEvent) => {
                                       </Select>
                                       {formValidation[order.id]?.purpose &&
                                         formValidation[order.id]?.purpose !==
-                                        order.purpose && (
+                                          order.purpose && (
                                           <p className="text-red-500 text-xs mt-1">
                                             Purpose must match order purpose:{" "}
                                             {order.purpose}
@@ -1100,14 +1106,15 @@ const handleIbrSubmit = async (e?: React.FormEvent) => {
                                         Receiver&apos;s full name
                                       </h4>
                                       <div
-                                        className={`bg-white p-2 sm:p-3 rounded-sm border ${formValidation[order.id]
+                                        className={`bg-white p-2 sm:p-3 rounded-sm border ${
+                                          formValidation[order.id]
                                             ?.receiverFullName &&
-                                            formValidation[order.id]
-                                              ?.receiverFullName !==
+                                          formValidation[order.id]
+                                            ?.receiverFullName !==
                                             beneficiary?.receiverFullName
                                             ? "border-red-500"
                                             : "border-gray-200"
-                                          }`}
+                                        }`}
                                       >
                                         <input
                                           type="text"
@@ -1143,7 +1150,7 @@ const handleIbrSubmit = async (e?: React.FormEvent) => {
                                         ?.receiverFullName &&
                                         formValidation[order.id]
                                           ?.receiverFullName !==
-                                        beneficiary?.receiverFullName && (
+                                          beneficiary?.receiverFullName && (
                                           <p className="text-red-500 text-xs mt-1">
                                             Name must match beneficiary name:{" "}
                                             {beneficiary?.receiverFullName}
@@ -1156,14 +1163,15 @@ const handleIbrSubmit = async (e?: React.FormEvent) => {
                                         Account no.
                                       </h4>
                                       <div
-                                        className={`bg-white p-2 sm:p-3 rounded-sm border ${formValidation[order.id]
+                                        className={`bg-white p-2 sm:p-3 rounded-sm border ${
+                                          formValidation[order.id]
                                             ?.receiverAccount &&
-                                            formValidation[order.id]
-                                              ?.receiverAccount !==
+                                          formValidation[order.id]
+                                            ?.receiverAccount !==
                                             beneficiary?.receiverAccount
                                             ? "border-red-500"
                                             : "border-gray-200"
-                                          }`}
+                                        }`}
                                       >
                                         <input
                                           type="text"
@@ -1198,7 +1206,7 @@ const handleIbrSubmit = async (e?: React.FormEvent) => {
                                         ?.receiverAccount &&
                                         formValidation[order.id]
                                           ?.receiverAccount !==
-                                        beneficiary?.receiverAccount && (
+                                          beneficiary?.receiverAccount && (
                                           <p className="text-red-500 text-xs mt-1">
                                             Account number must match
                                             beneficiary account:{" "}
@@ -1212,40 +1220,61 @@ const handleIbrSubmit = async (e?: React.FormEvent) => {
                                         Rate block status
                                       </h4>
                                       <div className="flex flex-col sm:flex-row gap-4">
-
                                         <Select
-                                          value={statusSelections[order.id] || ""}
-                                          onValueChange={(value) => handleStatusSelection(order.id, value)}
+                                          value={
+                                            statusSelections[order.id] || ""
+                                          }
+                                          onValueChange={(value) =>
+                                            handleStatusSelection(
+                                              order.id,
+                                              value
+                                            )
+                                          }
                                         >
                                           <SelectTrigger className="bg-gray-50 h-10 sm:h-12">
                                             <SelectValue placeholder="Select status" />
                                           </SelectTrigger>
                                           <SelectContent>
-                                            <SelectItem value="Pending">Pending</SelectItem>
-                                            <SelectItem value="Blocked">Blocked</SelectItem>
+                                            <SelectItem value="Pending">
+                                              Pending
+                                            </SelectItem>
+                                            <SelectItem value="Blocked">
+                                              Blocked
+                                            </SelectItem>
                                           </SelectContent>
                                         </Select>
 
                                         <Button
-                                          className={`h-10 sm:h-12 px-4 sm:px-6 ${!formValidation[order.id]?.isValid &&
-                                              statusSelections[order.id] === "Blocked"
+                                          className={`h-10 sm:h-12 px-4 sm:px-6 ${
+                                            !formValidation[order.id]
+                                              ?.isValid &&
+                                            statusSelections[order.id] ===
+                                              "Blocked"
                                               ? "bg-gray-400 cursor-not-allowed"
                                               : "bg-dark-blue hover:bg-dark-blue"
-                                            } text-white`}
+                                          } text-white`}
                                           disabled={
-                                            !formValidation[order.id]?.isValid &&
-                                            statusSelections[order.id] === "Blocked"
+                                            !formValidation[order.id]
+                                              ?.isValid &&
+                                            statusSelections[order.id] ===
+                                              "Blocked"
                                           }
                                           onClick={() => {
-                                            if (statusSelections[order.id] === "Pending") {
-                                              handleStatusChange(order.id, "Pending");
+                                            if (
+                                              statusSelections[order.id] ===
+                                              "Pending"
+                                            ) {
+                                              handleStatusChange(
+                                                order.id,
+                                                "Pending"
+                                              );
                                               setExpandedAuthorize((prev) => ({
                                                 ...prev,
                                                 [order.id]: false,
                                               }));
-                                            }
-                                            else if (
-                                              statusSelections[order.id] === "Blocked" &&
+                                            } else if (
+                                              statusSelections[order.id] ===
+                                                "Blocked" &&
                                               formValidation[order.id]?.isValid
                                             ) {
                                               handleAuthorizeSubmit(order.id);
@@ -1260,10 +1289,11 @@ const handleIbrSubmit = async (e?: React.FormEvent) => {
                                   {/* Authorize Button - Changes color based on status */}
                                   <div className="flex justify-center sm:justify-end sm:absolute sm:top-[-87px] sm:right-[275px] mt-4 sm:mt-0">
                                     <Button
-                                      className={`text-white flex items-center gap-2 h-10 sm:h-12 rounded-md px-4 sm:px-6 ${AuthorizeOrders.has(order.id)
+                                      className={`text-white flex items-center gap-2 h-10 sm:h-12 rounded-md px-4 sm:px-6 ${
+                                        AuthorizeOrders.has(order.id)
                                           ? "cursor-default"
                                           : "cursor-pointer"
-                                        }`}
+                                      }`}
                                       onClick={() => {
                                         setExpandedAuthorize((prev) => ({
                                           ...prev,
@@ -1273,7 +1303,7 @@ const handleIbrSubmit = async (e?: React.FormEvent) => {
                                       style={{
                                         background:
                                           AuthorizeOrders.has(order.id) ||
-                                            order.status === "Authorize"
+                                          order.status === "Authorize"
                                             ? "linear-gradient(to right, #61C454, #414143)"
                                             : "linear-gradient(to right, #614385, #516395)",
                                       }}
@@ -1287,7 +1317,7 @@ const handleIbrSubmit = async (e?: React.FormEvent) => {
                                       />
                                       <span className="text-sm sm:text-base">
                                         {AuthorizeOrders.has(order.id) ||
-                                          order.status === "Authorize"
+                                        order.status === "Authorize"
                                           ? "Authorize"
                                           : "Authorize"}
                                       </span>
