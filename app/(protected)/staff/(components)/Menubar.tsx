@@ -27,7 +27,7 @@ export default function BreadcrumbMenubar() {
                 key={item.id}
                 onClick={() => handleMenuItemClick(item.url)}
                 className={`flex-shrink-0 py-3 md:py-4 px-4 md:px-14 text-center transition-colors font-medium text-sm md:text-base whitespace-nowrap ${
-                  item.active ? "bg-white text-black" : "bg-dark-blue text-white hover:bg-dark-blue"
+                  item.active ? "bg-dark-blue text-white" : "bg-white text-black hover:bg-dark-blue"
                 } ${item.id === "order-details" || item.id === "beneficiary-details" ? "rounded-tl-md rounded-tr-md"  : ""} ${
                   item.id === "sender-details" || item.id === "documents" ? "rounded-tl-lg rounded-tr-lg" : ""
                 }`}

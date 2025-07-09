@@ -70,17 +70,18 @@ export function Sidebar({
       active: pathname === "/staff/dashboard",
     },
     {
-      href: "/staff/dashboard/view-orders",
-      icon: <Image src="/orders.svg" alt="Orders" width={24} height={24} className="w-6 h-6" />,
-      label: "View All Orders",
-      active: pathname === "/staff/dashboard/view-orders",
-    },
-    {
       href: "/staff/dashboard/placeorder",
       icon: <Image src="/placeee.svg" alt="Place Order" width={24} height={24} className="w-6 h-6" />,
       label: "Place an order",
       active: pathname === "/staff/dashboard/placeorder",
     },
+    {
+      href: "/staff/dashboard/view-orders",
+      icon: <Image src="/orders.svg" alt="Orders" width={24} height={24} className="w-6 h-6" />,
+      label: "View All Orders",
+      active: pathname === "/staff/dashboard/view-orders",
+    },
+    
     {
       href: "/staff/dashboard/manage-receivers",
       icon: <Image src="/Placean.svg" alt="Receivers" width={24} height={24} className="w-6 h-6" />,
