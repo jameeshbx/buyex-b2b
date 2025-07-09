@@ -37,7 +37,7 @@ import {
 } from "@/lib/financial";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { forexPartner, ForexPartner } from "@/data/forex-partner";
+import { forexPartnerData } from "@/data/forex-partner";
 
 interface CalculatedValues {
   inrAmount: string;
@@ -328,13 +328,16 @@ export default function OrderDetailsForm() {
 
     try {
       // First, create the order to get the orderId
+      console.log(formData);
       const order = await axios.post("/api/orders", {
         purpose: formData.purpose,
         foreignBankCharges: formData.foreignBankCharges,
         payer: formData.payer,
-        forexPartner: forexPartner.find(
-          (partner) => partner.accountName === formData.forexPartner
-        ) as ForexPartner,
+        forexPartner: forexPartnerData.find(
+          (partner) =>
+            partner.accountName.toLowerCase() ===
+            formData.forexPartner.toLowerCase()
+        ),
         margin: formData.margin,
         receiverBankCountry: formData.receiverBankCountry,
         studentName: formData.studentName,
