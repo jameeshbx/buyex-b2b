@@ -89,7 +89,7 @@ type Beneficiary = {
 const nonChangeableStatuses = [
   "QuoteDownloaded",
   "Documents placed",
-  "Authorize",
+
 ];
 const ChangeableStatuses = [
   "Received",
@@ -98,6 +98,7 @@ const ChangeableStatuses = [
   "Completed",
   "Verified",
   "Blocked",
+  "Authorize",
 ];
 
 export default function Dashboard() {
@@ -140,7 +141,7 @@ export default function Dashboard() {
       }
     >
   >({});
-  const [AuthorizeOrders, setAuthorizeOrders] = useState<Set<string>>(
+  const [AuthorizeOrders] = useState<Set<string>>(
     new Set()
   );
 
@@ -214,6 +215,23 @@ export default function Dashboard() {
     }
     setExpandedRows(newExpanded);
   };
+
+  // Update the status change handler in the authorization section
+const handleStatusSelection = (orderId: string, value: string) => {
+  setStatusSelections((prev) => ({
+    ...prev,
+    [orderId]: value,
+  }));
+  
+  if (value === "Blocked") {
+    const order = orders.find(o => o.id === orderId);
+    if (order) {
+      setSelectedOrderForIbr(order);
+      setIbrModalRate(order.ibrRate?.toString() || ""); // Pre-fill current IBR rate
+      setShowIbrModal(true);
+    }
+  }
+};
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
     try {
@@ -309,6 +327,65 @@ export default function Dashboard() {
     }
   };
 
+  // Modify the main submit button handler in the authorization section
+const handleAuthorizeSubmit = async (orderId: string) => {
+  try {
+    setLoading(true);
+    
+    // First update status to Authorize
+    const statusRes = await fetch(`/api/orders/${orderId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "Authorize" }),
+    });
+    
+    if (!statusRes.ok) throw new Error("Failed to update status");
+    const updatedOrder = await statusRes.json();
+    
+    setOrders((prevOrders) =>
+      prevOrders.map((order) => 
+        order.id === orderId ? updatedOrder : order
+      )
+    );
+    
+    // Then send email to forex partner
+    try {
+      const documentsRes = await fetch(`/api/upload/document/${orderId}`);
+      if (documentsRes.ok) {
+        const documents = await documentsRes.json();
+        const emailResponse = await fetch("/api/email/forex-partner", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orderId,
+            documents: documents.map((doc: { imageUrl: string }) => doc.imageUrl),
+          }),
+        });
+        
+        if (!emailResponse.ok) {
+          console.error("Failed to send email to forex partner");
+        }
+      }
+    } catch (docError) {
+      console.error("Error sending documents email:", docError);
+    }
+    
+    setExpandedAuthorize((prev) => ({
+      ...prev,
+      [orderId]: false,
+    }));
+    
+  } catch (err: unknown) {
+    let errorMessage = "Error authorizing order";
+    if (err instanceof Error) {
+      errorMessage = err.message;
+    }
+    setError(errorMessage);
+  } finally {
+    setLoading(false);
+  }
+};
+
   const renderStatusElement = (order: Order) => {
     const currentStatus = order.status;
 
@@ -376,76 +453,46 @@ export default function Dashboard() {
     return matchesPurpose && matchesSearch;
   });
 
-  // Fixed IBR submit function to prevent page refresh
-  const handleIbrSubmit = async (e?: React.FormEvent) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
+  // Modify the IBR submit handler to only update the rate
+const handleIbrSubmit = async (e?: React.FormEvent) => {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  if (!selectedOrderForIbr || !ibrModalRate.trim()) return;
+
+  try {
+    setLoading(true);
+    const res = await fetch(`/api/orders/${selectedOrderForIbr.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        ibrRate: Number.parseFloat(ibrModalRate)
+      }),
+    });
+    if (!res.ok) {
+      throw new Error("Failed to update IBR rate");
     }
-    if (!selectedOrderForIbr || !ibrModalRate.trim()) return;
+    const updatedOrder = await res.json();
+    setOrders((prevOrders) =>
+      prevOrders.map((order) =>
+        order.id === selectedOrderForIbr.id ? updatedOrder : order
+      )
+    );
 
-    try {
-      setLoading(true);
-      const res = await fetch(`/api/orders/${selectedOrderForIbr.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ibrRate: Number.parseFloat(ibrModalRate) }),
-      });
-      if (!res.ok) {
-        throw new Error("Failed to update IBR rate");
-      }
-      const updatedOrder = await res.json();
-      setOrders((prevOrders) =>
-        prevOrders.map((order) =>
-          order.id === selectedOrderForIbr.id ? updatedOrder : order
-        )
-      );
-
-      try {
-        const documentsRes = await fetch(
-          `/api/upload/document/${selectedOrderForIbr.id}`
-        );
-        if (documentsRes.ok) {
-          const documents = await documentsRes.json();
-          console.log("Documents for order:", documents);
-          try {
-            const emailResponse = await fetch("/api/email/forex-partner", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                documents: documents.map(
-                  (doc: { imageUrl: string }) => doc.imageUrl
-                ),
-              }),
-            });
-            if (emailResponse.ok) {
-              console.log("Email sent successfully to forex partner");
-            } else {
-              console.error("Failed to send email to forex partner");
-            }
-          } catch (emailError) {
-            console.error("Error sending email to forex partner:", emailError);
-          }
-        }
-      } catch (docError) {
-        console.error("Error fetching documents:", docError);
-      }
-
-      setShowIbrModal(false);
-      setIbrModalRate("");
-      setSelectedOrderForIbr(null);
-    } catch (err: unknown) {
-      let errorMessage = "Failed to update IBR rate";
-      if (err instanceof Error) {
-        errorMessage = err.message;
-      }
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
+    setShowIbrModal(false);
+    setIbrModalRate("");
+    setSelectedOrderForIbr(null);
+  } catch (err: unknown) {
+    let errorMessage = "Failed to update IBR rate";
+    if (err instanceof Error) {
+      errorMessage = err.message;
     }
-  };
+    setError(errorMessage);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const validateOrderForm = (
     order: Order,
@@ -631,11 +678,10 @@ export default function Dashboard() {
                         </div>
                         <div>
                           <button
-                            className={`w-24 h-7 rounded-sm text-xs font-medium border ${
-                              order.fxRateUpdated
+                            className={`w-24 h-7 rounded-sm text-xs font-medium border ${order.fxRateUpdated
                                 ? "bg-white border-gray-800 text-gray-800 font-bold cursor-default"
                                 : "bg-white text-red-600 border-red-600 font-bold hover:bg-red-50 cursor-pointer"
-                            }`}
+                              }`}
                             onClick={(e) => {
                               if (!order.fxRateUpdated) {
                                 e.stopPropagation();
@@ -707,11 +753,10 @@ export default function Dashboard() {
                         </div>
                         <div className="flex items-center justify-between">
                           <button
-                            className={`w-24 sm:w-28 h-7 rounded-sm text-xs font-medium border ${
-                              order.fxRateUpdated
+                            className={`w-24 sm:w-28 h-7 rounded-sm text-xs font-medium border ${order.fxRateUpdated
                                 ? "bg-white border-gray-800 text-gray-800 font-bold cursor-default"
                                 : "bg-white text-red-600 border-red-600 font-bold hover:bg-red-50 cursor-pointer"
-                            }`}
+                              }`}
                             onClick={(e) => {
                               e.stopPropagation();
                               handleUpdateRateClick(order);
@@ -791,11 +836,10 @@ export default function Dashboard() {
                               {!expandedAuthorize[order.id] ? (
                                 // Initial Authorize Button (Blue) - Dynamic spacing
                                 <div
-                                  className={`flex ${
-                                    expandedRows.has(order.id)
+                                  className={`flex ${expandedRows.has(order.id)
                                       ? "justify-end"
                                       : "justify-center sm:justify-end"
-                                  } mt-[-70px] mr-[-33px]`}
+                                    } mt-[-70px] mr-[-33px]`}
                                 >
                                   <Button
                                     type="button"
@@ -861,14 +905,13 @@ export default function Dashboard() {
                                         }}
                                       >
                                         <SelectTrigger
-                                          className={`bg-white border h-10 sm:h-12 ${
-                                            formValidation[order.id]
+                                          className={`bg-white border h-10 sm:h-12 ${formValidation[order.id]
                                               ?.currency &&
-                                            formValidation[order.id]
-                                              ?.currency !== order.currency
+                                              formValidation[order.id]
+                                                ?.currency !== order.currency
                                               ? "border-red-500"
                                               : "border-gray-200"
-                                          }`}
+                                            }`}
                                         >
                                           <SelectValue placeholder="Select currency" />
                                         </SelectTrigger>
@@ -913,7 +956,7 @@ export default function Dashboard() {
                                       </Select>
                                       {formValidation[order.id]?.currency &&
                                         formValidation[order.id]?.currency !==
-                                          order.currency && (
+                                        order.currency && (
                                           <p className="text-red-500 text-xs mt-1">
                                             Currency must match order currency:{" "}
                                             {order.currency}
@@ -926,15 +969,14 @@ export default function Dashboard() {
                                         FC Volume
                                       </h4>
                                       <div
-                                        className={`bg-white p-2 sm:p-3 rounded-sm border ${
-                                          formValidation[order.id]?.fcyAmt &&
-                                          Number.parseFloat(
-                                            formValidation[order.id]?.fcyAmt ||
+                                        className={`bg-white p-2 sm:p-3 rounded-sm border ${formValidation[order.id]?.fcyAmt &&
+                                            Number.parseFloat(
+                                              formValidation[order.id]?.fcyAmt ||
                                               "0"
-                                          ) !== order.amount
+                                            ) !== order.amount
                                             ? "border-red-500"
                                             : "border-gray-200"
-                                        }`}
+                                          }`}
                                       >
                                         <input
                                           type="text"
@@ -967,7 +1009,7 @@ export default function Dashboard() {
                                       {formValidation[order.id]?.fcyAmt &&
                                         Number.parseFloat(
                                           formValidation[order.id]?.fcyAmt ||
-                                            "0"
+                                          "0"
                                         ) !== order.amount && (
                                           <p className="text-red-500 text-xs mt-1">
                                             Amount must match order amount:{" "}
@@ -1004,13 +1046,12 @@ export default function Dashboard() {
                                         }}
                                       >
                                         <SelectTrigger
-                                          className={`bg-white border h-10 sm:h-12 ${
-                                            formValidation[order.id]?.purpose &&
-                                            formValidation[order.id]
-                                              ?.purpose !== order.purpose
+                                          className={`bg-white border h-10 sm:h-12 ${formValidation[order.id]?.purpose &&
+                                              formValidation[order.id]
+                                                ?.purpose !== order.purpose
                                               ? "border-red-500"
                                               : "border-gray-200"
-                                          }`}
+                                            }`}
                                         >
                                           <SelectValue placeholder="Select purpose" />
                                         </SelectTrigger>
@@ -1046,7 +1087,7 @@ export default function Dashboard() {
                                       </Select>
                                       {formValidation[order.id]?.purpose &&
                                         formValidation[order.id]?.purpose !==
-                                          order.purpose && (
+                                        order.purpose && (
                                           <p className="text-red-500 text-xs mt-1">
                                             Purpose must match order purpose:{" "}
                                             {order.purpose}
@@ -1059,15 +1100,14 @@ export default function Dashboard() {
                                         Receiver&apos;s full name
                                       </h4>
                                       <div
-                                        className={`bg-white p-2 sm:p-3 rounded-sm border ${
-                                          formValidation[order.id]
+                                        className={`bg-white p-2 sm:p-3 rounded-sm border ${formValidation[order.id]
                                             ?.receiverFullName &&
-                                          formValidation[order.id]
-                                            ?.receiverFullName !==
+                                            formValidation[order.id]
+                                              ?.receiverFullName !==
                                             beneficiary?.receiverFullName
                                             ? "border-red-500"
                                             : "border-gray-200"
-                                        }`}
+                                          }`}
                                       >
                                         <input
                                           type="text"
@@ -1103,7 +1143,7 @@ export default function Dashboard() {
                                         ?.receiverFullName &&
                                         formValidation[order.id]
                                           ?.receiverFullName !==
-                                          beneficiary?.receiverFullName && (
+                                        beneficiary?.receiverFullName && (
                                           <p className="text-red-500 text-xs mt-1">
                                             Name must match beneficiary name:{" "}
                                             {beneficiary?.receiverFullName}
@@ -1116,15 +1156,14 @@ export default function Dashboard() {
                                         Account no.
                                       </h4>
                                       <div
-                                        className={`bg-white p-2 sm:p-3 rounded-sm border ${
-                                          formValidation[order.id]
+                                        className={`bg-white p-2 sm:p-3 rounded-sm border ${formValidation[order.id]
                                             ?.receiverAccount &&
-                                          formValidation[order.id]
-                                            ?.receiverAccount !==
+                                            formValidation[order.id]
+                                              ?.receiverAccount !==
                                             beneficiary?.receiverAccount
                                             ? "border-red-500"
                                             : "border-gray-200"
-                                        }`}
+                                          }`}
                                       >
                                         <input
                                           type="text"
@@ -1159,7 +1198,7 @@ export default function Dashboard() {
                                         ?.receiverAccount &&
                                         formValidation[order.id]
                                           ?.receiverAccount !==
-                                          beneficiary?.receiverAccount && (
+                                        beneficiary?.receiverAccount && (
                                           <p className="text-red-500 text-xs mt-1">
                                             Account number must match
                                             beneficiary account:{" "}
@@ -1173,82 +1212,43 @@ export default function Dashboard() {
                                         Rate block status
                                       </h4>
                                       <div className="flex flex-col sm:flex-row gap-4">
+
                                         <Select
-                                          value={
-                                            statusSelections[order.id] || ""
-                                          }
-                                          onValueChange={(value) => {
-                                            setStatusSelections((prev) => ({
-                                              ...prev,
-                                              [order.id]: value,
-                                            }));
-                                            if (value === "Blocked") {
-                                              setSelectedOrderForIbr(order);
-                                              setIbrModalRate("");
-                                              setShowIbrModal(true);
-                                            }
-                                          }}
+                                          value={statusSelections[order.id] || ""}
+                                          onValueChange={(value) => handleStatusSelection(order.id, value)}
                                         >
                                           <SelectTrigger className="bg-gray-50 h-10 sm:h-12">
                                             <SelectValue placeholder="Select status" />
                                           </SelectTrigger>
                                           <SelectContent>
-                                            <SelectItem value="pending">
-                                              Pending
-                                            </SelectItem>
-                                            <SelectItem value="Blocked">
-                                              Blocked
-                                            </SelectItem>
+                                            <SelectItem value="Pending">Pending</SelectItem>
+                                            <SelectItem value="Blocked">Blocked</SelectItem>
                                           </SelectContent>
                                         </Select>
+
                                         <Button
-                                          className={`h-10 sm:h-12 px-4 sm:px-6 ${
-                                            !formValidation[order.id]
-                                              ?.isValid &&
-                                            statusSelections[order.id] ===
-                                              "Blocked"
+                                          className={`h-10 sm:h-12 px-4 sm:px-6 ${!formValidation[order.id]?.isValid &&
+                                              statusSelections[order.id] === "Blocked"
                                               ? "bg-gray-400 cursor-not-allowed"
                                               : "bg-dark-blue hover:bg-dark-blue"
-                                          } text-white`}
+                                            } text-white`}
                                           disabled={
-                                            !formValidation[order.id]
-                                              ?.isValid &&
-                                            statusSelections[order.id] ===
-                                              "Blocked"
+                                            !formValidation[order.id]?.isValid &&
+                                            statusSelections[order.id] === "Blocked"
                                           }
                                           onClick={() => {
-                                            if (
-                                              statusSelections[order.id] ===
-                                                "Blocked" &&
+                                            if (statusSelections[order.id] === "Pending") {
+                                              handleStatusChange(order.id, "Pending");
+                                              setExpandedAuthorize((prev) => ({
+                                                ...prev,
+                                                [order.id]: false,
+                                              }));
+                                            }
+                                            else if (
+                                              statusSelections[order.id] === "Blocked" &&
                                               formValidation[order.id]?.isValid
                                             ) {
-                                              setAuthorizeOrders(
-                                                (prev) =>
-                                                  new Set([
-                                                    ...Array.from(prev),
-                                                    order.id,
-                                                  ])
-                                              );
-                                              handleStatusChange(
-                                                order.id,
-                                                "Authorize"
-                                              );
-                                              setExpandedAuthorize((prev) => ({
-                                                ...prev,
-                                                [order.id]: false,
-                                              }));
-                                            } else if (
-                                              statusSelections[order.id] !==
-                                              "Blocked"
-                                            ) {
-                                              handleStatusChange(
-                                                order.id,
-                                                "Authorize"
-                                              );
-                                              setExpandedAuthorize((prev) => ({
-                                                ...prev,
-                                                [order.id]: false,
-                                              }));
+                                              handleAuthorizeSubmit(order.id);
                                             }
                                           }}
                                         >
@@ -1260,27 +1260,20 @@ export default function Dashboard() {
                                   {/* Authorize Button - Changes color based on status */}
                                   <div className="flex justify-center sm:justify-end sm:absolute sm:top-[-87px] sm:right-[275px] mt-4 sm:mt-0">
                                     <Button
-                                      className={`text-white flex items-center gap-2 h-10 sm:h-12 rounded-md px-4 sm:px-6 ${
-                                        AuthorizeOrders.has(order.id)
+                                      className={`text-white flex items-center gap-2 h-10 sm:h-12 rounded-md px-4 sm:px-6 ${AuthorizeOrders.has(order.id)
                                           ? "cursor-default"
                                           : "cursor-pointer"
-                                      }`}
+                                        }`}
                                       onClick={() => {
-                                        if (!AuthorizeOrders.has(order.id)) {
-                                          handleStatusChange(
-                                            order.id,
-                                            "Authorize"
-                                          );
-                                          setExpandedAuthorize((prev) => ({
-                                            ...prev,
-                                            [order.id]: false,
-                                          }));
-                                        }
+                                        setExpandedAuthorize((prev) => ({
+                                          ...prev,
+                                          [order.id]: !prev[order.id], // Toggle expand/shrink
+                                        }));
                                       }}
                                       style={{
                                         background:
                                           AuthorizeOrders.has(order.id) ||
-                                          order.status === "Authorize"
+                                            order.status === "Authorize"
                                             ? "linear-gradient(to right, #61C454, #414143)"
                                             : "linear-gradient(to right, #614385, #516395)",
                                       }}
@@ -1294,7 +1287,7 @@ export default function Dashboard() {
                                       />
                                       <span className="text-sm sm:text-base">
                                         {AuthorizeOrders.has(order.id) ||
-                                        order.status === "Authorize"
+                                          order.status === "Authorize"
                                           ? "Authorize"
                                           : "Authorize"}
                                       </span>
