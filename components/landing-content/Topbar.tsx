@@ -29,7 +29,17 @@ export default function Topbar() {
         <div className="container mx-auto px-4 py-4 flex flex-col items-center">
           {/* Logo */}
           <div className="mb-4">
-            <Image src="/header-logo.png" alt="" width={200} height={150} />
+            <Link href="/" passHref>
+  <div className="cursor-pointer">
+    <Image 
+      src="/header-logo.png" 
+      alt="Buy Exchange Logo" 
+      width={200} 
+      height={150} 
+      className="mb-6"
+    />
+  </div>
+</Link>
           </div>
 
           {/* Topbar Container */}

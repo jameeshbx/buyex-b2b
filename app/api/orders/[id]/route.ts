@@ -81,6 +81,7 @@ export async function PATCH(
         currency: body.currency,
         totalAmount: body.totalAmount !== undefined ? parseFloat(body.totalAmount) : undefined,
         customerRate: body.customerRate !== undefined ? parseFloat(body.customerRate) : undefined,
+        pancardNumber: body.pancardNumber,
         senderId: body.senderId,
         beneficiaryId: body.beneficiaryId,
         educationLoan: body.educationLoan
