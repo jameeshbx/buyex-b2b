@@ -9,7 +9,7 @@ async function page({ params }: PageProps) {
   const { orderId } = await params;
   return (
     <div>
-      <DocumentUploadForm orderID={orderId} />
+      <DocumentUploadForm orderID={orderId} currentUser={null} />
     </div>
   );
 }
