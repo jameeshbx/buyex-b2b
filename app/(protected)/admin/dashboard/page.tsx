@@ -1,11 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link"
 import {
   ChevronDown,
   ChevronRight,
   Upload,
   Search,
   Filter,
+  
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -698,13 +700,15 @@ export default function Dashboard() {
                           {renderStatusElement(order)}
                         </div>
                         <div onClick={(e) => e.stopPropagation()}>
+                        <Link href={`/admin/dashboard/upload-files/${order.id}`}>
                           <Button
                             size="sm"
-                            className="bg-dark-blue text-white px-2 py-2 text-xs h-7"
+                            className="bg-dark-blue hover:bg-blue-700 text-white px-2 py-2 text-xs h-7"
                           >
-                            <Upload className="h-3 w-3" />
+                            <Upload className="h-2 w-2" />
                             Uploads
                           </Button>
+                        </Link>
                         </div>
                       </div>
                       {/* Mobile/Tablet Layout */}
@@ -767,13 +771,15 @@ export default function Dashboard() {
                             {order.fxRateUpdated ? "UPDATED" : "UPDATE RATE"}
                           </button>
                           <div onClick={(e) => e.stopPropagation()}>
-                            <Button
-                              size="sm"
-                              className="bg-dark-blue text-white h-7 px-3"
-                            >
-                              <Upload className="h-3 w-3 mr-1" />
-                              Uploads
-                            </Button>
+                          <Link href={`/admin/dashboard/upload-files/${order.id}`}>
+                          <Button
+                            size="sm"
+                            className="bg-dark-blue hover:bg-blue-700 text-white px-2 py-2 text-xs h-7"
+                          >
+                            <Upload className="h-2 w-2" />
+                            Uploads
+                          </Button>
+                        </Link>
                           </div>
                         </div>
                       </div>
