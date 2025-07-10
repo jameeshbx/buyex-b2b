@@ -22,7 +22,7 @@ type FormState = {
   checklist: Record<string, File | null>;
 };
 
-export default function DocumentUploadForm({ orderID }: { orderID: string }) {
+export default function DocumentUploadForm({ orderID, currentUser }: { orderID: string, currentUser: { role: string, id?: string } | null }) {
   const router = useRouter();
   const [formState, setFormState] = useState<FormState>({
     kyc: {
@@ -41,24 +41,22 @@ export default function DocumentUploadForm({ orderID }: { orderID: string }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [senderDetails, setSenderDetails] = useState<Sender | null>(null);
   const [orderId] = useState<string | null>(orderID);
-  const [currentUser, setCurrentUser] = useState<{
-    role: string;
-    id?: string;
-  } | null>(null);
+  const [currentUserState, setCurrentUserState] = useState(currentUser);
 
   useEffect(() => {
-    const fetchCurrentUser = async () => {
-      try {
-        const response = await axios.get("/api/users/me");
-        setCurrentUser(response.data);
-      } catch (error) {
-        console.error("Error fetching user:", error);
-        // User not logged in - set to null
-        setCurrentUser(null);
-      }
-    };
-    fetchCurrentUser();
-  }, []);
+    if (currentUser === undefined) {
+      // Only fetch if not provided
+      const fetchCurrentUser = async () => {
+        try {
+          const response = await axios.get("/api/users/me", { withCredentials: true });
+          setCurrentUserState(response.data);
+        } catch  {
+          setCurrentUserState(null);
+        }
+      };
+      fetchCurrentUser();
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -68,7 +66,7 @@ export default function DocumentUploadForm({ orderID }: { orderID: string }) {
           setPurpose(order.data.purpose);
           setEducationLoan(order.data.educationLoan);
           // Check user type and handle sender details accordingly
-          if (currentUser?.role === "staff") {
+          if (currentUserState?.role === "staff") {
             // Staff user - must have sender details to proceed
             if (order.data.senderId) {
               try {
@@ -123,7 +121,7 @@ export default function DocumentUploadForm({ orderID }: { orderID: string }) {
         }
       } else {
         // No order ID provided
-        if (currentUser?.role === "staff") {
+        if (currentUserState?.role === "staff") {
           // Staff users need an order ID
           toast.error("Order ID is required");
           router.push(`/staff/dashboard/sender-details`);
@@ -133,10 +131,10 @@ export default function DocumentUploadForm({ orderID }: { orderID: string }) {
     };
 
     // Only fetch order after we have user info (or confirmed no user)
-    if (currentUser !== undefined) {
+    if (currentUserState !== undefined) {
       fetchOrder();
     }
-  }, [orderId, currentUser, router]);
+  }, [orderId, currentUserState, router]);
 
   const handleFileUpload = (
     section: "kyc" | "checklist",
@@ -253,11 +251,11 @@ export default function DocumentUploadForm({ orderID }: { orderID: string }) {
       let documentUserId = senderDetails?.id;
       if (!documentUserId) {
         // For students, users, or non-logged users, use appropriate fallback
-        if (currentUser?.id) {
-          documentUserId = currentUser.id;
-        } else if (currentUser?.role === "student") {
+        if (currentUserState?.id) {
+          documentUserId = currentUserState.id;
+        } else if (currentUserState?.role === "student") {
           documentUserId = "student-user";
-        } else if (currentUser?.role === "user") {
+        } else if (currentUserState?.role === "user") {
           documentUserId = "regular-user";
         } else {
           documentUserId = "anonymous-user";
@@ -266,8 +264,8 @@ export default function DocumentUploadForm({ orderID }: { orderID: string }) {
 
       // Determine who uploaded the document
       const getUploadedBy = () => {
-        if (!currentUser) return "Anonymous";
-        switch (currentUser.role) {
+        if (!currentUserState) return "Anonymous";
+        switch (currentUserState.role) {
           case "staff":
             return "Staff";
           case "student":
@@ -385,7 +383,7 @@ export default function DocumentUploadForm({ orderID }: { orderID: string }) {
       }
 
       // Success handling - Only MANAGER gets redirected, all others get popup only
-      if (currentUser?.role === "MANAGER" || currentUser?.role === "ADMIN") {
+      if (currentUserState?.role === "MANAGER" || currentUserState?.role === "ADMIN") {
         // MANAGER: Show success message and redirect to order preview
         toast.success(`${uploadedCount} documents uploaded successfully!`);
         router.push(`/staff/dashboard/order-preview?orderId=${orderId}`);
