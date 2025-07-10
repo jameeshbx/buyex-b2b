@@ -17,7 +17,7 @@ function DocumentUploadContent() {
       <Menubar />
       <div className="p-4 bg-white">
         <Suspense fallback={<div>Loading...</div>}>
-          <DocumentUploadForm orderID={orderID} />
+          <DocumentUploadForm orderID={orderID} currentUser={null} />
         </Suspense>
       </div>
     </main>
