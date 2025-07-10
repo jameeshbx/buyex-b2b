@@ -21,14 +21,29 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { role, userId, type, imageUrl, orderId, name, uploadedBy, comment } = body;
-
+    const { role, userId, type, imageUrl, orderId, name, uploadedBy, comment, fileSize } = body;
+    
     // Validate required fields
-    if (!role || !userId || !type || !imageUrl || !orderId) {
+    if (!role || !userId || !type || !imageUrl) {
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: "Missing required fields: role, userId, type, and imageUrl are required" },
         { status: 400 }
       );
+    }
+
+    // If orderId is provided, verify the order exists
+    if (orderId) {
+      const orderExists = await db.order.findUnique({
+        where: { id: orderId },
+        select: { id: true }
+      });
+      
+      if (!orderExists) {
+        return NextResponse.json(
+          { error: "Order not found with the provided orderId" },
+          { status: 404 }
+        );
+      }
     }
 
     const document = await db.document.create({
@@ -37,7 +52,8 @@ export async function POST(request: Request) {
         userId,
         type: type as DocumentType,
         imageUrl,
-        orderId,
+        fileSize,
+        orderId: orderId || null, // Handle optional orderId
         name,
         uploadedBy,
         comment,
@@ -46,6 +62,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(document, { status: 200 });
   } catch (error) {
+    
     return NextResponse.json(
       { error: "Failed to create document", details: error },
       { status: 500 }

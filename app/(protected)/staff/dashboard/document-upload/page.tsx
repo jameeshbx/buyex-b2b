@@ -1,6 +1,7 @@
 "use client";
 
 import DocumentUploadForm from "@/app/(protected)/staff/(components)/document-upload-form";
+import ListDocuments from "../../(components)/ListDocuments";
 import { Topbar } from "../../(components)/Topbar";
 import { pagesData } from "@/data/navigation";
 import Menubar from "../../(components)/Menubar";
@@ -18,6 +19,9 @@ function DocumentUploadContent() {
       <div className="p-4 bg-white">
         <Suspense fallback={<div>Loading...</div>}>
           <DocumentUploadForm orderID={orderID} currentUser={null} />
+          <div className="mt-4">
+            <ListDocuments orderID={orderID} />
+          </div>
         </Suspense>
       </div>
     </main>

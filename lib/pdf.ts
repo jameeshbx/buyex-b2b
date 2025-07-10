@@ -18,6 +18,7 @@ interface Order {
   status: string;
   createdAt: string;
   updatedAt: string;
+  pancardNumber: string;
   sender?: {
     id: string;
     studentName: string;
@@ -111,16 +112,16 @@ export async function generateA2Form(order: Order) {
     mobile: order.sender?.phoneNumber || '',
     email: order.sender?.studentEmailOriginal || '',
     nationality: order.sender?.nationality || '',
-    pan: '',
+    pan: order.pancardNumber,
     resStatus: 'Resident',
 
     senderName: order.sender?.senderName || '',
     senderPassportNo: '',
-    senderPAN: '',
+    senderPAN: order.pancardNumber,
     relation: order.sender?.relationship || '',
 
     forexPurpose: order.purpose || '',
-    forexAmountUSD: order.totalAmount.toString(),
+    forexAmountUSD: order.amount.toString(),
     forexAmountINR: order.totalAmount.toString(),
     country: order.receiverBankCountry || '',
     source: order.sender?.sourceOfFunds || '',

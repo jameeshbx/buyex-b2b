@@ -14,7 +14,6 @@ import { Loader2 } from "lucide-react";
 import { generateA2Form } from "@/lib/pdf";
 import { orderReceivedTemplate } from "@/lib/email-templates";
 
-
 interface ForexPartner {
   bankName: string;
   ifscCode: string;
@@ -42,6 +41,7 @@ interface Order {
   status: string;
   createdAt: string;
   updatedAt: string;
+  pancardNumber: string;
   sender?: {
     id: string;
     studentName: string;
@@ -387,9 +387,9 @@ export default function TransactionDetails({
                   Forex Partner
                 </div>
                 <div className="text-gray-600 text-sm sm:text-base font-jakarta">
-          {typeof order.forexPartner === "string"
-      ? order.forexPartner
-      : order.forexPartner?.bankName || "N/A"}
+                  {typeof order.forexPartner === "string"
+                    ? order.forexPartner
+                    : order.forexPartner?.bankName || "N/A"}
                 </div>
               </div>
             </div>
@@ -638,14 +638,14 @@ export default function TransactionDetails({
 async function generateA2FormPDF(order: Order) {
   // 🛠️ Again, ensure proper forexPartner type
   const cleanOrder = {
-  ...order,
-  forexPartner:
-    typeof order.forexPartner === "string"
-      ? order.forexPartner
-      : order.forexPartner?.bankName || "N/A", // Fallback if bankName is missing
-};
+    ...order,
+    forexPartner:
+      typeof order.forexPartner === "string"
+        ? order.forexPartner
+        : order.forexPartner?.bankName || "N/A", // Fallback if bankName is missing
+  };
   try {
-    const pdfBytes = await generateA2Form(cleanOrder)
+    const pdfBytes = await generateA2Form(cleanOrder);
 
     // Create a File object from the PDF bytes
     const fileName = `A2_Form_${order.id}_${
