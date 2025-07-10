@@ -105,13 +105,17 @@ export default function SignupSection() {
       <div className="relative w-full max-w-5xl bg-white flex flex-col lg:flex-row overflow-hidden shadow-xl rounded-lg">
         {/* Left Section */}
         <div className="w-full lg:w-1/3 bg-gradient-to-b from-dark-blue to-light-blue p-6 sm:p-8 text-white">
-          <Image
-            src="/images/signup/logo.png"
-            alt="Buy Exchange Logo"
-            width={165}
-            height={50}
-            className="mb-3"
-          />
+           <Link href="/" passHref>
+  <div className="cursor-pointer">
+    <Image 
+      src="/whitelogo.png" 
+      alt="Buy Exchange Logo" 
+      width={165} 
+      height={50} 
+      className="mb-6"
+    />
+  </div>
+</Link>
           <h1 className="text-2xl font-bold font-plus-jakarta">
             Be the Change in <br />
             Global Education.

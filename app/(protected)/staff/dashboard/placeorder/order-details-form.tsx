@@ -83,6 +83,7 @@ async function generateQuotePDF(
       ["Foreign Currency", formData.currency || ""],
       ["Foreign Currency Amount", formData.amount || ""],
       ["Exchange Rate", formData.customerRate || ""],
+      ["PAN Number", formData.pancardNumber || ""],
       ["Forex Conversion Tax", calculatedValues.gst],
       ["TCS", calculatedValues.tcsApplicable],
       ["Processing Charges", calculatedValues.bankFee],
@@ -130,9 +131,8 @@ async function generateQuotePDF(
   );
   doc.setTextColor(0, 0, 255);
   doc.textWithLink("www.buyexchange.in/document-uploads", 14, lastY + 12, {
-    url: `${process.env.NEXT_PUBLIC_APP_URL}/document-uploads/${
-      orderId || "pending"
-    }`,
+    url: `${process.env.NEXT_PUBLIC_APP_URL}/document-uploads/${orderId || "pending"
+      }`,
   });
 
   doc.setTextColor(0);
@@ -195,6 +195,7 @@ export default function OrderDetailsForm() {
       currency: "USD",
       totalAmount: "",
       customerRate: "",
+      pancardNumber: "",
       educationLoan: "no",
     },
   });
@@ -233,7 +234,7 @@ export default function OrderDetailsForm() {
     }
   }
 
-  
+
 
   function resetForm() {
     form.reset();
@@ -310,8 +311,8 @@ export default function OrderDetailsForm() {
     const currencyValue = form.watch("currency");
     const countryCurrency = selectedCountry
       ? COUNTRY_CURRENCY_MAP[
-          selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP
-        ]
+      selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP
+      ]
       : "USD";
 
     if (selectedCountry && currencyValue !== "USD") {
@@ -351,6 +352,7 @@ export default function OrderDetailsForm() {
         currency: formData.currency,
         totalAmount: formData.totalAmount,
         customerRate: formData.customerRate,
+        pancardNumber: formData.pancardNumber,
         status: "QuoteDownloaded", // Use valid enum value
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -361,7 +363,7 @@ export default function OrderDetailsForm() {
           currency:
             formData.currency ||
             COUNTRY_CURRENCY_MAP[
-              formData.receiverBankCountry as keyof typeof COUNTRY_CURRENCY_MAP
+            formData.receiverBankCountry as keyof typeof COUNTRY_CURRENCY_MAP
             ] ||
             "",
         },
@@ -421,7 +423,7 @@ export default function OrderDetailsForm() {
 
   return (
     <>
-      
+
 
       <Form {...form}>
         <form
@@ -469,7 +471,7 @@ export default function OrderDetailsForm() {
                           );
                           const countryCurrency =
                             COUNTRY_CURRENCY_MAP[
-                              selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP
+                            selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP
                             ] || "";
                           form.setValue("currency", countryCurrency);
                         }
@@ -481,33 +483,67 @@ export default function OrderDetailsForm() {
                           <SelectValue placeholder="Select purpose" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
-                        <SelectItem value="University fee transfer">
+                      <SelectContent
+                        className="w-full min-w-[var(--radix-select-trigger-width)] max-w-[95vw] max-h-[min(400px,60vh)] overflow-y-auto"
+                        position="popper"
+                        sideOffset={5}
+                        align="start"
+                        avoidCollisions={true}
+                        collisionPadding={10}
+                      >
+                        <SelectItem
+                          value="University fee transfer"
+                          className="hover:bg-blue-50 transition-colors text-sm sm:text-base"
+                        >
                           University fee transfer
                         </SelectItem>
-                        <SelectItem value="Student Living expenses transfer">
+                        <SelectItem
+                          value="Student Living expenses transfer"
+                          className="hover:bg-blue-50 transition-colors text-sm sm:text-base"
+                        >
                           Student Living expenses transfer
                         </SelectItem>
-                        <SelectItem value="Student Visa fee payment">
+                        <SelectItem
+                          value="Student Visa fee payment"
+                          className="hover:bg-blue-50 transition-colors text-sm sm:text-base"
+                        >
                           Student Visa fee payment
                         </SelectItem>
-                        <SelectItem value="Convera registered payment">
+                        <SelectItem
+                          value="Convera registered payment"
+                          className="hover:bg-blue-50 transition-colors text-sm sm:text-base"
+                        >
                           Convera registered payment
                         </SelectItem>
-                        <SelectItem value="Flywire registered payment">
+                        <SelectItem
+                          value="Flywire registered payment"
+                          className="hover:bg-blue-50 transition-colors text-sm sm:text-base"
+                        >
                           Flywire registered payment
                         </SelectItem>
-                        <SelectItem value="Blocked account transfer">
+                        <SelectItem
+                          value="Blocked account transfer"
+                          className="hover:bg-blue-50 transition-colors text-sm sm:text-base"
+                        >
                           Blocked account transfer
                         </SelectItem>
-                        <SelectItem value="Application fee">
+                        <SelectItem
+                          value="Application fee"
+                          className="hover:bg-blue-50 transition-colors text-sm sm:text-base"
+                        >
                           Application fee
                         </SelectItem>
-                        <SelectItem value="Accomodation fee">
-                          Accomodation fee
+                        <SelectItem
+                          value="Accommodation fee"
+                          className="hover:bg-blue-50 transition-colors text-sm sm:text-base"
+                        >
+                          Accommodation fee
                         </SelectItem>
-                        <SelectItem value="GIC Canada fee deposite">
-                          GIC Canada fee deposite
+                        <SelectItem
+                          value="GIC Canada fee deposit"
+                          className="hover:bg-blue-50 transition-colors text-sm sm:text-base"
+                        >
+                          GIC Canada fee deposit
                         </SelectItem>
                       </SelectContent>
                     </Select>
@@ -683,25 +719,45 @@ export default function OrderDetailsForm() {
                   </FormItem>
                 )}
               />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="margin"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-700 font-normal">
+                        Margin
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          className="bg-blue-50/50 border-blue-200 shadow-lg h-12"
+                          placeholder="Enter margin"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="margin"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-gray-700 font-normal">
-                      Margin
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        className="bg-blue-50/50 border-blue-200 shadow-lg h-12"
-                        placeholder="Enter margin"
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={form.control}
+                  name="ibrRate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-700 font-normal">
+                        IBR Rate
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          className="bg-blue-50/50 border-blue-200 shadow-lg h-12"
+                          readOnly
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
 
             {/* Right Column */}
@@ -719,7 +775,7 @@ export default function OrderDetailsForm() {
                         field.onChange(value);
                         const currency =
                           COUNTRY_CURRENCY_MAP[
-                            value as keyof typeof COUNTRY_CURRENCY_MAP
+                          value as keyof typeof COUNTRY_CURRENCY_MAP
                           ] || "USD";
                         form.setValue("currency", currency, {
                           shouldValidate: true,
@@ -736,35 +792,38 @@ export default function OrderDetailsForm() {
                           <SelectValue placeholder="Select country" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Germany">Germany</SelectItem>
-                        <SelectItem value="UAE">UAE</SelectItem>
+                      <SelectContent
+                        className="w-[var(--radix-select-trigger-width)] max-h-[300px] overflow-y-auto"
+                        position="popper"
+                        sideOffset={4}
+                        align="start"
+                        avoidCollisions={false}
+                      >
                         <SelectItem value="Australia">Australia</SelectItem>
-                        <SelectItem value="Canada">Canada</SelectItem>
-                        <SelectItem value="Switzerland">Switzerland</SelectItem>
-                        <SelectItem value="France">France</SelectItem>
-                        <SelectItem value="United States of America">
-                          United States of America
-                        </SelectItem>
-                        <SelectItem value="United Kingdom">
-                          United Kingdom
-                        </SelectItem>
-                        <SelectItem value="New Zealand">New Zealand</SelectItem>
-                        <SelectItem value="Sweden">Sweden</SelectItem>
-                        <SelectItem value="Geogia">Geogia</SelectItem>
                         <SelectItem value="Bulgaria">Bulgaria</SelectItem>
+                        <SelectItem value="Canada">Canada</SelectItem>
+                        <SelectItem value="France">France</SelectItem>
+                        <SelectItem value="Georgia">Georgia</SelectItem>
+                        <SelectItem value="Germany">Germany</SelectItem>
                         <SelectItem value="Ireland">Ireland</SelectItem>
                         <SelectItem value="Latvia">Latvia</SelectItem>
                         <SelectItem value="Lithuania">Lithuania</SelectItem>
+                        <SelectItem value="New Zealand">New Zealand</SelectItem>
+                        <SelectItem value="Sweden">Sweden</SelectItem>
+                        <SelectItem value="Switzerland">Switzerland</SelectItem>
+                        <SelectItem value="UAE">UAE</SelectItem>
+                        <SelectItem value="United Kingdom">United Kingdom</SelectItem>
+                        <SelectItem value="United States of America">United States of America</SelectItem>
                         <SelectItem value="Uzbekistan">Uzbekistan</SelectItem>
                       </SelectContent>
+
                     </Select>
                     {(form.watch("purpose") === "Blocked account transfer" ||
                       form.watch("purpose") === "GIC Canada fee deposite") && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        Country automatically set based on purpose selection
-                      </p>
-                    )}
+                        <p className="text-xs text-gray-500 mt-1">
+                          Country automatically set based on purpose selection
+                        </p>
+                      )}
                   </FormItem>
                 )}
               />
@@ -829,27 +888,8 @@ export default function OrderDetailsForm() {
                   </FormItem>
                 )}
               />
-
-              <FormField
-                control={form.control}
-                name="ibrRate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-gray-700 font-normal">
-                      IBR Rate
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        className="bg-blue-50/50 border-blue-200 shadow-lg h-12"
-                        readOnly
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-4 gap-2">
+              <div
+                className="grid grid-cols-4 gap-2">
                 <div className="col-span-3">
                   <FormField
                     control={form.control}
@@ -857,7 +897,7 @@ export default function OrderDetailsForm() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-gray-700 font-normal">
-                          Amount
+                          FCY Amount
                         </FormLabel>
                         <FormControl>
                           <Input
@@ -869,6 +909,10 @@ export default function OrderDetailsForm() {
                       </FormItem>
                     )}
                   />
+
+
+
+
                 </div>
                 <div className="col-span-1">
                   <FormField
@@ -878,8 +922,8 @@ export default function OrderDetailsForm() {
                       const selectedCountry = form.watch("receiverBankCountry");
                       const countryCurrency = selectedCountry
                         ? COUNTRY_CURRENCY_MAP[
-                            selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP
-                          ]
+                        selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP
+                        ]
                         : "USD";
 
                       const usdPrimaryCountries = [
@@ -931,7 +975,34 @@ export default function OrderDetailsForm() {
                     }}
                   />
                 </div>
+
+
               </div>
+              <FormField
+                control={form.control}
+                name="customerRate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-gray-700 font-normal">
+                      Customer rate
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        readOnly
+                        placeholder=" customer rate"
+                        className="bg-blue-50/50 border-blue-200 shadow-lg h-12"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+
+
+
+
+
             </div>
           </div>
 
@@ -1050,22 +1121,29 @@ export default function OrderDetailsForm() {
                 </Button>
               </div>
             </div>
-            <div>
-              <p className="text-gray-700 font-normal mb-2">Customer rate</p>
-              <FormField
-                control={form.control}
-                name="customerRate"
-                render={({ field }) => (
+
+            <div className="pt-4 mb-2 md:mb-0 gap-6">
+            <FormField  
+              control={form.control}
+              name="pancardNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>PAN Card</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
-                      readOnly
-                      placeholder=" customer rate"
-                      className="bg-gray-150 border-blue-100  shadow-lg h-12"
+                      placeholder="ABCDE1234F"
+                      className="bg-gray-150 border-blue-200 shadow-lg h-12 -mt-1.5"
+                      onChange={(e) => {
+                        const value = e.target.value.toUpperCase();
+                        field.onChange(value);
+                        form.setValue('pancardNumber', value); 
+                      }}
                     />
                   </FormControl>
-                )}
-              />
+                </FormItem>
+              )}
+            />
             </div>
           </div>
 

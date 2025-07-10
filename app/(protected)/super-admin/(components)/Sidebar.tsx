@@ -132,15 +132,17 @@ export function Sidebar({
                 <Image src="/Top.png" alt="Logo" width={40} height={40} className="h-full w-auto object-contain" />
               </div>
             ) : (
-              <div className="relative h-[60px] w-[116px] ml-8">
-                <Image
-                  src="/header-logo.png"
-                  alt="Logo"
-                  width={116}
-                  height={60}
-                  className="h-full w-full object-contain"
-                />
-              </div>
+               <Link href="/" passHref>
+  <div className="relative h-[60px] w-[116px] ml-8 cursor-pointer">
+    <Image
+      src="/header-logo.png"
+      alt="Logo"
+      width={116}
+      height={60}
+      className="h-full w-full object-contain"
+    />
+  </div>
+</Link>
             )}
           </Link>
 
