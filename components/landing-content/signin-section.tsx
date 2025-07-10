@@ -133,7 +133,17 @@ export default function LoginPage() {
         {/* Left side - Blue section */}
         <div className="w-full lg:w-1/2 bg-gradient-to-b from-dark-blue to-light-blue p-6 sm:p-8 lg:p-10 text-white relative">
           <div className="mb-8">
-            <Image src="/whitelogo.png" alt="Buy Exchange Logo" width={165} height={50} className="mb-6" />
+            <Link href="/" passHref>
+  <div className="cursor-pointer">
+    <Image 
+      src="/whitelogo.png" 
+      alt="Buy Exchange Logo" 
+      width={165} 
+      height={50} 
+      className="mb-6"
+    />
+  </div>
+</Link>
             <h1 className="text-xl sm:text-2xl font-bold mb-2 font-jakarta">
               Be the Change in
               <br />

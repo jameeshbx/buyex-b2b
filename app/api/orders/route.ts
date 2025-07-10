@@ -39,7 +39,8 @@ export async function POST(req: Request) {
       calculations,
       generatedPDF,
       status,
-      educationLoan
+      educationLoan,
+      pancardNumber
     } = body;
     
     
@@ -96,7 +97,8 @@ export async function POST(req: Request) {
         quote: quote,
         calculations: calculations,
         generatedPDF: generatedPDF,
-        educationLoan: educationLoan || "no" 
+        educationLoan: educationLoan || "no" ,
+        pancardNumber: pancardNumber || null,
       },
     });
 
