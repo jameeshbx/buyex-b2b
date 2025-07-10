@@ -169,7 +169,7 @@ model Order {
   currency            String
   totalAmount         Float
   customerRate        Float
-  pancardNumber       String? 
+  pancardNumber       String?
   createdAt           DateTime     @default(now())
   updatedAt           DateTime     @updatedAt
   status              OrderStatus
@@ -194,6 +194,7 @@ model Document {
   userId     String
   type       DocumentType
   imageUrl   String
+  fileSize   Int? // Add this field
   isVerified Boolean      @default(false)
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt

@@ -137,6 +137,7 @@ type DocumentFromAPI = {
   name?: string;
   type: string;
   comment?: string;
+  fileSize?: number;
   uploadedBy?: string;
   createdAt: string;
   imageUrl: string;
@@ -195,7 +196,7 @@ export default function UploadsPage({
           id: doc.id,
           name: doc.name || doc.type.split("/").pop() || doc.type,
           type: doc.type,
-          size: 0,
+          size: doc.fileSize || 0,
           comment: doc.comment || "",
           uploadedBy: doc.uploadedBy || "-",
           uploadedAt: new Date(doc.createdAt).toLocaleString(),
@@ -344,7 +345,7 @@ export default function UploadsPage({
             const user = await userRes.json();
             userId = user.id || "";
           }
-        } catch  {
+        } catch {
           // fallback: leave userId as empty string
         }
 
