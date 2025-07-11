@@ -14,12 +14,20 @@ import { Loader2 } from "lucide-react";
 import { generateA2Form } from "@/lib/pdf";
 import { orderReceivedTemplate } from "@/lib/email-templates";
 
+interface ForexPartner {
+  bankName: string;
+  ifscCode: string;
+  branch: string;
+  accountName: string;
+  accountNumber: string;
+  email: string;
+}
 interface Order {
   id: string;
   purpose: string;
   foreignBankCharges: number;
   payer: string;
-  forexPartner: string;
+  forexPartner: string | ForexPartner;
   margin: number;
   receiverBankCountry: string;
   studentName: string;
@@ -33,6 +41,7 @@ interface Order {
   status: string;
   createdAt: string;
   updatedAt: string;
+  pancardNumber: string;
   sender?: {
     id: string;
     studentName: string;
@@ -220,6 +229,7 @@ export default function TransactionDetails({
 
   const handleUpdateOrder = async () => {
     if (!order) return;
+    setUpdating(true);
 
     try {
       setUpdating(true);
@@ -239,8 +249,17 @@ export default function TransactionDetails({
       // Update local state
       setOrder((prev) => (prev ? { ...prev, ...updateData } : null));
 
+      const cleanOrder: Order = {
+        ...updateData,
+        forexPartner:
+          typeof updateData.forexPartner === "string"
+            ? updateData.forexPartner
+            : updateData.forexPartner.bankName,
+      };
+
       // Generate and upload A2 form PDF
-      const pdfResult = await generateA2FormPDF({ ...order, ...updateData });
+
+      const pdfResult = await generateA2FormPDF(cleanOrder);
 
       if (pdfResult.success) {
         console.log("A2 Form PDF uploaded successfully:", pdfResult);
@@ -368,7 +387,9 @@ export default function TransactionDetails({
                   Forex Partner
                 </div>
                 <div className="text-gray-600 text-sm sm:text-base font-jakarta">
-                  {order.forexPartner}
+                  {typeof order.forexPartner === "string"
+                    ? order.forexPartner
+                    : order.forexPartner?.bankName || "N/A"}
                 </div>
               </div>
             </div>
@@ -615,8 +636,16 @@ export default function TransactionDetails({
 
 // Helper to generate A2 form PDF and upload to S3
 async function generateA2FormPDF(order: Order) {
+  // 🛠️ Again, ensure proper forexPartner type
+  const cleanOrder = {
+    ...order,
+    forexPartner:
+      typeof order.forexPartner === "string"
+        ? order.forexPartner
+        : order.forexPartner?.bankName || "N/A", // Fallback if bankName is missing
+  };
   try {
-    const pdfBytes = await generateA2Form(order);
+    const pdfBytes = await generateA2Form(cleanOrder);
 
     // Create a File object from the PDF bytes
     const fileName = `A2_Form_${order.id}_${
@@ -722,7 +751,7 @@ async function generateA2FormPDF(order: Order) {
             tentativeAmount: order.amount || "",
             forexConversionTax: order.foreignBankCharges || "",
             // @ts-expect-error - calculations property not defined in Order interface
-            bankFee: order?.calculations?.bankFee || "",
+            bankFee: calculatedValues.bankFee,
             // @ts-expect-error - calculations property not defined in Order interface
             tcs: order?.calculations?.tcsApplicable || "",
             totalPayableAmount: order.totalAmount || "",

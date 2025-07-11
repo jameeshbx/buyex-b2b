@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Sidebar } from "@/app/(protected)/staff/(components)/Sidebar";
 import { cn } from "@/lib/utils";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 
 export default function ClientLayout({
   children,
@@ -27,6 +29,8 @@ export default function ClientLayout({
       </div>
       <main className="flex-1 h-screen overflow-auto">
         <div className="p-4 md:p-6 lg:p-8">{children}</div>
+        <Toaster />
+        <SonnerToaster />
       </main>
     </div>
   );

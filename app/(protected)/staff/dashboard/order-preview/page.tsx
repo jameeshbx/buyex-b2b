@@ -14,15 +14,16 @@ function OrderPreviewContent() {
   const handleCreateOrder = () => {
     setShowSuccessModal(true);
   };
+   const handleBack = () => {
+    window.history.back(); // or use router.back() if using useRouter()
+  };
 
   return (
     <>
       <TransactionDetails
         onCreateOrder={handleCreateOrder}
         orderId={orderId || ""}
-        onBack={function (): void {
-          throw new Error("Function not implemented.");
-        }}
+        onBack={handleBack}
       />
       {showSuccessModal && (
         <SuccessModal onClose={() => setShowSuccessModal(false)} />

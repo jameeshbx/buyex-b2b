@@ -1,32 +1,32 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useEffect } from "react"
-import { useMediaQuery } from "@/hooks/use-mobile"
-import { usePathname } from "next/navigation"
-import Image from "next/image"
-import Link from "next/link"
-import { ChevronLeft, ChevronRight } from "lucide-react"
-import { cn } from "@/lib/utils"
+import type React from "react";
+import { useState, useEffect } from "react";
+import { useMediaQuery } from "@/hooks/use-mobile";
+import { usePathname } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export function useMobile() {
-  const isMobileQuery = useMediaQuery("(max-width: 768px)")
-  const [isMobile, setIsMobile] = useState(false)
+  const isMobileQuery = useMediaQuery("(max-width: 768px)");
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    setIsMobile(isMobileQuery)
-  }, [isMobileQuery])
+    setIsMobile(isMobileQuery);
+  }, [isMobileQuery]);
 
-  return isMobile
+  return isMobile;
 }
 
 type NavItemProps = {
-  href: string
-  icon: React.ReactNode
-  label: string
-  collapsed: boolean
-  active: boolean
-}
+  href: string;
+  icon: React.ReactNode;
+  label: string;
+  collapsed: boolean;
+  active: boolean;
+};
 
 function NavItem({ href, icon, label, collapsed, active }: NavItemProps) {
   return (
@@ -35,91 +35,159 @@ function NavItem({ href, icon, label, collapsed, active }: NavItemProps) {
       className={cn(
         "flex items-center px-3 py-2.5 rounded-lg mx-2 text-gray-600 hover:bg-gray-100 transition-colors",
         active && "bg-blue-50 text-blue-600 font-medium",
-        collapsed ? "justify-center" : "justify-start",
+        collapsed ? "justify-center" : "justify-start"
       )}
     >
       <span
         className={cn(
           "flex-shrink-0 flex items-center justify-center w-6 h-6",
-          active ? "text-blue-600" : "text-gray-500",
+          active ? "text-blue-600" : "text-gray-500"
         )}
       >
         {icon}
       </span>
       {!collapsed && <span className="ml-3 truncate">{label}</span>}
     </Link>
-  )
+  );
 }
 
 export function Sidebar({
   collapsed,
   toggleSidebar,
 }: {
-  collapsed: boolean
-  toggleSidebar: () => void
+  collapsed: boolean;
+  toggleSidebar: () => void;
 }) {
-  const isMobile = useMobile()
-  const pathname = usePathname()
+  const isMobile = useMobile();
+  const pathname = usePathname();
 
   const navItems = [
     {
       href: "/admin/dashboard",
-      icon: <Image src="/orders.svg" alt="Orders" width={24} height={24} className="w-6 h-6" />,
+      icon: (
+        <Image
+          src="/orders.svg"
+          alt="Orders"
+          width={24}
+          height={24}
+          className="w-6 h-6"
+        />
+      ),
       label: "Dashboard",
       active: pathname === "/admin/dashboard",
     },
     {
       href: "/admin/dashboard/manage-orders",
-     icon: <Image src="/placeee.svg" alt="Place Order" width={24} height={24} className="w-6 h-6" />,
+      icon: (
+        <Image
+          src="/placeee.svg"
+          alt="Place Order"
+          width={24}
+          height={24}
+          className="w-6 h-6"
+        />
+      ),
       label: "Manage orders",
       active: pathname === "/admin/dashboard/manage-orders",
     },
     {
       href: "/admin/dashboard/manage-users",
-       icon: <Image src="/Placean.svg" alt="Receivers" width={24} height={24} className="w-6 h-6" />,
+      icon: (
+        <Image
+          src="/Placean.svg"
+          alt="Receivers"
+          width={24}
+          height={24}
+          className="w-6 h-6"
+        />
+      ),
       label: "Manage users",
       active: pathname === "/admin/dashboard/manage-users",
     },
     {
       href: "/admin/dashboard/reports",
-        icon: <Image src="/report.png" alt="Receivers" width={24} height={24} className="w-6 h-6" />,
+      icon: (
+        <Image
+          src="/report.png"
+          alt="Receivers"
+          width={24}
+          height={24}
+          className="w-6 h-6"
+        />
+      ),
       label: "Reports",
       active: pathname === "/admin/dashboard/reports",
     },
     {
       href: "/admin/dashboard/partner-banks",
-        icon: <Image src="/hbank.png" alt="Receivers" width={24} height={24} className="w-6 h-6" />,
+      icon: (
+        <Image
+          src="/hbank.png"
+          alt="Receivers"
+          width={24}
+          height={24}
+          className="w-6 h-6"
+        />
+      ),
       label: "Partner Banks",
       active: pathname === "/admin/dashboard/partner-banks",
     },
-  ]
+  ];
 
   const secondaryItems = [
     {
       href: "/admin/dashboard/settings",
-       icon: <Image src="/Icon-1.svg" alt="Settings" width={24} height={24} className="w-6 h-6" />,
+      icon: (
+        <Image
+          src="/Icon-1.svg"
+          alt="Settings"
+          width={24}
+          height={24}
+          className="w-6 h-6"
+        />
+      ),
       label: "Settings",
       active: pathname === "/admin/dashboard/settings",
     },
     {
       href: "/support",
-      icon: <Image src="/Icon-2.svg" alt="Support" width={24} height={24} className="w-6 h-6" />,
+      icon: (
+        <Image
+          src="/Icon-2.svg"
+          alt="Support"
+          width={24}
+          height={24}
+          className="w-6 h-6"
+        />
+      ),
       label: "Support",
       active: pathname === "/support",
     },
     {
       href: "/",
-     icon: <Image src="/icon-park-outline_reject.svg" alt="Logout" width={20} height={24} className="w-5 h-6" />,
+      icon: (
+        <Image
+          src="/icon-park-outline_reject.svg"
+          alt="Logout"
+          width={20}
+          height={24}
+          className="w-5 h-6"
+        />
+      ),
       label: "Logout",
       active: pathname === "/logout",
     },
-  ]
+  ];
 
   return (
     <>
       {/* Mobile overlay */}
       {isMobile && !collapsed && (
-        <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={toggleSidebar} aria-hidden="true" />
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={toggleSidebar}
+          aria-hidden="true"
+        />
       )}
 
       {/* Sidebar container - Fixed positioning with proper z-index */}
@@ -129,28 +197,36 @@ export function Sidebar({
           collapsed ? "w-16 sm:w-20" : "w-64",
           // Mobile behavior
           isMobile && collapsed && "-translate-x-full",
-          isMobile && !collapsed && "translate-x-0",
+          isMobile && !collapsed && "translate-x-0"
         )}
       >
         {/* Header section */}
         <div className="p-4 flex items-center justify-between border-b border-gray-100">
-          <Link href="/admin/dashboard" className="flex items-center">
-            {collapsed ? (
+          {collapsed ? (
+            <Link href="/admin/dashboard" className="flex items-center">
               <div className="relative h-10 w-10">
-                <Image src="/Top.png" alt="Logo" width={40} height={40} className="h-full w-auto object-contain" />
+                <Image
+                  src="/Top.png"
+                  alt="Logo"
+                  width={40}
+                  height={40}
+                  className="h-full w-auto object-contain"
+                />
               </div>
-            ) : (
-              <div className="relative h-[60px] w-[140px]">
+            </Link>
+          ) : (
+            <Link href="/" className="flex items-center">
+              <div className="relative h-[60px] w-[116px] ml-8 cursor-pointer">
                 <Image
                   src="/header-logo.png"
-                  alt="BuyExchange Logo"
-                  width={140}
+                  alt="Logo"
+                  width={116}
                   height={60}
                   className="h-full w-full object-contain"
                 />
               </div>
-            )}
-          </Link>
+            </Link>
+          )}
 
           {/* Toggle button */}
           <button
@@ -202,7 +278,7 @@ export function Sidebar({
         <div
           className={cn(
             "border-t border-gray-100 p-4 flex items-center bg-gray-50",
-            collapsed ? "justify-center" : "justify-between",
+            collapsed ? "justify-center" : "justify-between"
           )}
         >
           <div className="flex items-center min-w-0">
@@ -211,47 +287,51 @@ export function Sidebar({
             </div>
             {!collapsed && (
               <div className="ml-3 min-w-0 flex-1 overflow-hidden">
-                <div className="text-sm font-medium text-gray-700 truncate">Welcome back 👋</div>
+                <div className="text-sm font-medium text-gray-700 truncate">
+                  Welcome back 👋
+                </div>
                 <div className="text-xs text-gray-500 truncate">Admin</div>
               </div>
             )}
           </div>
-          {!collapsed && <ChevronRight size={16} className="text-gray-400 flex-shrink-0" />}
+          {!collapsed && (
+            <ChevronRight size={16} className="text-gray-400 flex-shrink-0" />
+          )}
         </div>
       </aside>
     </>
-  )
+  );
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const [collapsed, setCollapsed] = useState(false)
-  const isMobile = useMobile()
+  const [collapsed, setCollapsed] = useState(false);
+  const isMobile = useMobile();
 
   // Handle mobile/desktop behavior
   useEffect(() => {
     if (isMobile) {
-      setCollapsed(true)
+      setCollapsed(true);
     } else {
       // Check localStorage for preference when not on mobile
-      const storedState = localStorage.getItem("sidebarCollapsed")
+      const storedState = localStorage.getItem("sidebarCollapsed");
       if (storedState !== null) {
-        setCollapsed(storedState === "true")
+        setCollapsed(storedState === "true");
       } else {
-        setCollapsed(false)
+        setCollapsed(false);
       }
     }
-  }, [isMobile])
+  }, [isMobile]);
 
   // Persist state to localStorage (only for desktop)
   useEffect(() => {
     if (!isMobile && typeof window !== "undefined") {
-      localStorage.setItem("sidebarCollapsed", String(collapsed))
+      localStorage.setItem("sidebarCollapsed", String(collapsed));
     }
-  }, [collapsed, isMobile])
+  }, [collapsed, isMobile]);
 
   const toggleSidebar = () => {
-    setCollapsed(!collapsed)
-  }
+    setCollapsed(!collapsed);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -264,7 +344,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           // Desktop: Always account for sidebar space
           !isMobile && (collapsed ? "ml-16 sm:ml-20" : "ml-64"),
           // Mobile: Full width when sidebar is collapsed (hidden)
-          isMobile && "ml-0",
+          isMobile && "ml-0"
         )}
       >
         {/* Content wrapper with proper padding */}
@@ -273,5 +353,5 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </main>
     </div>
-  )
+  );
 }

@@ -2,6 +2,23 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
  // Add this import if you have Prisma types
 
+// Helper function to retry database operations
+async function retryOperation<T>(operation: () => Promise<T>, maxRetries = 3): Promise<T> {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await operation();
+    } catch (error) {
+      // if (error.code === 'P1001' && i < maxRetries - 1) {
+      //   // Wait before retrying (exponential backoff)
+      //   await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+      //   continue;
+      // }
+      throw error;
+    }
+  }
+  throw new Error('Max retries exceeded');
+}
+
 // GET /api/orders/[id] - Get a specific order
 export async function GET(
   req: Request,
@@ -10,14 +27,16 @@ export async function GET(
   try {
     const { id } = await params;
 
-    const order = await db.order.findUnique({
-      where: {
-        id,
-      },
-      include: {
-        sender: true,
-        beneficiary: true,
-      },
+    const order = await retryOperation(async () => {
+      return await db.order.findUnique({
+        where: {
+          id,
+        },
+        include: {
+          sender: true,
+          beneficiary: true,
+        },
+      });
     });
 
     if (!order) {
@@ -27,6 +46,11 @@ export async function GET(
     return NextResponse.json(order);
   } catch (error) {
     console.error("[ORDER_GET]", error);
+    
+    // if (error.code === 'P1001') {
+    //   return new NextResponse("Database connection error. Please try again later.", { status: 503 });
+    // }
+    
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
@@ -57,6 +81,7 @@ export async function PATCH(
         currency: body.currency,
         totalAmount: body.totalAmount !== undefined ? parseFloat(body.totalAmount) : undefined,
         customerRate: body.customerRate !== undefined ? parseFloat(body.customerRate) : undefined,
+        pancardNumber: body.pancardNumber,
         senderId: body.senderId,
         beneficiaryId: body.beneficiaryId,
         educationLoan: body.educationLoan

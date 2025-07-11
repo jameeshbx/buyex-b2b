@@ -1,11 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link"
 import {
   ChevronDown,
   ChevronRight,
   Upload,
   Search,
   Filter,
+  
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -48,7 +50,14 @@ type Order = {
   status: string;
   createdAt: string;
   receiverBankCountry?: string;
-  forexPartner?: string;
+  forexPartner?: {
+    accountNumber: string;
+    accountName: string;
+    bankName: string;
+    ifscCode: string;
+    branch: string;
+    email: string;
+  };
   receiverAccount?: string;
   payer?: string;
   consultancy?: string;
@@ -86,11 +95,7 @@ type Beneficiary = {
   status: boolean;
 };
 
-const nonChangeableStatuses = [
-  "QuoteDownloaded",
-  "Documents placed",
-  "Authorize",
-];
+const nonChangeableStatuses = ["QuoteDownloaded", "Documents placed"];
 const ChangeableStatuses = [
   "Received",
   "Pending",
@@ -98,6 +103,7 @@ const ChangeableStatuses = [
   "Completed",
   "Verified",
   "Blocked",
+  "Authorize",
 ];
 
 export default function Dashboard() {
@@ -140,9 +146,7 @@ export default function Dashboard() {
       }
     >
   >({});
-  const [AuthorizeOrders, setAuthorizeOrders] = useState<Set<string>>(
-    new Set()
-  );
+  const [AuthorizeOrders] = useState<Set<string>>(new Set());
 
   // Fetch beneficiary details
   const fetchBeneficiary = async (beneficiaryId: string) => {
@@ -179,13 +183,13 @@ export default function Dashboard() {
         setOrders(data);
 
         // Fetch beneficiaries for all orders
-        const beneficiaryPromises = data.map((order: Order) => {
-          // Assuming order ID corresponds to beneficiary ID, or use order.beneficiaryId if available
-          const beneficiaryId = order.beneficiaryId || order.id;
-          return fetchBeneficiary(beneficiaryId);
-        });
+        // const beneficiaryPromises = data.map((order: Order) => {
+        //   // Assuming order ID corresponds to beneficiary ID, or use order.beneficiaryId if available
+        //   const beneficiaryId = order.beneficiaryId || order.id;
+        //   return fetchBeneficiary(beneficiaryId);
+        // });
 
-        await Promise.all(beneficiaryPromises);
+        // await Promise.all(beneficiaryPromises);
       } catch (err: unknown) {
         let errorMessage = "Error fetching orders";
         if (err instanceof Error) {
@@ -213,6 +217,23 @@ export default function Dashboard() {
       }
     }
     setExpandedRows(newExpanded);
+  };
+
+  // Update the status change handler in the authorization section
+  const handleStatusSelection = (orderId: string, value: string) => {
+    setStatusSelections((prev) => ({
+      ...prev,
+      [orderId]: value,
+    }));
+
+    if (value === "Blocked") {
+      const order = orders.find((o) => o.id === orderId);
+      if (order) {
+        setSelectedOrderForIbr(order);
+        setIbrModalRate(order.ibrRate?.toString() || ""); // Pre-fill current IBR rate
+        setShowIbrModal(true);
+      }
+    }
   };
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
@@ -309,6 +330,64 @@ export default function Dashboard() {
     }
   };
 
+  // Modify the main submit button handler in the authorization section
+  const handleAuthorizeSubmit = async (orderId: string) => {
+    try {
+      setLoading(true);
+
+      // First update status to Authorize
+      const statusRes = await fetch(`/api/orders/${orderId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "Authorize" }),
+      });
+
+      if (!statusRes.ok) throw new Error("Failed to update status");
+      const updatedOrder = await statusRes.json();
+
+      setOrders((prevOrders) =>
+        prevOrders.map((order) => (order.id === orderId ? updatedOrder : order))
+      );
+
+      // Then send email to forex partner
+      try {
+        const documentsRes = await fetch(`/api/upload/document/${orderId}`);
+        if (documentsRes.ok) {
+          const documents = await documentsRes.json();
+          const emailResponse = await fetch("/api/email/forex-partner", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              orderId,
+              documents: documents.map(
+                (doc: { imageUrl: string }) => doc.imageUrl
+              ),
+            }),
+          });
+
+          if (!emailResponse.ok) {
+            console.error("Failed to send email to forex partner");
+          }
+        }
+      } catch (docError) {
+        console.error("Error sending documents email:", docError);
+      }
+
+      setExpandedAuthorize((prev) => ({
+        ...prev,
+        [orderId]: false,
+      }));
+    } catch (err: unknown) {
+      let errorMessage = "Error authorizing order";
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const renderStatusElement = (order: Order) => {
     const currentStatus = order.status;
 
@@ -376,7 +455,7 @@ export default function Dashboard() {
     return matchesPurpose && matchesSearch;
   });
 
-  // Fixed IBR submit function to prevent page refresh
+  // Modify the IBR submit handler to only update the rate
   const handleIbrSubmit = async (e?: React.FormEvent) => {
     if (e) {
       e.preventDefault();
@@ -389,7 +468,9 @@ export default function Dashboard() {
       const res = await fetch(`/api/orders/${selectedOrderForIbr.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ibrRate: Number.parseFloat(ibrModalRate) }),
+        body: JSON.stringify({
+          ibrRate: Number.parseFloat(ibrModalRate),
+        }),
       });
       if (!res.ok) {
         throw new Error("Failed to update IBR rate");
@@ -400,38 +481,6 @@ export default function Dashboard() {
           order.id === selectedOrderForIbr.id ? updatedOrder : order
         )
       );
-
-      try {
-        const documentsRes = await fetch(
-          `/api/upload/document/${selectedOrderForIbr.id}`
-        );
-        if (documentsRes.ok) {
-          const documents = await documentsRes.json();
-          console.log("Documents for order:", documents);
-          try {
-            const emailResponse = await fetch("/api/email/forex-partner", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                documents: documents.map(
-                  (doc: { imageUrl: string }) => doc.imageUrl
-                ),
-              }),
-            });
-            if (emailResponse.ok) {
-              console.log("Email sent successfully to forex partner");
-            } else {
-              console.error("Failed to send email to forex partner");
-            }
-          } catch (emailError) {
-            console.error("Error sending email to forex partner:", emailError);
-          }
-        }
-      } catch (docError) {
-        console.error("Error fetching documents:", docError);
-      }
 
       setShowIbrModal(false);
       setIbrModalRate("");
@@ -651,13 +700,15 @@ export default function Dashboard() {
                           {renderStatusElement(order)}
                         </div>
                         <div onClick={(e) => e.stopPropagation()}>
+                        <Link href={`/admin/dashboard/upload-files/${order.id}`}>
                           <Button
                             size="sm"
-                            className="bg-dark-blue text-white px-2 py-2 text-xs h-7"
+                            className="bg-dark-blue hover:bg-blue-700 text-white px-2 py-2 text-xs h-7"
                           >
-                            <Upload className="h-3 w-3" />
+                            <Upload className="h-2 w-2" />
                             Uploads
                           </Button>
+                        </Link>
                         </div>
                       </div>
                       {/* Mobile/Tablet Layout */}
@@ -720,13 +771,15 @@ export default function Dashboard() {
                             {order.fxRateUpdated ? "UPDATED" : "UPDATE RATE"}
                           </button>
                           <div onClick={(e) => e.stopPropagation()}>
-                            <Button
-                              size="sm"
-                              className="bg-dark-blue text-white h-7 px-3"
-                            >
-                              <Upload className="h-3 w-3 mr-1" />
-                              Uploads
-                            </Button>
+                          <Link href={`/admin/dashboard/upload-files/${order.id}`}>
+                          <Button
+                            size="sm"
+                            className="bg-dark-blue hover:bg-blue-700 text-white px-2 py-2 text-xs h-7"
+                          >
+                            <Upload className="h-2 w-2" />
+                            Uploads
+                          </Button>
+                        </Link>
                           </div>
                         </div>
                       </div>
@@ -780,7 +833,7 @@ export default function Dashboard() {
                                 Forex Partner
                               </h4>
                               <p className="text-gray-600 text-sm sm:text-base font-jakarta bg-gray-50 p-2 sm:p-3 rounded-sm">
-                                {order.forexPartner || "-"}
+                                {order.forexPartner?.bankName || "-"}
                               </p>
                             </div>
                           </div>
@@ -1177,23 +1230,18 @@ export default function Dashboard() {
                                           value={
                                             statusSelections[order.id] || ""
                                           }
-                                          onValueChange={(value) => {
-                                            setStatusSelections((prev) => ({
-                                              ...prev,
-                                              [order.id]: value,
-                                            }));
-                                            if (value === "Blocked") {
-                                              setSelectedOrderForIbr(order);
-                                              setIbrModalRate("");
-                                              setShowIbrModal(true);
-                                            }
-                                          }}
+                                          onValueChange={(value) =>
+                                            handleStatusSelection(
+                                              order.id,
+                                              value
+                                            )
+                                          }
                                         >
                                           <SelectTrigger className="bg-gray-50 h-10 sm:h-12">
                                             <SelectValue placeholder="Select status" />
                                           </SelectTrigger>
                                           <SelectContent>
-                                            <SelectItem value="pending">
+                                            <SelectItem value="Pending">
                                               Pending
                                             </SelectItem>
                                             <SelectItem value="Blocked">
@@ -1201,6 +1249,7 @@ export default function Dashboard() {
                                             </SelectItem>
                                           </SelectContent>
                                         </Select>
+
                                         <Button
                                           className={`h-10 sm:h-12 px-4 sm:px-6 ${
                                             !formValidation[order.id]
@@ -1219,36 +1268,22 @@ export default function Dashboard() {
                                           onClick={() => {
                                             if (
                                               statusSelections[order.id] ===
-                                                "Blocked" &&
-                                              formValidation[order.id]?.isValid
+                                              "Pending"
                                             ) {
-                                              setAuthorizeOrders(
-                                                (prev) =>
-                                                  new Set([
-                                                    ...Array.from(prev),
-                                                    order.id,
-                                                  ])
-                                              );
                                               handleStatusChange(
                                                 order.id,
-                                                "Authorize"
+                                                "Pending"
                                               );
                                               setExpandedAuthorize((prev) => ({
                                                 ...prev,
                                                 [order.id]: false,
                                               }));
                                             } else if (
-                                              statusSelections[order.id] !==
-                                              "Blocked"
+                                              statusSelections[order.id] ===
+                                                "Blocked" &&
+                                              formValidation[order.id]?.isValid
                                             ) {
-                                              handleStatusChange(
-                                                order.id,
-                                                "Authorize"
-                                              );
-                                              setExpandedAuthorize((prev) => ({
-                                                ...prev,
-                                                [order.id]: false,
-                                              }));
+                                              handleAuthorizeSubmit(order.id);
                                             }
                                           }}
                                         >
@@ -1266,16 +1301,10 @@ export default function Dashboard() {
                                           : "cursor-pointer"
                                       }`}
                                       onClick={() => {
-                                        if (!AuthorizeOrders.has(order.id)) {
-                                          handleStatusChange(
-                                            order.id,
-                                            "Authorize"
-                                          );
-                                          setExpandedAuthorize((prev) => ({
-                                            ...prev,
-                                            [order.id]: false,
-                                          }));
-                                        }
+                                        setExpandedAuthorize((prev) => ({
+                                          ...prev,
+                                          [order.id]: !prev[order.id], // Toggle expand/shrink
+                                        }));
                                       }}
                                       style={{
                                         background:

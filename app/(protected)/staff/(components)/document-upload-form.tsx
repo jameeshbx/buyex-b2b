@@ -7,7 +7,7 @@ import Image from "next/image";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { S3FileUploader } from "./s3-file-uploader";
-import { Sender } from "@prisma/client";
+import type { Sender } from "@prisma/client";
 import axios from "axios";
 
 type FormState = {
@@ -19,10 +19,28 @@ type FormState = {
     identityUrl?: string;
     identityS3Key?: string;
   };
-  checklist: Record<string, File | null>;
+  checklist: Record<string, File | null | string>; // Allow string values for URLs
 };
 
-export default function DocumentUploadForm({ orderID }: { orderID: string }) {
+// Type for existing documents from API
+type ExistingDocument = {
+  id: string;
+  name?: string;
+  type: string;
+  imageUrl: string;
+  fileSize?: number;
+  uploadedBy?: string;
+  createdAt: string;
+  comment?: string;
+};
+
+export default function DocumentUploadForm({
+  orderID,
+  currentUser,
+}: {
+  orderID: string;
+  currentUser: { role: string; id?: string } | null;
+}) {
   const router = useRouter();
   const [formState, setFormState] = useState<FormState>({
     kyc: {
@@ -35,35 +53,162 @@ export default function DocumentUploadForm({ orderID }: { orderID: string }) {
     },
     checklist: {},
   });
-
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [purpose, setPurpose] = useState<string | null>(null);
   const [educationLoan, setEducationLoan] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [senderDetails, setSenderDetails] = useState<Sender | null>(null);
   const [orderId] = useState<string | null>(orderID);
+  const [currentUserState, setCurrentUserState] = useState(currentUser);
+  const [existingDocuments, setExistingDocuments] = useState<
+    ExistingDocument[]
+  >([]);
+  const [isLoadingDocuments, setIsLoadingDocuments] = useState(false);
+
+  useEffect(() => {
+    if (currentUser === undefined) {
+      // Only fetch if not provided
+      const fetchCurrentUser = async () => {
+        try {
+          const response = await axios.get("/api/users/me", {
+            withCredentials: true,
+          });
+          setCurrentUserState(response.data);
+        } catch {
+          setCurrentUserState(null);
+        }
+      };
+      fetchCurrentUser();
+    }
+  }, [currentUser]);
+
+  // Fetch existing documents for this order
+  useEffect(() => {
+    const fetchExistingDocuments = async () => {
+      if (!orderId) return;
+
+      setIsLoadingDocuments(true);
+      try {
+        const response = await fetch(`/api/upload/document/${orderId}`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch documents");
+        }
+        const documents = await response.json();
+        setExistingDocuments(Array.isArray(documents) ? documents : []);
+      } catch (error) {
+        console.error("Error fetching existing documents:", error);
+        // Don't show error toast for this as it's not critical
+      } finally {
+        setIsLoadingDocuments(false);
+      }
+    };
+
+    fetchExistingDocuments();
+  }, [orderId]);
+
+  // Map existing documents to form state
+  useEffect(() => {
+    if (existingDocuments.length === 0) return;
+
+    const newFormState = { ...formState };
+
+    existingDocuments.forEach((doc) => {
+      // Map KYC documents
+      if (doc.type === "PAN") {
+        newFormState.kyc.panUrl = doc.imageUrl;
+        newFormState.kyc.panS3Key = doc.id; // Using id as S3Key for existing files
+      } else if (doc.type === "IDENTITY") {
+        newFormState.kyc.identityUrl = doc.imageUrl;
+        newFormState.kyc.identityS3Key = doc.id;
+      } else {
+        // Map checklist documents
+        const checklistKey = doc.type;
+        // Don't set the file field for existing documents, only the URL
+        newFormState.checklist[`${checklistKey}Url`] = doc.imageUrl;
+        newFormState.checklist[`${checklistKey}S3Key`] = doc.id;
+      }
+    });
+
+    setFormState(newFormState);
+  }, [existingDocuments]);
 
   useEffect(() => {
     const fetchOrder = async () => {
       if (orderId) {
-        const order = await axios.get(`/api/orders/${orderId}`);
-        setPurpose(order.data.purpose);
-        setEducationLoan(order.data.educationLoan); // assuming this field exists
-
-        if (order.data.senderId) {
-          const sender = await axios.get(`/api/senders/${order.data.senderId}`);
-          if (sender.data) {
-            setSenderDetails(sender.data);
+        try {
+          const order = await axios.get(`/api/orders/${orderId}`);
+          setPurpose(order.data.purpose);
+          setEducationLoan(order.data.educationLoan);
+          // Check user type and handle sender details accordingly
+          if (currentUserState?.role === "staff") {
+            // Staff user - must have sender details to proceed
+            if (order.data.senderId) {
+              try {
+                const sender = await axios.get(
+                  `/api/senders/${order.data.senderId}`
+                );
+                if (sender.data) {
+                  setSenderDetails(sender.data);
+                } else {
+                  // Sender ID exists but no sender data found
+                  toast.error("Sender details not found");
+                  router.push(
+                    `/staff/dashboard/sender-details?orderId=${orderId}`
+                  );
+                  return;
+                }
+              } catch {
+                toast.error("Failed to fetch sender details");
+                router.push(
+                  `/staff/dashboard/sender-details?orderId=${orderId}`
+                );
+                return;
+              }
+            } else {
+              // Staff user with no sender details - redirect to sender details
+              toast.info("Please add sender details first");
+              router.push(`/staff/dashboard/sender-details?orderId=${orderId}`);
+              return;
+            }
+          } else {
+            // Student, user, or not logged in - allow upload without sender details check
+            if (order.data.senderId) {
+              try {
+                const sender = await axios.get(
+                  `/api/senders/${order.data.senderId}`
+                );
+                if (sender.data) {
+                  setSenderDetails(sender.data);
+                }
+              } catch {
+                // Sender details not found, but that's okay for students/users/non-logged users
+                console.log(
+                  "Sender details not found, proceeding without them"
+                );
+              }
+            }
+            // For students/users/non-logged users, we don't require sender details
           }
-        } else {
-          router.push(`/staff/dashboard/sender-details?orderId=${orderId}`);
+        } catch (error) {
+          console.error("Error fetching order:", error);
+          toast.error("Failed to fetch order details");
         }
       } else {
-        router.push(`/staff/dashboard/sender-details`);
+        // No order ID provided
+        if (currentUserState?.role === "staff") {
+          // Staff users need an order ID
+          toast.error("Order ID is required");
+          router.push(`/staff/dashboard/sender-details`);
+        }
+        // Students/users/non-logged users might access this differently, so we don't redirect
       }
     };
-    fetchOrder();
-  }, [orderId]);
+
+    // Only fetch order after we have user info (or confirmed no user)
+    if (currentUserState !== undefined) {
+      fetchOrder();
+    }
+  }, [orderId, currentUserState, router]);
 
   const handleFileUpload = (
     section: "kyc" | "checklist",
@@ -100,6 +245,7 @@ export default function DocumentUploadForm({ orderID }: { orderID: string }) {
       },
       checklist: {},
     });
+    console.log("reset");
     setFormErrors({});
     toast.info("Form has been reset");
   };
@@ -109,16 +255,16 @@ export default function DocumentUploadForm({ orderID }: { orderID: string }) {
     let isValid = true;
 
     // Validate KYC documents
-    const panError = validateFile(
-      formState.kyc.pan,
-      "Pancard",
-      5,
-      [".jpg", ".jpeg", ".png", ".pdf"]
-    );
+    const panError = validateFile(formState.kyc.pan, "Pancard", 5, [
+      ".jpg",
+      ".jpeg",
+      ".png",
+      ".pdf",
+    ]);
     if (panError) {
       errors["kyc.pan"] = panError;
       isValid = false;
-    } else if (!formState.kyc.pan) {
+    } else if (!formState.kyc.pan && !formState.kyc.panUrl) {
       errors["kyc.pan"] = "Pancard is required";
       isValid = false;
     }
@@ -132,7 +278,7 @@ export default function DocumentUploadForm({ orderID }: { orderID: string }) {
     if (identityError) {
       errors["kyc.identity"] = identityError;
       isValid = false;
-    } else if (!formState.kyc.identity) {
+    } else if (!formState.kyc.identity && !formState.kyc.identityUrl) {
       errors["kyc.identity"] = "Identity document is required";
       isValid = false;
     }
@@ -141,17 +287,21 @@ export default function DocumentUploadForm({ orderID }: { orderID: string }) {
     if (purpose && CHECKLIST_FIELDS[purpose]) {
       for (const item of CHECKLIST_FIELDS[purpose]) {
         const file = formState.checklist?.[item.type];
-        if (!file) {
+        const fileUrl = formState.checklist?.[`${item.type}Url`];
+        if (!file && !fileUrl) {
           errors[`checklist.${item.type}`] = `${item.label} is required`;
           isValid = false;
         }
       }
     }
+
     // Loan sanction letter if educationLoan is yes
     if (educationLoan === "yes") {
       const file = formState.checklist?.["LOAN_SANCTION_LETTER"];
-      if (!file) {
-        errors["checklist.LOAN_SANCTION_LETTER"] = "Loan Sanction Letter is required";
+      const fileUrl = formState.checklist?.["LOAN_SANCTION_LETTERUrl"];
+      if (!file && !fileUrl) {
+        errors["checklist.LOAN_SANCTION_LETTER"] =
+          "Loan Sanction Letter is required";
         isValid = false;
       }
     }
@@ -173,28 +323,61 @@ export default function DocumentUploadForm({ orderID }: { orderID: string }) {
     try {
       const filesArray = [];
 
+      // Determine the user ID to use
+      let documentUserId = senderDetails?.id;
+      if (!documentUserId) {
+        // For students, users, or non-logged users, use appropriate fallback
+        if (currentUserState?.id) {
+          documentUserId = currentUserState.id;
+        } else if (currentUserState?.role === "student") {
+          documentUserId = "student-user";
+        } else if (currentUserState?.role === "user") {
+          documentUserId = "regular-user";
+        } else {
+          documentUserId = "anonymous-user";
+        }
+      }
+
+      // Determine who uploaded the document
+      const getUploadedBy = () => {
+        if (!currentUserState) return "Anonymous";
+        switch (currentUserState.role) {
+          case "staff":
+            return "Staff";
+          case "student":
+            return "Student";
+          case "user":
+            return "User";
+          default:
+            return "User";
+        }
+      };
+
+      const uploadedBy = getUploadedBy();
+
       // Add KYC files
       if (formState.kyc.pan) {
         filesArray.push({
           role: "SENDER",
           type: "PAN",
           imageUrl: formState.kyc.panUrl,
-          userId: senderDetails?.id,
+          userId: documentUserId,
           orderId,
           name: "Pancard",
-          uploadedBy: "Staff",
+          uploadedBy,
           comment: "Sender Pancard",
         });
       }
+
       if (formState.kyc.identity) {
         filesArray.push({
           role: "SENDER",
           type: "IDENTITY",
           imageUrl: formState.kyc.identityUrl,
-          userId: senderDetails?.id,
+          userId: documentUserId,
           orderId,
           name: "Identity Document",
-          uploadedBy: "Staff",
+          uploadedBy,
           comment: "Sender Identity document",
         });
       }
@@ -209,15 +392,16 @@ export default function DocumentUploadForm({ orderID }: { orderID: string }) {
               role: "SENDER",
               type: item.type,
               imageUrl: fileUrl,
-              userId: senderDetails?.id,
+              userId: documentUserId,
               orderId,
               name: item.label,
-              uploadedBy: "Staff",
+              uploadedBy,
               comment: `Sender ${item.label}`,
             });
           }
         }
       }
+
       // Loan sanction letter if educationLoan is yes
       if (educationLoan === "yes") {
         const file = formState.checklist?.["LOAN_SANCTION_LETTER"];
@@ -227,68 +411,181 @@ export default function DocumentUploadForm({ orderID }: { orderID: string }) {
             role: "SENDER",
             type: "LOAN_SANCTION_LETTER",
             imageUrl: fileUrl,
-            userId: senderDetails?.id,
+            userId: documentUserId,
             orderId,
             name: "Loan Sanction Letter",
-            uploadedBy: "Staff",
+            uploadedBy,
             comment: "Loan Sanction Letter",
           });
         }
       }
 
+      // Upload all files to database
+      let uploadedCount = 0;
       for (const file of filesArray) {
-        const response = await fetch("/api/upload/document", {
-          method: "POST",
-          body: JSON.stringify(file),
-        });
+        try {
+          const response = await fetch("/api/upload/document", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(file),
+          });
 
-        if (!response.ok) {
-          let errorDetails = "";
-          try {
-            const errorData = await response.json();
-            errorDetails =
-              errorData.details || errorData.message || "Unknown error";
-          } catch {
-            errorDetails = `Status: ${response.status} - ${response.statusText}`;
+          if (!response.ok) {
+            let errorDetails = "";
+            try {
+              const errorData = await response.json();
+              errorDetails =
+                errorData.error ||
+                errorData.message ||
+                errorData.details ||
+                "Unknown error";
+              console.error("API Error Response:", errorData);
+            } catch (parseError) {
+              errorDetails = `HTTP ${response.status}: ${response.statusText}`;
+              console.error("Failed to parse error response:", parseError);
+            }
+            throw new Error(`Upload failed for ${file.name}: ${errorDetails}`);
           }
-          throw new Error(`Upload failed: ${errorDetails}`);
+
+          const result = await response.json();
+          console.log("Document uploaded successfully:", result);
+          uploadedCount++;
+        } catch (fileError) {
+          console.error(`Error uploading ${file.name}:`, fileError);
+          throw fileError;
         }
       }
-      router.push(`/staff/dashboard/order-preview?orderId=${orderId}`);
+
+      // Success handling - Only MANAGER gets redirected, all others get popup only
+      if (
+        currentUserState?.role === "MANAGER" ||
+        currentUserState?.role === "ADMIN"
+      ) {
+        // MANAGER: Show success message and redirect to order preview
+        toast.success(`${uploadedCount} documents uploaded successfully!`);
+        router.push(`/staff/dashboard/order-preview?orderId=${orderId}`);
+      } else {
+        // All other roles: Only show success popup, no redirect
+        toast.success("Documents uploaded successfully!");
+        // Reset the form for non-manager users to allow new uploads
+        handleReset();
+      }
     } catch (error) {
       console.error("Submission error:", error);
-      toast.error(
+      const errorMessage =
         error instanceof Error
           ? error.message
-          : "Failed to upload documents. Please try again."
-      );
+          : "Failed to upload documents. Please try again.";
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Show loading state while fetching documents
+  if (isLoadingDocuments) {
+    return (
+      <div className="max-w-5xl mx-auto">
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-dark-blue"></div>
+          <span className="ml-2 text-gray-600">
+            Loading existing documents...
+          </span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit} className="max-w-5xl mx-auto">
+      {/* Existing Documents Summary */}
+      {existingDocuments.length > 0 && (
+        <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <h3 className="text-lg font-semibold text-blue-800 mb-3">
+            Existing Documents ({existingDocuments.length})
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {existingDocuments.map((doc) => (
+              <div
+                key={doc.id}
+                className="flex items-center space-x-2 p-2 bg-white rounded border"
+              >
+                <div className="flex-shrink-0">
+                  {doc.imageUrl.match(/\.(pdf)$/i) ? (
+                    <div className="w-8 h-8 bg-red-100 rounded flex items-center justify-center">
+                      <span className="text-red-600 text-xs font-bold">
+                        PDF
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
+                      <span className="text-blue-600 text-xs font-bold">
+                        IMG
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">
+                    {doc.name || doc.type}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {doc.uploadedBy} •{" "}
+                    {new Date(doc.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <a
+                  href={doc.imageUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 text-xs"
+                >
+                  View
+                </a>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* KYC Section */}
       <div className="mb-8">
-        <h2 className="text-xl font-semibold font-jakarta mb-4">KYC Documents</h2>
+        <h2 className="text-xl font-semibold font-jakarta mb-4">
+          KYC Documents
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block font-jakarta text-sm mb-2">
               PanCard of Remitter*
             </label>
-            <S3FileUploader
-              onFileUpload={(file, s3Url, s3Key) =>
-                handleFileUpload("kyc", "pan", file, s3Url, s3Key)
-              }
-              currentFile={formState.kyc.pan}
-              currentS3Url={formState.kyc.panUrl}
-              currentS3Key={formState.kyc.panS3Key}
-              acceptedFileTypes={[".jpg", ".jpeg", ".png", ".pdf"]}
-              maxSizeMB={5}
-              fieldName="PanCard"
-              folder="buyex-documents"
-            />
+            {formState.kyc.panUrl ? (
+              <div className="p-3 bg-green-50 border border-green-200 rounded">
+                <p className="text-green-800 text-sm">✓ Pancard uploaded</p>
+                <a
+                  href={formState.kyc.panUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 text-xs"
+                >
+                  View document
+                </a>
+              </div>
+            ) : (
+              <S3FileUploader
+                onFileUpload={(file, s3Url, s3Key) =>
+                  handleFileUpload("kyc", "pan", file, s3Url, s3Key)
+                }
+                currentFile={formState.kyc.pan}
+                currentS3Url={formState.kyc.panUrl}
+                currentS3Key={formState.kyc.panS3Key}
+                acceptedFileTypes={[".jpg", ".jpeg", ".png", ".pdf"]}
+                maxSizeMB={5}
+                fieldName="PanCard"
+                folder="buyex-documents"
+              />
+            )}
             {formErrors["kyc.pan"] && (
               <p className="text-red-500 text-xs mt-1">
                 {formErrors["kyc.pan"]}
@@ -299,18 +596,34 @@ export default function DocumentUploadForm({ orderID }: { orderID: string }) {
             <label className="block font-jakarta text-sm mb-2">
               Aadhaar/Passport/Driving license of Remitter*
             </label>
-            <S3FileUploader
-              onFileUpload={(file, s3Url, s3Key) =>
-                handleFileUpload("kyc", "identity", file, s3Url, s3Key)
-              }
-              currentFile={formState.kyc.identity}
-              currentS3Url={formState.kyc.identityUrl}
-              currentS3Key={formState.kyc.identityS3Key}
-              acceptedFileTypes={[".jpg", ".jpeg", ".png", ".pdf"]}
-              maxSizeMB={5}
-              fieldName="Identity Document"
-              folder="buyex-documents"
-            />
+            {formState.kyc.identityUrl ? (
+              <div className="p-3 bg-green-50 border border-green-200 rounded">
+                <p className="text-green-800 text-sm">
+                  ✓ Identity document uploaded
+                </p>
+                <a
+                  href={formState.kyc.identityUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 text-xs"
+                >
+                  View document
+                </a>
+              </div>
+            ) : (
+              <S3FileUploader
+                onFileUpload={(file, s3Url, s3Key) =>
+                  handleFileUpload("kyc", "identity", file, s3Url, s3Key)
+                }
+                currentFile={formState.kyc.identity}
+                currentS3Url={formState.kyc.identityUrl}
+                currentS3Key={formState.kyc.identityS3Key}
+                acceptedFileTypes={[".jpg", ".jpeg", ".png", ".pdf"]}
+                maxSizeMB={5}
+                fieldName="Identity Document"
+                folder="buyex-documents"
+              />
+            )}
             {formErrors["kyc.identity"] && (
               <p className="text-red-500 text-xs mt-1">
                 {formErrors["kyc.identity"]}
@@ -325,64 +638,127 @@ export default function DocumentUploadForm({ orderID }: { orderID: string }) {
         <h2 className="text-xl font-semibold font-jakarta mb-4">Checklist</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {purpose &&
-            CHECKLIST_FIELDS[purpose]?.map((item) => (
-              <div key={item.type}>
-                <label className="block text-sm font-jakarta mb-2">
-                  {item.label}*
-                </label>
-                <S3FileUploader
-                  onFileUpload={(file, s3Url, s3Key) =>
-                    handleFileUpload("checklist", item.type, file, s3Url, s3Key)
-                  }
-                  currentFile={formState.checklist?.[item.type] ?? null}
-                  currentS3Url={
-                    typeof formState.checklist?.[`${item.type}Url`] === "string"
-                      ? (formState.checklist?.[`${item.type}Url`] as unknown as string)
-                      : undefined
-                  }
-                  currentS3Key={
-                    typeof formState.checklist?.[`${item.type}S3Key`] === "string"
-                      ? (formState.checklist?.[`${item.type}S3Key`] as unknown as string)
-                      : undefined
-                  }
-                  acceptedFileTypes={[".pdf", ".jpg", ".jpeg", ".png"]}
-                  maxSizeMB={5}
-                  fieldName={item.label}
-                  folder="buyex-documents"
-                />
-                {formErrors[`checklist.${item.type}`] && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {formErrors[`checklist.${item.type}`]}
-                  </p>
-                )}
-              </div>
-            ))}
+            CHECKLIST_FIELDS[purpose]?.map((item) => {
+              const fileUrl = formState.checklist?.[
+                `${item.type}Url`
+              ] as string;
+              return (
+                <div key={item.type}>
+                  <label className="block text-sm font-jakarta mb-2">
+                    {item.label}*
+                  </label>
+                  {fileUrl ? (
+                    <div className="p-3 bg-green-50 border border-green-200 rounded">
+                      <p className="text-green-800 text-sm">
+                        ✓ {item.label} uploaded
+                      </p>
+                      <a
+                        href={fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 text-xs"
+                      >
+                        View document
+                      </a>
+                    </div>
+                  ) : (
+                    <S3FileUploader
+                      onFileUpload={(file, s3Url, s3Key) =>
+                        handleFileUpload(
+                          "checklist",
+                          item.type,
+                          file,
+                          s3Url,
+                          s3Key
+                        )
+                      }
+                      currentFile={
+                        formState.checklist?.[item.type] instanceof File
+                          ? (formState.checklist?.[item.type] as File)
+                          : null
+                      }
+                      currentS3Url={
+                        typeof formState.checklist?.[`${item.type}Url`] ===
+                        "string"
+                          ? (formState.checklist?.[`${item.type}Url`] as string)
+                          : undefined
+                      }
+                      currentS3Key={
+                        typeof formState.checklist?.[`${item.type}S3Key`] ===
+                        "string"
+                          ? (formState.checklist?.[
+                              `${item.type}S3Key`
+                            ] as string)
+                          : undefined
+                      }
+                      acceptedFileTypes={[".pdf", ".jpg", ".jpeg", ".png"]}
+                      maxSizeMB={5}
+                      fieldName={item.label}
+                      folder="buyex-documents"
+                    />
+                  )}
+                  {formErrors[`checklist.${item.type}`] && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {formErrors[`checklist.${item.type}`]}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
           {/* Add Loan Sanction Letter if educationLoan is yes */}
           {educationLoan === "yes" && (
             <div>
               <label className="block text-sm font-jakarta mb-2">
                 Loan Sanction Letter*
               </label>
-              <S3FileUploader
-                onFileUpload={(file, s3Url, s3Key) =>
-                  handleFileUpload("checklist", "LOAN_SANCTION_LETTER", file, s3Url, s3Key)
-                }
-                currentFile={formState.checklist?.LOAN_SANCTION_LETTER ?? null}
-                currentS3Url={
-                  typeof formState.checklist?.LOAN_SANCTION_LETTERUrl === "string"
-                    ? formState.checklist?.LOAN_SANCTION_LETTERUrl
-                    : undefined
-                }
-                currentS3Key={
-                  typeof formState.checklist?.LOAN_SANCTION_LETTERS3Key === "string"
-                    ? formState.checklist?.LOAN_SANCTION_LETTERS3Key
-                    : undefined
-                }
-                acceptedFileTypes={[".pdf"]}
-                maxSizeMB={5}
-                fieldName="Loan Sanction Letter"
-                folder="buyex-documents"
-              />
+              {formState.checklist?.LOAN_SANCTION_LETTERUrl ? (
+                <div className="p-3 bg-green-50 border border-green-200 rounded">
+                  <p className="text-green-800 text-sm">
+                    ✓ Loan Sanction Letter uploaded
+                  </p>
+                  <a
+                    href={formState.checklist.LOAN_SANCTION_LETTERUrl as string}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 text-xs"
+                  >
+                    View document
+                  </a>
+                </div>
+              ) : (
+                <S3FileUploader
+                  onFileUpload={(file, s3Url, s3Key) =>
+                    handleFileUpload(
+                      "checklist",
+                      "LOAN_SANCTION_LETTER",
+                      file,
+                      s3Url,
+                      s3Key
+                    )
+                  }
+                  currentFile={
+                    formState.checklist?.LOAN_SANCTION_LETTER instanceof File
+                      ? (formState.checklist?.LOAN_SANCTION_LETTER as File)
+                      : null
+                  }
+                  currentS3Url={
+                    typeof formState.checklist?.LOAN_SANCTION_LETTERUrl ===
+                    "string"
+                      ? formState.checklist?.LOAN_SANCTION_LETTERUrl
+                      : undefined
+                  }
+                  currentS3Key={
+                    typeof formState.checklist?.LOAN_SANCTION_LETTERS3Key ===
+                    "string"
+                      ? formState.checklist?.LOAN_SANCTION_LETTERS3Key
+                      : undefined
+                  }
+                  acceptedFileTypes={[".pdf"]}
+                  maxSizeMB={5}
+                  fieldName="Loan Sanction Letter"
+                  folder="buyex-documents"
+                />
+              )}
               {formErrors["checklist.LOAN_SANCTION_LETTER"] && (
                 <p className="text-red-500 text-xs mt-1">
                   {formErrors["checklist.LOAN_SANCTION_LETTER"]}
@@ -443,6 +819,7 @@ function validateFile(
   acceptedFileTypes: string[]
 ): string | undefined {
   if (!file) return undefined;
+
   const fileExtension = file.name
     .substring(file.name.lastIndexOf("."))
     .toLowerCase();
@@ -451,10 +828,12 @@ function validateFile(
       ", "
     )}`;
   }
+
   const maxSizeBytes = maxSizeMB * 1024 * 1024;
   if (file.size > maxSizeBytes) {
     return `${fieldName} must be less than ${maxSizeMB} MB`;
   }
+
   return undefined;
 }
 
