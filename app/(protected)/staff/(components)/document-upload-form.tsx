@@ -66,7 +66,7 @@ export default function DocumentUploadForm({
   const [isLoadingDocuments, setIsLoadingDocuments] = useState(false);
 
   useEffect(() => {
-    if (currentUser === undefined) {
+    if (currentUser === null) {
       // Only fetch if not provided
       const fetchCurrentUser = async () => {
         try {
@@ -74,12 +74,14 @@ export default function DocumentUploadForm({
             withCredentials: true,
           });
           setCurrentUserState(response.data);
+          console.log("Current user:", response.data.role);
         } catch {
           setCurrentUserState(null);
         }
       };
       fetchCurrentUser();
     }
+    
   }, [currentUser]);
 
   // Fetch existing documents for this order
@@ -314,6 +316,17 @@ export default function DocumentUploadForm({
     e.preventDefault();
     setIsSubmitting(true);
 
+    // If MANAGER and documents already exist, just redirect
+    if (
+      currentUserState?.role === "MANAGER" &&
+      existingDocuments.length > 0
+    ) {
+      toast.info("Documents already uploaded. Redirecting to order preview...");
+      router.push(`/staff/dashboard/order-preview?orderId=${orderId}`);
+      setIsSubmitting(false);
+      return;
+    }
+
     if (!validateForm()) {
       toast.error("Please fill all required fields");
       setIsSubmitting(false);
@@ -356,7 +369,7 @@ export default function DocumentUploadForm({
       const uploadedBy = getUploadedBy();
 
       // Add KYC files
-      if (formState.kyc.pan) {
+      if (formState.kyc.pan || formState.kyc.panUrl) {
         filesArray.push({
           role: "SENDER",
           type: "PAN",
@@ -369,7 +382,7 @@ export default function DocumentUploadForm({
         });
       }
 
-      if (formState.kyc.identity) {
+      if (formState.kyc.identity || formState.kyc.identityUrl) {
         filesArray.push({
           role: "SENDER",
           type: "IDENTITY",
@@ -387,7 +400,7 @@ export default function DocumentUploadForm({
         for (const item of CHECKLIST_FIELDS[purpose]) {
           const file = formState.checklist?.[item.type];
           const fileUrl = formState.checklist?.[`${item.type}Url`];
-          if (file) {
+          if (file || fileUrl) {
             filesArray.push({
               role: "SENDER",
               type: item.type,
@@ -406,7 +419,7 @@ export default function DocumentUploadForm({
       if (educationLoan === "yes") {
         const file = formState.checklist?.["LOAN_SANCTION_LETTER"];
         const fileUrl = formState.checklist?.["LOAN_SANCTION_LETTERUrl"];
-        if (file) {
+        if (file || fileUrl) {
           filesArray.push({
             role: "SENDER",
             type: "LOAN_SANCTION_LETTER",
