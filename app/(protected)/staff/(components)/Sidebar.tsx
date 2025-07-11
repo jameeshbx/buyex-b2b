@@ -199,7 +199,7 @@ export function Sidebar({
       >
         {/* Header section */}
         <div className="p-4 flex items-center justify-between border-b border-gray-100">
-          <Link href="/staff/dashboard" className="flex items-center">
+          <Link href="/" className="flex items-center">
             {collapsed ? (
               <div className="relative h-10 w-10">
                 <Image
