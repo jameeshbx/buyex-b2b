@@ -123,7 +123,6 @@ export default function Dashboard() {
   const [ibrRate, setIbrRate] = useState<string>("");
   const [customerRate, setCustomerRate] = useState<string>("");
   const [settlementRate, setSettlementRate] = useState<string>("");
-  const [visibleRows, setVisibleRows] = useState(5);
   const [selectedPurpose, setSelectedPurpose] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -147,6 +146,8 @@ export default function Dashboard() {
     >
   >({});
   const [AuthorizeOrders] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const ordersPerPage = 10; // Adjust as needed
 
   // Fetch beneficiary details
   const fetchBeneficiary = async (beneficiaryId: string) => {
@@ -304,8 +305,6 @@ export default function Dashboard() {
     }
   };
 
-  const handleSeeMoreClick = () => setVisibleRows((prev) => prev + 5);
-  const handleSeeLessClick = () => setVisibleRows(5);
 
   const getStatusBadgeColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -455,6 +454,12 @@ export default function Dashboard() {
     return matchesPurpose && matchesSearch;
   });
 
+  const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
+  const paginatedOrders = filteredOrders.slice(
+    (currentPage - 1) * ordersPerPage,
+    currentPage * ordersPerPage
+  );
+
   // Modify the IBR submit handler to only update the rate
   const handleIbrSubmit = async (e?: React.FormEvent) => {
     if (e) {
@@ -551,24 +556,7 @@ export default function Dashboard() {
                 Order history
               </CardTitle>
               <div className="flex gap-2">
-                {visibleRows < filteredOrders.length && (
-                  <Button
-                    variant="ghost"
-                    className="text-dark-blue hover:text-blue-800 text-sm sm:text-base"
-                    onClick={handleSeeMoreClick}
-                  >
-                    See More
-                  </Button>
-                )}
-                {visibleRows > 5 && (
-                  <Button
-                    variant="ghost"
-                    className="text-dark-blue hover:text-blue-800 text-sm sm:text-base"
-                    onClick={handleSeeLessClick}
-                  >
-                    See Less
-                  </Button>
-                )}
+                {/* Removed See More/See Less buttons */}
               </div>
             </div>
             {/* Filter and Search Section */}
@@ -638,7 +626,7 @@ export default function Dashboard() {
                 <div>Action</div>
               </div>
               {/* Order Rows - Only show visibleRows */}
-              {filteredOrders.slice(0, visibleRows).map((order) => {
+              {paginatedOrders.map((order) => {
                 const beneficiaryId = order.beneficiaryId || order.id;
                 const beneficiary = beneficiaries[beneficiaryId];
                 const showAuthorizeButton = order.status === "Received";
@@ -1344,6 +1332,27 @@ export default function Dashboard() {
                   </React.Fragment>
                 );
               })}
+            </div>
+            <div className="flex justify-center items-center gap-2 my-4">
+              <Button
+                variant="outline"
+                className="px-3 py-1"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              >
+                Previous
+              </Button>
+              <span className="mx-2 text-sm">
+                Page {currentPage} of {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                className="px-3 py-1"
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              >
+                Next
+              </Button>
             </div>
           </CardContent>
         </Card>

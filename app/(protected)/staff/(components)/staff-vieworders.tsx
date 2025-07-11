@@ -202,7 +202,7 @@ export default function Dashboard() {
     const normalizedStatus = currentStatus.replace(/\s+/g, "").toLowerCase();
 
     // List of statuses to show as link
-    const linkStatuses = ["quotedownloaded", "documentsplaced", "pending"];
+    const linkStatuses = ["quotedownloaded", "documentsplaced", "pending","blocked"];
 
     if (nonChangeableStatuses.includes(currentStatus)) {
       if (linkStatuses.includes(normalizedStatus)) {
