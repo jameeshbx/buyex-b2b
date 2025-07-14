@@ -210,11 +210,15 @@ export default function TransactionDetails({
       const tcsAmount = Number.parseFloat(
         calculateTcs(
           inrAmount,
-          order.educationLoan === "yes" ? "education" : ""
+          order.educationLoan === "yes"
         )
       );
       const totalPayable = Number.parseFloat(
-        calculateTotalPayable(inrAmount, calculatedValues.bankFee)
+        calculateTotalPayable(
+          inrAmount,
+          calculatedValues.bankFee,
+          order.educationLoan === "yes"
+        )
       );
 
       setCalculatedValues((prev) => ({
