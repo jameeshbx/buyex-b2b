@@ -134,34 +134,6 @@ function Senderdetails() {
   });
 
   useEffect(() => {
-    const storedPayer = localStorage.getItem("selectedPayer");
-    if (storedPayer) {
-      const payerValue = storedPayer.toLowerCase();
-      setPayer(payerValue);
-      // Set the relationship field based on payer
-      form.setValue(
-        "relationship",
-        payerValue as
-          | "self"
-          | "parent"
-          | "brother"
-          | "sister"
-          | "spouse"
-          | "other"
-          | undefined
-      );
-
-      // If payer is self, set sender email to student's real email
-      if (payerValue === "self") {
-        const studentEmail = form.getValues("studentEmailOriginal");
-        if (studentEmail) {
-          form.setValue("senderEmail", studentEmail);
-        }
-      }
-    }
-  }, [form]);
-
-  useEffect(() => {
     const fetchOrder = async () => {
       if (orderId) {
         try {
@@ -180,6 +152,7 @@ function Senderdetails() {
               setSenderDetails(sender.data);
               // form.reset will be handled by the useEffect above
             }
+            setPayer(order.data.payer?.toLowerCase?.() || "self"); // <-- set payer from order details
           } else {
             router.push(`/staff/dashboard/sender-details`);
           }

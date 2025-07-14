@@ -153,6 +153,147 @@ export default function TransactionDetails({
     Uzbekistan: "USD",
   };
 
+  // Helper function to generate A2 form PDF and upload to S3
+  const generateA2FormPDF = async (order: Order, calculatedValues: CalculatedValues) => {
+    const cleanOrder = {
+      ...order,
+      forexPartner:
+        typeof order.forexPartner === "string"
+          ? order.forexPartner
+          : order.forexPartner?.bankName || "N/A",
+    };
+    
+    try {
+      const pdfBytes = await generateA2Form(cleanOrder);
+
+      // Create a File object from the PDF bytes
+      const fileName = `A2_Form_${order.id}_${
+        new Date().toISOString().split("T")[0]
+      }.pdf`;
+      const pdfBlob = new Blob([pdfBytes], { type: "application/pdf" });
+      const pdfFile = new File([pdfBlob], fileName, { type: "application/pdf" });
+
+      // Step 1: Get presigned URL for S3 upload
+      const presignedResponse = await fetch("/api/upload/s3", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fileName: fileName,
+          fileType: "application/pdf",
+          folder: "buyex-documents/a2-forms",
+        }),
+      });
+
+      if (!presignedResponse.ok) {
+        const errorData = await presignedResponse.json();
+        throw new Error(errorData.error || "Failed to get upload URL");
+      }
+
+      const presignedData = await presignedResponse.json();
+
+      // Step 2: Upload PDF to S3
+      const uploadResponse = await fetch(presignedData.presignedUrl, {
+        method: "PUT",
+        body: pdfFile,
+        headers: {
+          "Content-Type": "application/pdf",
+        },
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error("Failed to upload PDF to S3");
+      }
+
+      // Step 3: Save document record to database
+      const documentResponse = await fetch("/api/upload/document", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          role: "SENDER",
+          userId: order.sender?.id,
+          type: "OTHER",
+          imageUrl: presignedData.cloudFrontUrl,
+          orderId: order.id,
+        }),
+      });
+
+      if (!documentResponse.ok) {
+        const errorData = await documentResponse.json();
+        throw new Error(errorData.error || "Failed to save document record");
+      }
+
+      const documentData = await documentResponse.json();
+
+      console.log("PDF generated and uploaded successfully:", {
+        fileName,
+        s3Url: presignedData.cloudFrontUrl,
+        documentId: documentData.id,
+      });
+
+      return {
+        success: true,
+        fileName,
+        s3Url: presignedData.cloudFrontUrl,
+        documentId: documentData.id,
+      };
+    } catch (error) {
+      console.error("Error generating and uploading PDF:", error);
+      throw error;
+    } finally {
+      // Send email notification via API route
+      try {
+        await fetch("/api/email/send", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            to: "jameesh@buyex.in",
+            subject: "A2 Form Generated",
+            html: orderReceivedTemplate({
+              orderDate: new Date().toISOString(),
+              orderId: order.id,
+              senderName: order.sender?.studentName || "",
+              phone: order.sender?.phoneNumber || "",
+              email: order.sender?.studentEmailOriginal || "",
+              purpose: order.purpose || "",
+              receiverName: order.beneficiary?.receiverFullName || "",
+              foreignCurrency: order.currency || "",
+              product: order.purpose || "",
+              orderType: "",
+              quantity: "",
+              rate: order.customerRate || "",
+              tentativeAmount: order.amount || "",
+              forexConversionTax: order.foreignBankCharges || "",
+              bankFee: calculatedValues.bankFee,
+              tcs: calculatedValues.tcsApplicable || "",
+              totalPayableAmount: order.totalAmount || "",
+              residentStatus: "",
+              motherName: order.sender?.mothersName || "",
+              relationshipWithReceiver: order.sender?.relationship || "",
+              senderAddressLine1: order.sender?.addressLine1 || "",
+              senderAddressLine2: order.sender?.addressLine2 || "",
+              funding: order.sender?.sourceOfFunds || "",
+              senderAccountNo: order.sender?.payerAccountNumber || "",
+              ifsc: order.sender?.payerBankName || "",
+              bankName: order.sender?.payerBankName || "",
+              branchName: order.sender?.payerBankName || "",
+              agent: order.sender?.payerBankName || "",
+              supportEmail: order.sender?.payerBankName || "",
+              supportPhone: order.sender?.payerBankName || "",
+            }),
+          }),
+        });
+      } catch (error) {
+        console.error("Failed to send email notification:", error);
+      }
+    }
+  };
+
   // Fetch order details
   useEffect(() => {
     const fetchOrder = async () => {
@@ -261,9 +402,8 @@ export default function TransactionDetails({
             : updateData.forexPartner.bankName,
       };
 
-      // Generate and upload A2 form PDF
-
-      const pdfResult = await generateA2FormPDF(cleanOrder);
+      // Generate and upload A2 form PDF with calculatedValues passed as parameter
+      const pdfResult = await generateA2FormPDF(cleanOrder, calculatedValues);
 
       if (pdfResult.success) {
         console.log("A2 Form PDF uploaded successfully:", pdfResult);
@@ -636,147 +776,4 @@ export default function TransactionDetails({
       </div>
     </div>
   );
-}
-
-// Helper to generate A2 form PDF and upload to S3
-async function generateA2FormPDF(order: Order) {
-  // 🛠️ Again, ensure proper forexPartner type
-  const cleanOrder = {
-    ...order,
-    forexPartner:
-      typeof order.forexPartner === "string"
-        ? order.forexPartner
-        : order.forexPartner?.bankName || "N/A", // Fallback if bankName is missing
-  };
-  try {
-    const pdfBytes = await generateA2Form(cleanOrder);
-
-    // Create a File object from the PDF bytes
-    const fileName = `A2_Form_${order.id}_${
-      new Date().toISOString().split("T")[0]
-    }.pdf`;
-    const pdfBlob = new Blob([pdfBytes], { type: "application/pdf" });
-    const pdfFile = new File([pdfBlob], fileName, { type: "application/pdf" });
-
-    // Step 1: Get presigned URL for S3 upload
-    const presignedResponse = await fetch("/api/upload/s3", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        fileName: fileName,
-        fileType: "application/pdf",
-        folder: "buyex-documents/a2-forms",
-      }),
-    });
-
-    if (!presignedResponse.ok) {
-      const errorData = await presignedResponse.json();
-      throw new Error(errorData.error || "Failed to get upload URL");
-    }
-
-    const presignedData = await presignedResponse.json();
-
-    // Step 2: Upload PDF to S3
-    const uploadResponse = await fetch(presignedData.presignedUrl, {
-      method: "PUT",
-      body: pdfFile,
-      headers: {
-        "Content-Type": "application/pdf",
-      },
-    });
-
-    if (!uploadResponse.ok) {
-      throw new Error("Failed to upload PDF to S3");
-    }
-
-    // Step 3: Save document record to database
-    const documentResponse = await fetch("/api/upload/document", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        role: "SENDER",
-        userId: order.sender?.id, // You'll need to get this from your auth context
-        type: "OTHER",
-        imageUrl: presignedData.cloudFrontUrl,
-        orderId: order.id,
-      }),
-    });
-
-    if (!documentResponse.ok) {
-      const errorData = await documentResponse.json();
-      throw new Error(errorData.error || "Failed to save document record");
-    }
-
-    const documentData = await documentResponse.json();
-
-    console.log("PDF generated and uploaded successfully:", {
-      fileName,
-      s3Url: presignedData.cloudFrontUrl,
-      documentId: documentData.id,
-    });
-
-    return {
-      success: true,
-      fileName,
-      s3Url: presignedData.cloudFrontUrl,
-      documentId: documentData.id,
-    };
-  } catch (error) {
-    console.error("Error generating and uploading PDF:", error);
-    throw error;
-  } finally {
-    // Send email notification via API route
-    try {
-      await fetch("/api/email/send", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          to: "jameesh@buyex.in",
-          subject: "A2 Form Generated",
-          html: orderReceivedTemplate({
-            orderDate: new Date().toISOString(),
-            orderId: order.id,
-            senderName: order.sender?.studentName || "",
-            phone: order.sender?.phoneNumber || "",
-            email: order.sender?.studentEmailOriginal || "",
-            purpose: order.purpose || "",
-            receiverName: order.beneficiary?.receiverFullName || "",
-            foreignCurrency: order.currency || "",
-            product: order.purpose || "",
-            orderType: "",
-            quantity: "",
-            rate: order.customerRate || "",
-            tentativeAmount: order.amount || "",
-            forexConversionTax: order.foreignBankCharges || "",
-            // @ts-expect-error - calculations property not defined in Order interface
-            bankFee: calculatedValues.bankFee,
-            // @ts-expect-error - calculations property not defined in Order interface
-            tcs: order?.calculations?.tcsApplicable || "",
-            totalPayableAmount: order.totalAmount || "",
-            residentStatus: "",
-            motherName: order.sender?.mothersName || "",
-            relationshipWithReceiver: order.sender?.relationship || "",
-            senderAddressLine1: order.sender?.addressLine1 || "",
-            senderAddressLine2: order.sender?.addressLine2 || "",
-            funding: order.sender?.sourceOfFunds || "",
-            senderAccountNo: order.sender?.payerAccountNumber || "",
-            ifsc: order.sender?.payerBankName || "",
-            bankName: order.sender?.payerBankName || "",
-            branchName: order.sender?.payerBankName || "",
-            agent: order.sender?.payerBankName || "",
-            supportEmail: order.sender?.payerBankName || "",
-            supportPhone: order.sender?.payerBankName || "",
-          }),
-        }),
-      });
-    } catch (error) {
-      console.error("Failed to send email notification:", error);
-    }
-  }
 }
