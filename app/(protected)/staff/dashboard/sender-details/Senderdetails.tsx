@@ -69,6 +69,7 @@ function Senderdetails() {
   const [selectedStatus, setSelectedStatus] = useState("pending");
   const [sameAddress, setSameAddress] = useState(false);
   const [senderDetails, setSenderDetails] = useState<Sender | null>(null);
+  const [statusError, setStatusError] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -393,19 +394,14 @@ function Senderdetails() {
     }
   };
 
-  const handleStatusConfirm = async () => {
-    form.setValue("status", selectedStatus);
-    if (orderId) {
-      try {
-        await axios.patch(`/api/orders/${orderId}`, {
-          status: selectedStatus,
-        });
-      } catch (error) {
-        console.error("Error updating status:", error);
-        alert("Failed to update status. Please try again.");
-      }
+  const handleStatusConfirm = () => {
+    if (selectedStatus === "Blocked") {
+      setShowStatusPopup(false); // Close the dialog
+      setStatusError(null);      // Clear any previous error
+      // ...any other logic you need
+    } else {
+      setStatusError("Please select 'Blocked' to proceed.");
     }
-    setShowStatusPopup(false);
   };
 
   const handleOpenChange = (open: boolean) => {
@@ -443,6 +439,9 @@ function Senderdetails() {
                 <SelectItem value="Blocked">Blocked</SelectItem>
               </SelectContent>
             </Select>
+            {statusError && (
+              <p className="text-red-500 text-xs px-4">{statusError}</p>
+            )}
           </div>
           <DialogFooter className="px-4 sm:px-6 pb-4 sm:pb-6">
             <Button

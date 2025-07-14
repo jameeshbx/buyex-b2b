@@ -1145,9 +1145,7 @@ export default function OrderDetailsForm() {
           <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
             <Button
               type="button"
-              onClick={() =>
-                handleDownloadQuote(form.getValues(), calculatedValues)
-              }
+              onClick={form.handleSubmit((data) => handleDownloadQuote(data, calculatedValues))}
               variant="outline"
               className="text-white border-none hover:opacity-90 flex items-center gap-2 h-12 rounded-md px-6"
               style={{
