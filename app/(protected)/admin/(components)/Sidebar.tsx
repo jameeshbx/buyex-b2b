@@ -4,10 +4,12 @@ import type React from "react";
 import { useState, useEffect } from "react";
 import { useMediaQuery } from "@/hooks/use-mobile";
 import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 export function useMobile() {
   const isMobileQuery = useMediaQuery("(max-width: 768px)");
@@ -21,23 +23,48 @@ export function useMobile() {
 }
 
 type NavItemProps = {
-  href: string;
+  href?: string;
   icon: React.ReactNode;
   label: string;
   collapsed: boolean;
   active: boolean;
+  onClick?: () => void;
+  isButton?: boolean;
 };
 
-function NavItem({ href, icon, label, collapsed, active }: NavItemProps) {
+function NavItem({
+  href,
+  icon,
+  label,
+  collapsed,
+  active,
+  onClick,
+  isButton,
+}: NavItemProps) {
+  const baseClasses = cn(
+    "flex items-center px-3 py-2.5 rounded-lg mx-2 text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer",
+    active && "bg-blue-50 text-blue-600 font-medium",
+    collapsed ? "justify-center" : "justify-start"
+  );
+
+  if (isButton) {
+    return (
+      <button onClick={onClick} className={baseClasses}>
+        <span
+          className={cn(
+            "flex-shrink-0 flex items-center justify-center w-6 h-6",
+            active ? "text-blue-600" : "text-gray-500"
+          )}
+        >
+          {icon}
+        </span>
+        {!collapsed && <span className="ml-3 truncate">{label}</span>}
+      </button>
+    );
+  }
+
   return (
-    <Link
-      href={href}
-      className={cn(
-        "flex items-center px-3 py-2.5 rounded-lg mx-2 text-gray-600 hover:bg-gray-100 transition-colors",
-        active && "bg-blue-50 text-blue-600 font-medium",
-        collapsed ? "justify-center" : "justify-start"
-      )}
-    >
+    <Link href={href!} className={baseClasses}>
       <span
         className={cn(
           "flex-shrink-0 flex items-center justify-center w-6 h-6",
@@ -60,6 +87,32 @@ export function Sidebar({
 }) {
   const isMobile = useMobile();
   const pathname = usePathname();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+
+      // Force clear all cookies and session data
+      await signOut({
+        callbackUrl: "/signin",
+        redirect: true,
+      });
+
+      // Additional cleanup - clear any local storage or session storage
+      if (typeof window !== "undefined") {
+        localStorage.clear();
+        sessionStorage.clear();
+      }
+
+      toast.success("Logged out successfully");
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast.error("Failed to logout. Please try again.");
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   const navItems = [
     {
@@ -164,7 +217,6 @@ export function Sidebar({
       active: pathname === "/support",
     },
     {
-      href: "/",
       icon: (
         <Image
           src="/icon-park-outline_reject.svg"
@@ -174,8 +226,10 @@ export function Sidebar({
           className="w-5 h-6"
         />
       ),
-      label: "Logout",
-      active: pathname === "/logout",
+      label: isLoggingOut ? "Logging out..." : "Logout",
+      active: false,
+      onClick: handleLogout,
+      isButton: true,
     },
   ];
 
@@ -260,14 +314,16 @@ export function Sidebar({
           {/* Secondary navigation */}
           <div className="border-t border-gray-200 mt-6 pt-6 px-3">
             <nav className="space-y-2">
-              {secondaryItems.map((item) => (
+              {secondaryItems.map((item, index) => (
                 <NavItem
-                  key={item.href}
+                  key={item.href || `logout-${index}`}
                   href={item.href}
                   icon={item.icon}
                   label={item.label}
                   collapsed={collapsed}
                   active={item.active}
+                  onClick={item.onClick}
+                  isButton={item.isButton}
                 />
               ))}
             </nav>

@@ -9,7 +9,39 @@ import type { Session, User } from "next-auth";
 export const authConfig: AuthOptions = {
   adapter: PrismaAdapter(db),
   session: {
-    strategy: "jwt",
+    strategy: "jwt", // Changed from "database" to "jwt"
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+  jwt: {
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+    callbackUrl: {
+      name: `next-auth.callback-url`,
+      options: {
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+    csrfToken: {
+      name: `next-auth.csrf-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
   },
   providers: [
     CredentialsProvider({
@@ -97,6 +129,10 @@ export const authConfig: AuthOptions = {
       } catch (error) {
         console.error("Error updating last login:", error);
       }
+    },
+    async signOut({ session, token }) {
+      // Clear any additional session data if needed
+      console.log("User signed out");
     },
   },
   debug: process.env.NODE_ENV === "development",
