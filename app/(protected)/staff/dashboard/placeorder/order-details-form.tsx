@@ -252,6 +252,7 @@ export default function OrderDetailsForm() {
   const foreignBankCharges = form.watch("foreignBankCharges");
   const margin = form.watch("margin");
   const ibrRate = form.watch("ibrRate");
+  const educationLoan = form.watch("educationLoan");
 
   useEffect(() => {
     if (currency) {
@@ -262,23 +263,18 @@ export default function OrderDetailsForm() {
   }, [currency, form]);
 
   useEffect(() => {
-    if (foreignBankCharges === "OUR") {
-      setCalculatedValues((prev) => ({
-        ...prev,
-        bankFee: "1500",
-      }));
-    } else {
-      setCalculatedValues((prev) => ({
-        ...prev,
-        bankFee: "300",
-      }));
-    }
+    const bankFee = foreignBankCharges === "OUR" ? 1500 : 300;
+    setCalculatedValues((prev) => ({
+      ...prev,
+      bankFee: bankFee.toString(),
+    }));
   }, [foreignBankCharges]);
 
   useEffect(() => {
     const currentAmount = Number.parseFloat(amount || "0");
     const currentMargin = Number.parseFloat(margin || "0");
     const currentIbrRate = Number.parseFloat(ibrRate || "0");
+    const bankFee = foreignBankCharges === "OUR" ? 1500 : 300;
 
     if (currentAmount && currentMargin) {
       const totalAmount = (currentIbrRate + currentMargin) * currentAmount;
@@ -290,17 +286,15 @@ export default function OrderDetailsForm() {
         ...prev,
         inrAmount: totalAmount.toString(),
         gst: calculateGst(totalAmount).toString(),
-        tcsApplicable:
-          form.watch("educationLoan") === "yes"
-            ? "0"
-            : calculateTcs(totalAmount).toString(),
+        tcsApplicable: calculateTcs(totalAmount, educationLoan === "yes"),
         totalPayable: calculateTotalPayable(
           totalAmount,
-          Number.parseFloat(prev.bankFee)
+          bankFee,
+          educationLoan === "yes"
         ).toString(),
       }));
     }
-  }, [amount, margin, ibrRate, calculatedValues.bankFee, form]);
+  }, [amount, margin, ibrRate, foreignBankCharges, educationLoan, form]);
 
   useEffect(() => {
     form.setValue("totalAmount", calculatedValues.totalPayable.toString());
@@ -1151,9 +1145,7 @@ export default function OrderDetailsForm() {
           <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
             <Button
               type="button"
-              onClick={() =>
-                handleDownloadQuote(form.getValues(), calculatedValues)
-              }
+              onClick={form.handleSubmit((data) => handleDownloadQuote(data, calculatedValues))}
               variant="outline"
               className="text-white border-none hover:opacity-90 flex items-center gap-2 h-12 rounded-md px-6"
               style={{
