@@ -20,15 +20,14 @@ export const getLiveRate = async (base: string, target: string) => {
   return data.rates[target];
 };
 
-export const calculateTcs = (amount: number, purpose?: string) => {
-  if (purpose === "education") {
-    return (amount * 0.005).toFixed(2).toString();
+export const calculateTcs = (amount: number, educationLoan?: boolean) => {
+  if (educationLoan) {
+    return "0";
+  }
+  if (amount <= TCS_SLAB) {
+    return "0";
   } else {
-    if (amount <= TCS_SLAB) {
-      return "0";
-    } else {
-      return ((amount - TCS_SLAB) * TCS_RATE).toFixed(2).toString();
-    }
+    return ((amount - TCS_SLAB) * TCS_RATE).toFixed(2).toString();
   }
 };
 
@@ -48,11 +47,10 @@ export const calculateGst = (amount: number) => {
   return Math.max(calculatedGst, MINIMUM_GST).toFixed(2).toString();
 };
 
-export const calculateTotalPayable = (amount: number, bankFee: number) => {
-  return (
-    amount +
-    parseFloat(calculateTcs(amount)) +
-    parseFloat(calculateGst(amount)) +
-    bankFee
-  ).toFixed(2);
+export const calculateTotalPayable = (amount: number, bankFee: number, educationLoan?: boolean) => {
+  const tcs = parseFloat(calculateTcs(amount, educationLoan));
+  const gst = parseFloat(calculateGst(amount));
+  const total = amount + tcs + gst + bankFee;
+  console.log('calculateTotalPayable:', { amount, bankFee, educationLoan, tcs, gst, total });
+  return total.toFixed(2);
 };
