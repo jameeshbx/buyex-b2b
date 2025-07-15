@@ -225,6 +225,8 @@ enum UserRole {
   ADMIN
   USER
   MANAGER
+  AGENT
+  SUB_AGENT
   ORGANISATION_ADMIN
   ORGANISATION_USER
 }
@@ -258,7 +260,7 @@ enum OrderStatus {
   Rejected
   Completed
   QuoteDownloaded
-  Authorize
+  Authorized
   DocumentsPlaced
   RateExpired
   Blocked

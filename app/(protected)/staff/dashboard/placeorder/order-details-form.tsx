@@ -39,7 +39,6 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { ForexPartner, forexPartnerData } from "@/data/forex-partner";
 
-
 interface CalculatedValues {
   inrAmount: string;
   bankFee: string;
@@ -131,8 +130,9 @@ async function generateQuotePDF(
   );
   doc.setTextColor(0, 0, 255);
   doc.textWithLink("www.buyexchange.in/document-uploads", 14, lastY + 12, {
-    url: `${process.env.NEXT_PUBLIC_APP_URL}/document-uploads/${orderId || "pending"
-      }`,
+    url: `${process.env.NEXT_PUBLIC_APP_URL}/document-uploads/${
+      orderId || "pending"
+    }`,
   });
 
   doc.setTextColor(0);
@@ -234,8 +234,6 @@ export default function OrderDetailsForm() {
     }
   }
 
-
-
   function resetForm() {
     form.reset();
     setShowCalculation(false);
@@ -305,8 +303,8 @@ export default function OrderDetailsForm() {
     const currencyValue = form.watch("currency");
     const countryCurrency = selectedCountry
       ? COUNTRY_CURRENCY_MAP[
-      selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP
-      ]
+          selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP
+        ]
       : "USD";
 
     if (selectedCountry && currencyValue !== "USD") {
@@ -357,7 +355,7 @@ export default function OrderDetailsForm() {
           currency:
             formData.currency ||
             COUNTRY_CURRENCY_MAP[
-            formData.receiverBankCountry as keyof typeof COUNTRY_CURRENCY_MAP
+              formData.receiverBankCountry as keyof typeof COUNTRY_CURRENCY_MAP
             ] ||
             "",
         },
@@ -402,6 +400,13 @@ export default function OrderDetailsForm() {
     }
   };
 
+  // Add useEffect to handle navigation when unauthenticated
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/signin");
+    }
+  }, [status, router]);
+
   if (status === "loading") {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -411,14 +416,11 @@ export default function OrderDetailsForm() {
   }
 
   if (status === "unauthenticated") {
-    router.push("/auth/signin");
-    return null;
+    return null; // Remove the router.push call from here
   }
 
   return (
     <>
-
-
       <Form {...form}>
         <form
           onSubmit={(e) => {
@@ -465,7 +467,7 @@ export default function OrderDetailsForm() {
                           );
                           const countryCurrency =
                             COUNTRY_CURRENCY_MAP[
-                            selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP
+                              selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP
                             ] || "";
                           form.setValue("currency", countryCurrency);
                         }
@@ -769,7 +771,7 @@ export default function OrderDetailsForm() {
                         field.onChange(value);
                         const currency =
                           COUNTRY_CURRENCY_MAP[
-                          value as keyof typeof COUNTRY_CURRENCY_MAP
+                            value as keyof typeof COUNTRY_CURRENCY_MAP
                           ] || "USD";
                         form.setValue("currency", currency, {
                           shouldValidate: true,
@@ -806,18 +808,21 @@ export default function OrderDetailsForm() {
                         <SelectItem value="Sweden">Sweden</SelectItem>
                         <SelectItem value="Switzerland">Switzerland</SelectItem>
                         <SelectItem value="UAE">UAE</SelectItem>
-                        <SelectItem value="United Kingdom">United Kingdom</SelectItem>
-                        <SelectItem value="United States of America">United States of America</SelectItem>
+                        <SelectItem value="United Kingdom">
+                          United Kingdom
+                        </SelectItem>
+                        <SelectItem value="United States of America">
+                          United States of America
+                        </SelectItem>
                         <SelectItem value="Uzbekistan">Uzbekistan</SelectItem>
                       </SelectContent>
-
                     </Select>
                     {(form.watch("purpose") === "Blocked account transfer" ||
                       form.watch("purpose") === "GIC Canada fee deposite") && (
-                        <p className="text-xs text-gray-500 mt-1">
-                          Country automatically set based on purpose selection
-                        </p>
-                      )}
+                      <p className="text-xs text-gray-500 mt-1">
+                        Country automatically set based on purpose selection
+                      </p>
+                    )}
                   </FormItem>
                 )}
               />
@@ -882,8 +887,7 @@ export default function OrderDetailsForm() {
                   </FormItem>
                 )}
               />
-              <div
-                className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-4 gap-2">
                 <div className="col-span-3">
                   <FormField
                     control={form.control}
@@ -903,10 +907,6 @@ export default function OrderDetailsForm() {
                       </FormItem>
                     )}
                   />
-
-
-
-
                 </div>
                 <div className="col-span-1">
                   <FormField
@@ -916,8 +916,8 @@ export default function OrderDetailsForm() {
                       const selectedCountry = form.watch("receiverBankCountry");
                       const countryCurrency = selectedCountry
                         ? COUNTRY_CURRENCY_MAP[
-                        selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP
-                        ]
+                            selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP
+                          ]
                         : "USD";
 
                       const usdPrimaryCountries = [
@@ -969,8 +969,6 @@ export default function OrderDetailsForm() {
                     }}
                   />
                 </div>
-
-
               </div>
               <FormField
                 control={form.control}
@@ -991,12 +989,6 @@ export default function OrderDetailsForm() {
                   </FormItem>
                 )}
               />
-
-
-
-
-
-
             </div>
           </div>
 
@@ -1117,27 +1109,27 @@ export default function OrderDetailsForm() {
             </div>
 
             <div className="pt-4 mb-2 md:mb-0 gap-6">
-            <FormField  
-              control={form.control}
-              name="pancardNumber"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>PAN Card</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      placeholder="ABCDE1234F"
-                      className="bg-gray-150 border-blue-200 shadow-lg h-12 -mt-1.5"
-                      onChange={(e) => {
-                        const value = e.target.value.toUpperCase();
-                        field.onChange(value);
-                        form.setValue('pancardNumber', value); 
-                      }}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="pancardNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>PAN Card</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="ABCDE1234F"
+                        className="bg-gray-150 border-blue-200 shadow-lg h-12 -mt-1.5"
+                        onChange={(e) => {
+                          const value = e.target.value.toUpperCase();
+                          field.onChange(value);
+                          form.setValue("pancardNumber", value);
+                        }}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
             </div>
           </div>
 
@@ -1145,7 +1137,9 @@ export default function OrderDetailsForm() {
           <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
             <Button
               type="button"
-              onClick={form.handleSubmit((data) => handleDownloadQuote(data, calculatedValues))}
+              onClick={form.handleSubmit((data) =>
+                handleDownloadQuote(data, calculatedValues)
+              )}
               variant="outline"
               className="text-white border-none hover:opacity-90 flex items-center gap-2 h-12 rounded-md px-6"
               style={{

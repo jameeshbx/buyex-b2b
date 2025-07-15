@@ -81,7 +81,6 @@ export default function DocumentUploadForm({
       };
       fetchCurrentUser();
     }
-    
   }, [currentUser]);
 
   // Fetch existing documents for this order
@@ -147,16 +146,14 @@ export default function DocumentUploadForm({
             if (order.data.senderId) {
               try {
                 const sender = await axios.get(`
-                  /api/senders/${order.data.senderId}`
-                );
+                  /api/senders/${order.data.senderId}`);
                 if (sender.data) {
                   setSenderDetails(sender.data);
                 } else {
                   // Sender ID exists but no sender data found
                   toast.error("Sender details not found");
                   router.push(`
-                    /staff/dashboard/sender-details?orderId=${orderId}`
-                  );
+                    /staff/dashboard/sender-details?orderId=${orderId}`);
                   return;
                 }
               } catch {
@@ -177,8 +174,7 @@ export default function DocumentUploadForm({
             if (order.data.senderId) {
               try {
                 const sender = await axios.get(`
-                  /api/senders/${order.data.senderId}`
-                );
+                  /api/senders/${order.data.senderId}`);
                 if (sender.data) {
                   setSenderDetails(sender.data);
                 }
@@ -317,10 +313,7 @@ export default function DocumentUploadForm({
     setIsSubmitting(true);
 
     // If MANAGER and documents already exist, just redirect
-    if (
-      currentUserState?.role === "MANAGER" &&
-      existingDocuments.length > 0
-    ) {
+    if (currentUserState?.role === "MANAGER" && existingDocuments.length > 0) {
       toast.info("Documents already uploaded. Redirecting to order preview...");
       router.push(`/staff/dashboard/order-preview?orderId=${orderId}`);
       setIsSubmitting(false);
@@ -379,6 +372,7 @@ export default function DocumentUploadForm({
           name: "Pancard",
           uploadedBy,
           comment: "Sender Pancard",
+          fileSize: formState.kyc.pan?.size || null,
         });
       }
 
@@ -392,6 +386,7 @@ export default function DocumentUploadForm({
           name: "Identity Document",
           uploadedBy,
           comment: "Sender Identity document",
+          fileSize: formState.kyc.identity?.size || null,
         });
       }
 
@@ -410,6 +405,7 @@ export default function DocumentUploadForm({
               name: item.label,
               uploadedBy,
               comment: `Sender ${item.label}`,
+              fileSize: file instanceof File ? file.size : null,
             });
           }
         }
@@ -429,6 +425,7 @@ export default function DocumentUploadForm({
             name: "Loan Sanction Letter",
             uploadedBy,
             comment: "Loan Sanction Letter",
+            fileSize: file instanceof File ? file.size : null,
           });
         }
       }
@@ -700,7 +697,7 @@ export default function DocumentUploadForm({
                         typeof formState.checklist?.[`${item.type}S3Key`] ===
                         "string"
                           ? (formState.checklist?.[
-                             ` ${item.type}S3Key`
+                              ` ${item.type}S3Key`
                             ] as string)
                           : undefined
                       }
