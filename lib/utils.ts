@@ -29,3 +29,15 @@ export function generateRandomPassword(length: number = 12): string {
   
   return password;
 }
+
+/**
+ * Generates an order ID in the format BE + DDMMYY + auto-increment ID
+ * @param autoIncrementId number (should be padded if needed)
+ * @param date Date object (defaults to today)
+ */
+export function generateOrderId(autoIncrementId: number, date: Date = new Date()): string {
+  const dd = String(date.getDate()).padStart(2, '0');
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const yy = String(date.getFullYear()).slice(-2);
+  return `BE${dd}${mm}${yy}${autoIncrementId}`;
+}

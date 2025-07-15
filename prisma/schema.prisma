@@ -156,7 +156,7 @@ model Beneficiary {
 }
 
 model Order {
-  id                  String       @id @default(cuid())
+  id                  String       @id
   purpose             String
   foreignBankCharges  Float
   payer               String

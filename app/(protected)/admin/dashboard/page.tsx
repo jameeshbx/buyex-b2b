@@ -1,13 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
-import Link from "next/link"
+import Link from "next/link";
 import {
   ChevronDown,
   ChevronRight,
   Upload,
   Search,
   Filter,
-  
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -103,7 +102,7 @@ const ChangeableStatuses = [
   "Completed",
   "Verified",
   "Blocked",
-  "Authorize",
+  "Authorized",
 ];
 
 export default function Dashboard() {
@@ -305,14 +304,13 @@ export default function Dashboard() {
     }
   };
 
-
   const getStatusBadgeColor = (status: string) => {
     switch (status.toLowerCase()) {
       case "received":
         return "bg-blue-100 text-blue-800 hover:bg-blue-200";
       case "QuoteDownloaded":
         return "bg-green-100 text-green-800 hover:bg-green-200";
-      case "Authorize":
+      case "Authorized":
         return "bg-green-100 text-green-800 hover:bg-green-200";
       case "documents placed":
         return "bg-yellow-100 text-yellow-800 hover:bg-yellow-200";
@@ -338,7 +336,7 @@ export default function Dashboard() {
       const statusRes = await fetch(`/api/orders/${orderId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "Authorize" }),
+        body: JSON.stringify({ status: "Authorized" }),
       });
 
       if (!statusRes.ok) throw new Error("Failed to update status");
@@ -688,15 +686,17 @@ export default function Dashboard() {
                           {renderStatusElement(order)}
                         </div>
                         <div onClick={(e) => e.stopPropagation()}>
-                        <Link href={`/admin/dashboard/upload-files/${order.id}`}>
-                          <Button
-                            size="sm"
-                            className="bg-dark-blue hover:bg-blue-700 text-white px-2 py-2 text-xs h-7"
+                          <Link
+                            href={`/admin/dashboard/upload-files/${order.id}`}
                           >
-                            <Upload className="h-2 w-2" />
-                            Uploads
-                          </Button>
-                        </Link>
+                            <Button
+                              size="sm"
+                              className="bg-dark-blue hover:bg-blue-700 text-white px-2 py-2 text-xs h-7"
+                            >
+                              <Upload className="h-2 w-2" />
+                              Uploads
+                            </Button>
+                          </Link>
                         </div>
                       </div>
                       {/* Mobile/Tablet Layout */}
@@ -759,15 +759,17 @@ export default function Dashboard() {
                             {order.fxRateUpdated ? "UPDATED" : "UPDATE RATE"}
                           </button>
                           <div onClick={(e) => e.stopPropagation()}>
-                          <Link href={`/admin/dashboard/upload-files/${order.id}`}>
-                          <Button
-                            size="sm"
-                            className="bg-dark-blue hover:bg-blue-700 text-white px-2 py-2 text-xs h-7"
-                          >
-                            <Upload className="h-2 w-2" />
-                            Uploads
-                          </Button>
-                        </Link>
+                            <Link
+                              href={`/admin/dashboard/upload-files/${order.id}`}
+                            >
+                              <Button
+                                size="sm"
+                                className="bg-dark-blue hover:bg-blue-700 text-white px-2 py-2 text-xs h-7"
+                              >
+                                <Upload className="h-2 w-2" />
+                                Uploads
+                              </Button>
+                            </Link>
                           </div>
                         </div>
                       </div>
@@ -860,7 +862,7 @@ export default function Dashboard() {
                                       className="w-8 h-8 sm:w-6 sm:h-6"
                                     />
                                     <span className="text-sm sm:text-base">
-                                      Authorize
+                                      Authorized
                                     </span>
                                     <div className="flex ml-1">
                                       <span className="text-white font-bold">
@@ -1297,7 +1299,7 @@ export default function Dashboard() {
                                       style={{
                                         background:
                                           AuthorizeOrders.has(order.id) ||
-                                          order.status === "Authorize"
+                                          order.status === "Authorized"
                                             ? "linear-gradient(to right, #61C454, #414143)"
                                             : "linear-gradient(to right, #614385, #516395)",
                                       }}
@@ -1311,9 +1313,9 @@ export default function Dashboard() {
                                       />
                                       <span className="text-sm sm:text-base">
                                         {AuthorizeOrders.has(order.id) ||
-                                        order.status === "Authorize"
-                                          ? "Authorize"
-                                          : "Authorize"}
+                                        order.status === "Authorized"
+                                          ? "Authorized"
+                                          : "Authorized"}
                                       </span>
                                       <div className="flex ml-1">
                                         <span className="text-white font-bold animate-bounce-slower">
@@ -1349,7 +1351,9 @@ export default function Dashboard() {
                 variant="outline"
                 className="px-3 py-1"
                 disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
               >
                 Next
               </Button>
