@@ -1,25 +1,15 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import Image from "next/image";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  formSchema,
-  type FormValues as OriginalFormValues,
-} from "@/schema/senderdetails";
+"use client"
+import { useEffect, useState } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { Card, CardContent } from "@/components/ui/card"
+import { Tabs, TabsContent } from "@/components/ui/tabs"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import Image from "next/image"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { formSchema, type FormValues as OriginalFormValues } from "@/schema/senderdetails"
 import {
   Dialog,
   DialogContent,
@@ -27,218 +17,151 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { useRouter, useSearchParams } from "next/navigation";
-import axios from "axios";
-import type { Sender } from "@prisma/client";
+} from "@/components/ui/dialog"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { useRouter, useSearchParams } from "next/navigation"
+import axios from "axios"
+import type { Sender } from "@prisma/client"
 
 type FormValues = OriginalFormValues & {
-  status?: string;
-};
+  status?: string
+}
 
 function Senderdetails() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-
-  const [orderId, setOrderId] = useState<string | null>(null);
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const [orderId, setOrderId] = useState<string | null>(null)
 
   // On mount, get orderId from URL or localStorage
   useEffect(() => {
-    const urlOrderId = searchParams.get("orderId");
+    const urlOrderId = searchParams.get("orderId")
     if (urlOrderId) {
-      setOrderId(urlOrderId);
-      localStorage.setItem("currentOrderId", urlOrderId);
+      setOrderId(urlOrderId)
+      localStorage.setItem("currentOrderId", urlOrderId)
     } else {
-      const storedOrderId = localStorage.getItem("currentOrderId");
+      const storedOrderId = localStorage.getItem("currentOrderId")
       if (storedOrderId) {
-        setOrderId(storedOrderId);
+        setOrderId(storedOrderId)
       }
     }
-  }, [searchParams]);
+  }, [searchParams])
 
-  const [payer, setPayer] = useState<string>("self");
-  const [showStatusPopup, setShowStatusPopup] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState("pending");
-  const [sameAddress, setSameAddress] = useState(false);
-  const [senderDetails, setSenderDetails] = useState<Sender | null>(null);
-  const [statusError, setStatusError] = useState<string | null>(null);
+  const [payer, setPayer] = useState<string>("self")
+  const [showStatusPopup, setShowStatusPopup] = useState(false)
+  const [selectedStatus, setSelectedStatus] = useState("pending")
+  const [sameAddress, setSameAddress] = useState(false)
+  const [senderDetails, setSenderDetails] = useState<Sender | null>(null)
+  const [statusError, setStatusError] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
+    mode: "onChange", // Enable real-time validation
     defaultValues: {
-      studentName: senderDetails?.studentName || "",
-      studentEmailOriginal: senderDetails?.studentEmailOriginal || "",
-      studentEmailFake: senderDetails?.studentEmailFake || "",
-      phoneNumber: senderDetails?.phoneNumber || "",
-      addressLine1: senderDetails?.addressLine1 || "",
-      addressLine2: senderDetails?.addressLine2 || "",
-      state: senderDetails?.state || "",
-      postalCode: senderDetails?.postalCode || "",
-      nationality:
-        (senderDetails?.nationality as
-          | "indian"
-          | "american"
-          | "british"
-          | "canadian"
-          | "australian") || "indian",
-      relationship: payer as
-        | "self"
-        | "parent"
-        | "brother"
-        | "sister"
-        | "spouse"
-        | "other"
-        | undefined,
-      senderName: senderDetails?.senderName || "",
-      bankCharges:
-        (senderDetails?.bankCharges as "resident" | "nri" | "pio") ||
-        "resident",
-      mothersName: senderDetails?.mothersName || "",
-      dob: senderDetails?.dob || "",
-      senderNationality:
-        (senderDetails?.nationality as
-          | "indian"
-          | "american"
-          | "british"
-          | "canadian"
-          | "australian") || "indian",
-      senderEmail: senderDetails?.senderEmail || "",
-      sourceOfFunds:
-        (senderDetails?.sourceOfFunds as
-          | "salary"
-          | "savings"
-          | "business"
-          | "investment") || undefined,
-      occupationStatus:
-        (senderDetails?.occupationStatus as
-          | "employed"
-          | "self-employed"
-          | "business-owner"
-          | "retired"
-          | "student") || undefined,
-      payerAccountNumber: senderDetails?.payerAccountNumber || "",
-      payerBankName: senderDetails?.payerBankName || "",
-      senderAddressLine1: senderDetails?.senderAddressLine1 || "",
-      senderAddressLine2: senderDetails?.senderAddressLine2 || "",
-      senderState: senderDetails?.senderState || "",
-      senderPostalCode: senderDetails?.senderPostalCode || "",
-      status: senderDetails?.status || "pending",
+      studentName: "",
+      studentEmailOriginal: "",
+      studentEmailFake: "",
+      phoneNumber: "",
+      addressLine1: "",
+      addressLine2: "",
+      state: "",
+      postalCode: "",
+      nationality: "indian",
+      relationship: "self",
+      senderName: "",
+      bankCharges: "resident",
+      mothersName: "",
+      dob: "",
+      senderNationality: "indian",
+      senderEmail: "",
+      sourceOfFunds: undefined,
+      occupationStatus: undefined,
+      payerAccountNumber: "",
+      payerBankName: "",
+      senderAddressLine1: "",
+      senderAddressLine2: "",
+      senderState: "",
+      senderPostalCode: "",
+      status: "pending",
     },
-  });
+  })
 
+  // Consolidated useEffect for fetching order, sender details, and controlling popup visibility
   useEffect(() => {
-    const fetchOrder = async () => {
+    const fetchOrderAndSenderDetails = async () => {
       if (orderId) {
         try {
-          const order = await axios.get(`/api/orders/${orderId}`);
-          console.log("Fetched order:", order.data);
+          const order = await axios.get(`/api/orders/${orderId}`)
+          console.log("Fetched order:", order.data)
+
+          const orderPayer = order.data.payer?.toLowerCase?.() || "self"
+          console.log("Setting payer from order:", orderPayer)
+          setPayer(orderPayer)
+
+          let currentSenderDetails: Sender | null = null // Use a local variable for immediate check
           if (order.data.senderId) {
-            console.log(
-              "Fetching sender details for senderId:",
-              order.data.senderId
-            );
-            const sender = await axios.get(
-              `/api/senders/${order.data.senderId}`
-            );
-            console.log("Fetched sender details:", sender.data);
+            console.log("Fetching sender details for senderId:", order.data.senderId)
+            const sender = await axios.get(`/api/senders/${order.data.senderId}`)
+            console.log("Fetched sender details:", sender.data)
             if (sender.data) {
-              setSenderDetails(sender.data);
-              // form.reset will be handled by the useEffect above
+              setSenderDetails(sender.data)
+              currentSenderDetails = sender.data
             }
-            setPayer(order.data.payer?.toLowerCase?.() || "self"); // <-- set payer from order details
           } else {
-            router.push(`/staff/dashboard/sender-details`);
+            console.log("No existing sender details, but payer is set to:", orderPayer)
+            setSenderDetails(null) // Ensure senderDetails is null if no senderId
           }
-        } catch {
-          setSenderDetails(null);
-          form.reset();
-        }
-      }
-    };
-    fetchOrder();
-  }, [orderId, form, router]); // <-- Depend on orderId
 
-  useEffect(() => {
-    const fetchOrderStatus = async () => {
-      if (orderId) {
-        try {
-          const order = await axios.get(`/api/orders/${orderId}`);
-          if (order.data) {
-            form.setValue("status", order.data.status || "pending");
-          }
+          // Set form status from order data
+          form.setValue("status", order.data.status || "pending")
+
+          // Determine if popup should show: ONLY if orderId exists AND senderDetails are NOT yet filled.
+          // This directly addresses "only the before filling sender details shown teh popup"
+          setShowStatusPopup(orderId !== null && currentSenderDetails === null)
         } catch (error) {
-          console.error("Error fetching order status:", error);
+          console.error("Error fetching order:", error)
+          setSenderDetails(null)
+          form.reset()
+          setShowStatusPopup(false) // Hide popup on error
         }
+      } else {
+        // If no orderId, ensure popup is hidden
+        setShowStatusPopup(false)
       }
-    };
-    fetchOrderStatus();
-  }, [orderId, form]);
+    }
+    fetchOrderAndSenderDetails()
+  }, [orderId, form]) // Dependencies: orderId and form (for setValue/reset)
 
   useEffect(() => {
-    form.setValue(
-      "relationship",
-      payer as
-        | "self"
-        | "parent"
-        | "brother"
-        | "sister"
-        | "spouse"
-        | "other"
-        | undefined
-    );
-
+    // Update relationship field based on payer
+    form.setValue("relationship", payer as "self" | "parent" | "brother" | "sister" | "spouse" | "other" | undefined)
     // If payer is self, update sender email when student email changes
     if (payer === "self") {
-      const studentEmail = form.getValues("studentEmailOriginal");
+      const studentEmail = form.getValues("studentEmailOriginal")
       if (studentEmail) {
-        form.setValue("senderEmail", studentEmail);
+        form.setValue("senderEmail", studentEmail)
       }
     }
-  }, [payer, form]);
+  }, [payer, form])
 
   // Watch for changes in student email and update sender email when payer is self
-  const studentEmail = form.watch("studentEmailOriginal");
+  const studentEmail = form.watch("studentEmailOriginal")
   useEffect(() => {
     if (payer === "self" && studentEmail) {
-      form.setValue("senderEmail", studentEmail);
+      form.setValue("senderEmail", studentEmail)
     }
-  }, [studentEmail, payer, form]);
+  }, [studentEmail, payer, form])
 
   useEffect(() => {
     if (senderDetails) {
       // Ensure all values match your form schema types
-      const allowedBankCharges = ["resident", "nri", "pio"] as const;
-      const allowedOccupationStatus = [
-        "employed",
-        "self-employed",
-        "business-owner",
-        "retired",
-        "student",
-      ] as const;
-      const allowedSourceOfFunds = [
-        "salary",
-        "savings",
-        "business",
-        "investment",
-      ] as const;
-
-      // Remove unused safeBankCharges and safeOccupationStatus variables since they're not used
+      const allowedBankCharges = ["resident", "nri", "pio"] as const
+      const allowedOccupationStatus = ["employed", "self-employed", "business-owner", "retired", "student"] as const
+      const allowedSourceOfFunds = ["salary", "savings", "business", "investment"] as const
       const safeSourceOfFunds =
-        senderDetails.sourceOfFunds &&
-        (allowedSourceOfFunds as readonly string[]).includes(
-          senderDetails.sourceOfFunds
-        )
+        senderDetails.sourceOfFunds && (allowedSourceOfFunds as readonly string[]).includes(senderDetails.sourceOfFunds)
           ? (senderDetails.sourceOfFunds as (typeof allowedSourceOfFunds)[number])
-          : undefined;
-
+          : undefined
       form.reset({
         ...senderDetails,
         addressLine1: senderDetails.addressLine1 ?? "",
@@ -249,7 +172,7 @@ function Senderdetails() {
         studentEmailOriginal: senderDetails.studentEmailOriginal ?? "",
         studentEmailFake: senderDetails.studentEmailFake ?? "",
         phoneNumber: senderDetails.phoneNumber ?? "",
-        relationship: (senderDetails.relationship ?? undefined) as
+        relationship: (senderDetails.relationship ?? payer) as
           | "self"
           | "parent"
           | "brother"
@@ -259,10 +182,7 @@ function Senderdetails() {
           | undefined,
         senderName: senderDetails.senderName ?? "",
         bankCharges:
-          senderDetails.bankCharges &&
-          (allowedBankCharges as readonly string[]).includes(
-            senderDetails.bankCharges
-          )
+          senderDetails.bankCharges && (allowedBankCharges as readonly string[]).includes(senderDetails.bankCharges)
             ? (senderDetails.bankCharges as (typeof allowedBankCharges)[number])
             : "resident",
         mothersName: senderDetails.mothersName ?? "",
@@ -274,16 +194,11 @@ function Senderdetails() {
           | "canadian"
           | "australian"
           | undefined,
-        senderEmail:
-          payer === "self"
-            ? senderDetails.studentEmailOriginal ?? ""
-            : senderDetails.senderEmail ?? "",
+        senderEmail: payer === "self" ? (senderDetails.studentEmailOriginal ?? "") : (senderDetails.senderEmail ?? ""),
         sourceOfFunds: safeSourceOfFunds,
         occupationStatus:
           senderDetails.occupationStatus &&
-          (allowedOccupationStatus as readonly string[]).includes(
-            senderDetails.occupationStatus
-          )
+          (allowedOccupationStatus as readonly string[]).includes(senderDetails.occupationStatus)
             ? (senderDetails.occupationStatus as (typeof allowedOccupationStatus)[number])
             : "employed",
         payerAccountNumber: senderDetails.payerAccountNumber ?? "",
@@ -300,138 +215,132 @@ function Senderdetails() {
           | "australian"
           | undefined,
         status: senderDetails.status || "pending",
-      });
+      })
     }
-  }, [senderDetails, form]);
+  }, [senderDetails, form, payer])
 
   const onSubmit = async (data: FormValues) => {
-    console.log("Form submitted with data:", data);
-    console.log("Current payer value:", payer);
-    console.log("Current relationship value:", data.relationship);
-
-    const errors = form.formState.errors;
-    console.log("Form errors:", errors);
-
-    if (Object.keys(errors).length > 0) {
-      console.log("Form has errors, preventing submission");
-      alert("Please fix the form errors before submitting");
-      return;
-    }
-
+    console.log("Form submitted with data:", data)
+    console.log("Current payer value:", payer)
+    console.log("Current relationship value:", data.relationship)
+    setIsSubmitting(true)
     try {
-      let response;
+      // Validate form before submission
+      const isValid = await form.trigger()
+      if (!isValid) {
+        console.log("Form validation failed")
+        const errors = form.formState.errors
+        console.log("Form errors:", errors)
+        // Show specific error messages
+        const errorMessages = Object.entries(errors)
+          .map(([field, error]) => {
+            return `${field}: ${error?.message || "Invalid value"}`
+          })
+          .join("\n")
+        alert(`Please fix the following errors:\n${errorMessages}`)
+        setIsSubmitting(false)
+        return
+      }
+      let response
       if (senderDetails?.id) {
         // Update sender
         response = await axios.put(`/api/senders/${senderDetails.id}`, {
           ...data,
-          orderId, // not used in PUT, but harmless
-        });
-
-        // PATCH the order to set senderId (since PUT does not do this)
+          orderId,
+        })
         if (orderId && response.data?.id) {
           await axios.patch(`/api/orders/${orderId}`, {
             senderId: response.data.id,
             status: "Pending",
-          });
+          })
         }
       } else {
         // Create sender
         response = await axios.post("/api/senders", {
           ...data,
           orderId,
-        });
-
-        // PATCH the order to set senderId (since POST does not do this)
+        })
         if (orderId && response.data?.id) {
           await axios.patch(`/api/orders/${orderId}`, {
             senderId: response.data.id,
             status: "Pending",
-          });
+          })
         }
       }
-
-      console.log("order id is ", orderId);
-
+      console.log("order id is ", orderId)
       // Continue navigation
       if (orderId) {
-        router.push(`/staff/dashboard/beneficiary-details?orderId=${orderId}`);
+        router.push(`/staff/dashboard/beneficiary-details?orderId=${orderId}`)
       } else {
-        alert("Order ID is missing. Cannot continue.");
+        alert("Order ID is missing. Cannot continue.")
       }
     } catch (error) {
-      console.error("Failed to create sender:", error);
+      console.error("Failed to create sender:", error)
       if (axios.isAxiosError(error)) {
-        console.error("Response data:", error.response?.data);
-        console.error("Response status:", error.response?.status);
+        console.error("Response data:", error.response?.data)
+        console.error("Response status:", error.response?.status)
       }
-      alert("Failed to submit form. Please try again.");
+      alert("Failed to submit form. Please try again.")
+    } finally {
+      setIsSubmitting(false)
     }
-  };
+  }
 
   const handleReset = () => {
-    form.reset();
-    setSameAddress(false);
-    form.setValue("status", "pending");
-
-    // If payer is self, set sender email to student email after reset
+    form.reset()
+    setSameAddress(false)
+    form.setValue("status", "pending")
     if (payer === "self") {
-      const studentEmail = form.getValues("studentEmailOriginal");
+      const studentEmail = form.getValues("studentEmailOriginal")
       if (studentEmail) {
-        form.setValue("senderEmail", studentEmail);
+        form.setValue("senderEmail", studentEmail)
       }
     }
-  };
+  }
 
   const handleSameAddressChange = (checked: boolean) => {
-    setSameAddress(checked);
+    setSameAddress(checked)
     if (checked) {
-      const { addressLine1, addressLine2, state, postalCode } =
-        form.getValues();
-      form.setValue("senderAddressLine1", addressLine1);
-      form.setValue("senderAddressLine2", addressLine2);
-      form.setValue("senderState", state);
-      form.setValue("senderPostalCode", postalCode);
+      const { addressLine1, addressLine2, state, postalCode } = form.getValues()
+      form.setValue("senderAddressLine1", addressLine1)
+      form.setValue("senderAddressLine2", addressLine2)
+      form.setValue("senderState", state)
+      form.setValue("senderPostalCode", postalCode)
     }
-  };
+  }
 
   const handleStatusConfirm = () => {
     if (selectedStatus === "Blocked") {
-      setShowStatusPopup(false); // Close the dialog
-      setStatusError(null);      // Clear any previous error
-      // ...any other logic you need
+      setShowStatusPopup(false)
+      setStatusError(null)
     } else {
-      setStatusError("Please select 'Blocked' to proceed.");
+      setStatusError("Please select 'Blocked' to proceed.")
     }
-  };
+  }
 
   const handleOpenChange = (open: boolean) => {
-    if (!open) return; // Prevent closing when clicking outside
-    setShowStatusPopup(open);
-  };
+    // Only allow closing if sender details exist or if we're opening
+    // This ensures the user must interact with the popup if sender details are missing
+    if (open || senderDetails) {
+      setShowStatusPopup(open)
+    }
+  }
 
-  useEffect(() => {
-    setShowStatusPopup(true);
-  }, []);
-
+  // Debug: Add temporary display to show current payer value
+  console.log("Current payer state:", payer)
+  console.log("Sender details section should show:", payer !== "self")
 
   return (
     <div>
-      {/* Simplified Status Popup Dialog - Only Submit Button */}
+      {/* Status Popup Dialog */}
       <Dialog open={showStatusPopup} onOpenChange={handleOpenChange}>
         <DialogContent className="w-[90vw] max-w-[425px] md:w-full">
           <DialogHeader className="px-4 sm:px-6">
-            <DialogTitle className="text-lg sm:text-xl">
-              Rate Status
-            </DialogTitle>
-            <DialogDescription className="mt-2 sm:mt-3 text-sm sm:text-base">
-              Update rate status
-            </DialogDescription>
+            <DialogTitle className="text-lg sm:text-xl">Rate Status</DialogTitle>
+            <DialogDescription className="mt-2 sm:mt-3 text-sm sm:text-base">Update rate status</DialogDescription>
           </DialogHeader>
           <div className="px-4 sm:px-6 py-2 sm:py-4">
-            <Select
-              value={selectedStatus}
-              onValueChange={(value) => setSelectedStatus(value)}
-            >
+            <Select value={selectedStatus} onValueChange={(value) => setSelectedStatus(value)}>
               <SelectTrigger className="w-full h-10 sm:h-12 text-sm sm:text-base">
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
@@ -439,9 +348,7 @@ function Senderdetails() {
                 <SelectItem value="Blocked">Blocked</SelectItem>
               </SelectContent>
             </Select>
-            {statusError && (
-              <p className="text-red-500 text-xs px-4">{statusError}</p>
-            )}
+            {statusError && <p className="text-red-500 text-xs px-4">{statusError}</p>}
           </div>
           <DialogFooter className="px-4 sm:px-6 pb-4 sm:pb-6">
             <Button
@@ -460,64 +367,10 @@ function Senderdetails() {
             <Card className="shadow-none bg-transparent sm:bg-white sm:shadow-sm sm:border rounded-none">
               <CardContent className="p-0 sm:p-0">
                 <Form {...form}>
-                  <form
-                    onSubmit={form.handleSubmit(onSubmit)}
-                    className="space-y-6 sm:space-y-8"
-                  >
-                    {/* Debug: Show form errors */}
-                    {/* {Object.keys(form.formState.errors).length > 0 && (
-                      <div className="p-4 bg-red-50 border border-red-200 rounded-md mb-4">
-                        <h3 className="text-red-800 font-semibold mb-2">
-                          Form Errors:
-                        </h3>
-                        <ul className="list-disc pl-5 text-red-700">
-                          {Object.entries(form.formState.errors).map(
-                            ([key, error]) => (
-                              <li key={key}>
-                                <strong>{key}:</strong> {error.message}
-                              </li>
-                            )
-                          )}
-                        </ul>
-                      </div>
-                    )}*/}
-
-                    {/* Debug: Show current state */}
-                    {/* <div className="p-4 bg-blue-50 border border-blue-200 rounded-md mb-4">
-                      <h3 className="text-blue-800 font-semibold mb-2">
-                        Debug Info:
-                      </h3>
-                      <p>
-                        <strong>Payer:</strong> {payer}
-                      </p>
-                      <p>
-                        <strong>Relationship:</strong>{" "}
-                        {form.watch("relationship")}
-                      </p>
-                      <p>
-                        <strong>Student Email:</strong>{" "}
-                        {form.watch("studentEmailOriginal")}
-                      </p>
-                      <p>
-                        <strong>Sender Email:</strong>{" "}
-                        {form.watch("senderEmail")}
-                        {payer === "self" && " (auto-set from student email)"}
-                      </p>
-                      <p>
-                        <strong>Form is valid:</strong>{" "}
-                        {form.formState.isValid ? "Yes" : "No"}
-                      </p>
-                      <p>
-                        <strong>Form is dirty:</strong>{" "}
-                        {form.formState.isDirty ? "Yes" : "No"}
-                      </p>
-                    </div>  */}
-
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 sm:space-y-8">
                     {/* Student Details Section - Always shown */}
                     <div className="p-6 sm:p-6 mb-5">
-                      <h2 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6 font-jakarta">
-                        Student Details
-                      </h2>
+                      <h2 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6 font-jakarta">Student Details</h2>
                       <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2">
                         {/* Student Name */}
                         <FormField
@@ -539,7 +392,6 @@ function Senderdetails() {
                             </FormItem>
                           )}
                         />
-
                         {/* Student Email (Original) */}
                         <FormField
                           control={form.control}
@@ -561,7 +413,6 @@ function Senderdetails() {
                             </FormItem>
                           )}
                         />
-
                         {/* Student Email (Fake) */}
                         <FormField
                           control={form.control}
@@ -583,7 +434,6 @@ function Senderdetails() {
                             </FormItem>
                           )}
                         />
-
                         {/* Phone Number */}
                         <FormField
                           control={form.control}
@@ -609,16 +459,13 @@ function Senderdetails() {
                             </FormItem>
                           )}
                         />
-
                         {/* Address Line 1 */}
                         <FormField
                           control={form.control}
                           name="addressLine1"
                           render={({ field }) => (
                             <FormItem className="space-y-1 sm:space-y-2">
-                              <FormLabel className="font-jakarta text-sm sm:text-base text-gray-500">
-                                Address
-                              </FormLabel>
+                              <FormLabel className="font-jakarta text-sm sm:text-base text-gray-500">Address</FormLabel>
                               <FormControl>
                                 <Input
                                   placeholder="Enter Building name / House name / Flat number"
@@ -630,7 +477,6 @@ function Senderdetails() {
                             </FormItem>
                           )}
                         />
-
                         {/* Address Line 2 */}
                         <FormField
                           control={form.control}
@@ -648,16 +494,13 @@ function Senderdetails() {
                             </FormItem>
                           )}
                         />
-
                         {/* State */}
                         <FormField
                           control={form.control}
                           name="state"
                           render={({ field }) => (
                             <FormItem className="space-y-1 sm:space-y-2">
-                              <FormLabel className="font-jakarta text-sm sm:text-base text-gray-500">
-                                State
-                              </FormLabel>
+                              <FormLabel className="font-jakarta text-sm sm:text-base text-gray-500">State</FormLabel>
                               <FormControl>
                                 <Input
                                   placeholder="State"
@@ -669,7 +512,6 @@ function Senderdetails() {
                             </FormItem>
                           )}
                         />
-
                         {/* Postal Code */}
                         <FormField
                           control={form.control}
@@ -690,7 +532,6 @@ function Senderdetails() {
                             </FormItem>
                           )}
                         />
-
                         {/* Nationality */}
                         <FormField
                           control={form.control}
@@ -700,44 +541,26 @@ function Senderdetails() {
                               <FormLabel className="font-jakarta text-sm sm:text-base text-gray-500">
                                 Nationality
                               </FormLabel>
-                              <Select
-                                onValueChange={field.onChange}
-                                defaultValue={field.value}
-                              >
+                              <Select onValueChange={field.onChange} value={field.value}>
                                 <FormControl>
                                   <SelectTrigger className="bg-blue-50 h-12 sm:h-14 rounded-none">
                                     <SelectValue placeholder="Select nationality" />
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent className="rounded-none text-gray-500">
-                                  <SelectItem
-                                    value="indian"
-                                    className="rounded-none"
-                                  >
+                                  <SelectItem value="indian" className="rounded-none">
                                     Indian
                                   </SelectItem>
-                                  <SelectItem
-                                    value="american"
-                                    className="rounded-none"
-                                  >
+                                  <SelectItem value="american" className="rounded-none">
                                     American
                                   </SelectItem>
-                                  <SelectItem
-                                    value="british"
-                                    className="rounded-none"
-                                  >
+                                  <SelectItem value="british" className="rounded-none">
                                     British
                                   </SelectItem>
-                                  <SelectItem
-                                    value="canadian"
-                                    className="rounded-none"
-                                  >
+                                  <SelectItem value="canadian" className="rounded-none">
                                     Canadian
                                   </SelectItem>
-                                  <SelectItem
-                                    value="australian"
-                                    className="rounded-none"
-                                  >
+                                  <SelectItem value="australian" className="rounded-none">
                                     Australian
                                   </SelectItem>
                                 </SelectContent>
@@ -746,15 +569,34 @@ function Senderdetails() {
                             </FormItem>
                           )}
                         />
+                        {/* DOB Field - Show in Student Details when payer is "self" */}
+                        {payer === "self" && (
+                          <FormField
+                            control={form.control}
+                            name="dob"
+                            render={({ field }) => (
+                              <FormItem className="space-y-1 sm:space-y-2">
+                                <FormLabel className="font-jakarta text-sm sm:text-base text-gray-500">
+                                  Date of Birth
+                                </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    placeholder="DD/MM/YYYY"
+                                    className="bg-blue-50 h-12 sm:h-14 rounded-none"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage className="text-xs sm:text-sm" />
+                              </FormItem>
+                            )}
+                          />
+                        )}
                       </div>
                     </div>
-
                     {/* Conditionally render Sender Details Section based on payer */}
                     {payer !== "self" && (
                       <div className="p-4 sm:p-6 border-t border-gray-200">
-                        <h2 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6 font-jakarta">
-                          Sender Details
-                        </h2>
+                        <h2 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6 font-jakarta">Sender Details</h2>
                         {/* Relationship and Name */}
                         <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2">
                           {/* Relationship */}
@@ -766,38 +608,23 @@ function Senderdetails() {
                                 <FormLabel className="font-jakarta text-sm sm:text-base text-gray-500">
                                   Relationship to Student
                                 </FormLabel>
-                                <Select
-                                  onValueChange={field.onChange}
-                                  value={field.value}
-                                >
+                                <Select onValueChange={field.onChange} value={field.value}>
                                   <FormControl>
                                     <SelectTrigger className="bg-blue-50 font-jakarta h-12 sm:h-14 rounded-none">
                                       <SelectValue placeholder="Select relationship" />
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent className="rounded-none">
-                                    <SelectItem
-                                      value="parent"
-                                      className="rounded-none"
-                                    >
+                                    <SelectItem value="parent" className="rounded-none">
                                       Parent
                                     </SelectItem>
-                                    <SelectItem
-                                      value="brother"
-                                      className="rounded-none"
-                                    >
+                                    <SelectItem value="brother" className="rounded-none">
                                       Brother
                                     </SelectItem>
-                                    <SelectItem
-                                      value="sister"
-                                      className="rounded-none"
-                                    >
+                                    <SelectItem value="sister" className="rounded-none">
                                       Sister
                                     </SelectItem>
-                                    <SelectItem
-                                      value="spouse"
-                                      className="rounded-none"
-                                    >
+                                    <SelectItem value="spouse" className="rounded-none">
                                       Spouse
                                     </SelectItem>
                                   </SelectContent>
@@ -806,7 +633,6 @@ function Senderdetails() {
                               </FormItem>
                             )}
                           />
-
                           {/* Sender Name */}
                           <FormField
                             control={form.control}
@@ -828,13 +654,12 @@ function Senderdetails() {
                             )}
                           />
                         </div>
-
-                        {/* Sender Email - Add this after senderName field */}
+                        {/* Sender Email */}
                         <FormField
                           control={form.control}
                           name="senderEmail"
                           render={({ field }) => (
-                            <FormItem className="space-y-1 sm:space-y-2">
+                            <FormItem className="space-y-1 sm:space-y-2 mt-4 sm:mt-6">
                               <FormLabel className="font-jakarta text-sm sm:text-base text-gray-500">
                                 Email Address
                               </FormLabel>
@@ -848,20 +673,15 @@ function Senderdetails() {
                                 />
                               </FormControl>
                               {payer === "self" && (
-                                <p className="text-xs text-gray-500">
-                                  Automatically set to student&apos;s email
-                                </p>
+                                <p className="text-xs text-gray-500">Automatically set to student&apos;s email</p>
                               )}
                               <FormMessage className="text-xs sm:text-sm" />
                             </FormItem>
                           )}
                         />
-
                         {/* Foreign bank charges */}
                         <div className="space-y-1 sm:space-y-2 mt-4 sm:mt-6">
-                          <Label className="text-sm sm:text-base text-gray-500">
-                            Foreign bank charges
-                          </Label>
+                          <Label className="text-sm sm:text-base text-gray-500">Residence Status</Label>
                           <div className="flex flex-wrap gap-3 sm:gap-4 mt-1 sm:mt-2">
                             <FormField
                               control={form.control}
@@ -874,15 +694,10 @@ function Senderdetails() {
                                       id="resident"
                                       className="h-4 w-4 rounded-none"
                                       checked={field.value === "resident"}
-                                      onChange={() =>
-                                        field.onChange("resident")
-                                      }
+                                      onChange={() => field.onChange("resident")}
                                     />
                                   </FormControl>
-                                  <Label
-                                    htmlFor="resident"
-                                    className="text-sm sm:text-base "
-                                  >
+                                  <Label htmlFor="resident" className="text-sm sm:text-base ">
                                     Resident
                                   </Label>
                                 </FormItem>
@@ -897,14 +712,15 @@ function Senderdetails() {
                                     <input
                                       type="radio"
                                       id="nri"
-                                      className="h-4 w-4 rounded-none"
+                                      className="h-4 w-4 rounded-none opacity-50 cursor-not-allowed"
                                       checked={field.value === "nri"}
                                       onChange={() => field.onChange("nri")}
+                                      disabled={true}
                                     />
                                   </FormControl>
                                   <Label
                                     htmlFor="nri"
-                                    className="text-sm sm:text-base"
+                                    className="text-sm sm:text-base text-gray-400 cursor-not-allowed"
                                   >
                                     NRI
                                   </Label>
@@ -920,14 +736,15 @@ function Senderdetails() {
                                     <input
                                       type="radio"
                                       id="pio"
-                                      className="h-4 w-4 rounded-none"
+                                      className="h-4 w-4 rounded-none opacity-50 cursor-not-allowed"
                                       checked={field.value === "pio"}
                                       onChange={() => field.onChange("pio")}
+                                      disabled={true}
                                     />
                                   </FormControl>
                                   <Label
                                     htmlFor="pio"
-                                    className="text-sm sm:text-base"
+                                    className="text-sm sm:text-base text-gray-400 cursor-not-allowed"
                                   >
                                     PIO/OCI
                                   </Label>
@@ -941,10 +758,8 @@ function Senderdetails() {
                             </p>
                           )}
                         </div>
-
                         {/* Mother's Name and DOB */}
                         <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 mt-4 sm:mt-6">
-                          {/* Mother's Name */}
                           <FormField
                             control={form.control}
                             name="mothersName"
@@ -964,15 +779,14 @@ function Senderdetails() {
                               </FormItem>
                             )}
                           />
-
-                          {/* DOB */}
+                          {/* DOB - Show in Sender Details when payer is not "self" */}
                           <FormField
                             control={form.control}
                             name="dob"
                             render={({ field }) => (
                               <FormItem className="space-y-1 sm:space-y-2">
                                 <FormLabel className="font-jakarta text-sm sm:text-base text-gray-500">
-                                  DOB
+                                  Date of Birth
                                 </FormLabel>
                                 <FormControl>
                                   <Input
@@ -986,7 +800,6 @@ function Senderdetails() {
                             )}
                           />
                         </div>
-
                         {/* Same address checkbox */}
                         <div className="space-y-1 sm:space-y-2 mt-4 sm:mt-6">
                           <div className="flex items-center space-x-2">
@@ -995,19 +808,13 @@ function Senderdetails() {
                               id="sameAddress"
                               className="h-4 w-4 rounded-none"
                               checked={sameAddress}
-                              onChange={(e) =>
-                                handleSameAddressChange(e.target.checked)
-                              }
+                              onChange={(e) => handleSameAddressChange(e.target.checked)}
                             />
-                            <Label
-                              htmlFor="sameAddress"
-                              className="text-sm sm:text-base "
-                            >
+                            <Label htmlFor="sameAddress" className="text-sm sm:text-base ">
                               Same address as student
                             </Label>
                           </div>
                         </div>
-
                         {/* Sender Address fields */}
                         <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 mt-4 sm:mt-6">
                           {/* Sender Address Line 1 */}
@@ -1030,7 +837,6 @@ function Senderdetails() {
                               </FormItem>
                             )}
                           />
-
                           {/* Sender Address Line 2 */}
                           <FormField
                             control={form.control}
@@ -1048,16 +854,13 @@ function Senderdetails() {
                               </FormItem>
                             )}
                           />
-
                           {/* Sender State */}
                           <FormField
                             control={form.control}
                             name="senderState"
                             render={({ field }) => (
                               <FormItem className="space-y-1 sm:space-y-2">
-                                <FormLabel className="font-jakarta text-sm sm:text-base text-gray-500">
-                                  State
-                                </FormLabel>
+                                <FormLabel className="font-jakarta text-sm sm:text-base text-gray-500">State</FormLabel>
                                 <FormControl>
                                   <Input
                                     placeholder="State"
@@ -1069,7 +872,6 @@ function Senderdetails() {
                               </FormItem>
                             )}
                           />
-
                           {/* Sender Postal Code */}
                           <FormField
                             control={form.control}
@@ -1091,7 +893,6 @@ function Senderdetails() {
                             )}
                           />
                         </div>
-
                         {/* Source of funds and Occupation */}
                         <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 mt-4 sm:mt-6">
                           {/* Source of Funds */}
@@ -1100,41 +901,24 @@ function Senderdetails() {
                             name="sourceOfFunds"
                             render={({ field }) => (
                               <FormItem className="space-y-1 sm:space-y-2">
-                                <FormLabel className="font-jakarta text-sm sm:text-base">
-                                  Source of funds
-                                </FormLabel>
-                                <Select
-                                  onValueChange={field.onChange}
-                                  value={field.value}
-                                >
+                                <FormLabel className="font-jakarta text-sm sm:text-base">Source of funds</FormLabel>
+                                <Select onValueChange={field.onChange} value={field.value}>
                                   <FormControl>
                                     <SelectTrigger className="bg-blue-50 font-jakarta h-12 sm:h-14 rounded-none">
                                       <SelectValue placeholder="Source of funds" />
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent className="rounded-none">
-                                    <SelectItem
-                                      value="salary"
-                                      className="rounded-none"
-                                    >
+                                    <SelectItem value="salary" className="rounded-none">
                                       Salary
                                     </SelectItem>
-                                    <SelectItem
-                                      value="savings"
-                                      className="rounded-none"
-                                    >
+                                    <SelectItem value="savings" className="rounded-none">
                                       Savings
                                     </SelectItem>
-                                    <SelectItem
-                                      value="business"
-                                      className="rounded-none"
-                                    >
+                                    <SelectItem value="business" className="rounded-none">
                                       Business Income
                                     </SelectItem>
-                                    <SelectItem
-                                      value="investment"
-                                      className="rounded-none"
-                                    >
+                                    <SelectItem value="investment" className="rounded-none">
                                       Investment Returns
                                     </SelectItem>
                                   </SelectContent>
@@ -1143,54 +927,33 @@ function Senderdetails() {
                               </FormItem>
                             )}
                           />
-
                           {/* Occupation Status */}
                           <FormField
                             control={form.control}
                             name="occupationStatus"
                             render={({ field }) => (
                               <FormItem className="space-y-1 sm:space-y-2">
-                                <FormLabel className="font-jakarta text-sm sm:text-base">
-                                  Occupation status
-                                </FormLabel>
-                                <Select
-                                  onValueChange={field.onChange}
-                                  value={field.value}
-                                >
+                                <FormLabel className="font-jakarta text-sm sm:text-base">Occupation status</FormLabel>
+                                <Select onValueChange={field.onChange} value={field.value}>
                                   <FormControl>
                                     <SelectTrigger className="bg-blue-50 font-jakarta h-12 sm:h-14 rounded-none">
                                       <SelectValue placeholder="Employment status" />
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent className="rounded-none">
-                                    <SelectItem
-                                      value="employed"
-                                      className="rounded-none"
-                                    >
+                                    <SelectItem value="employed" className="rounded-none">
                                       Employed
                                     </SelectItem>
-                                    <SelectItem
-                                      value="self-employed"
-                                      className="rounded-none"
-                                    >
+                                    <SelectItem value="self-employed" className="rounded-none">
                                       Self-employed
                                     </SelectItem>
-                                    <SelectItem
-                                      value="business-owner"
-                                      className="rounded-none"
-                                    >
+                                    <SelectItem value="business-owner" className="rounded-none">
                                       Business Owner
                                     </SelectItem>
-                                    <SelectItem
-                                      value="retired"
-                                      className="rounded-none"
-                                    >
+                                    <SelectItem value="retired" className="rounded-none">
                                       Retired
                                     </SelectItem>
-                                    <SelectItem
-                                      value="student"
-                                      className="rounded-none"
-                                    >
+                                    <SelectItem value="student" className="rounded-none">
                                       Student
                                     </SelectItem>
                                   </SelectContent>
@@ -1200,7 +963,6 @@ function Senderdetails() {
                             )}
                           />
                         </div>
-
                         {/* Bank details */}
                         <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 mt-4 sm:mt-6">
                           {/* Payer Account Number */}
@@ -1223,16 +985,13 @@ function Senderdetails() {
                               </FormItem>
                             )}
                           />
-
                           {/* Payer Bank Name */}
                           <FormField
                             control={form.control}
                             name="payerBankName"
                             render={({ field }) => (
                               <FormItem className="space-y-1 sm:space-y-2">
-                                <FormLabel className="font-jakarta text-sm sm:text-base">
-                                  Payer Bank Name
-                                </FormLabel>
+                                <FormLabel className="font-jakarta text-sm sm:text-base">Payer Bank Name</FormLabel>
                                 <FormControl>
                                   <Input
                                     placeholder="Enter bank name"
@@ -1247,35 +1006,36 @@ function Senderdetails() {
                         </div>
                       </div>
                     )}
-
                     {/* Buttons */}
                     <div className="flex flex-col sm:flex-row justify-center p-4 sm:p-6 gap-3 sm:gap-4 border-t border-gray-200">
                       <Button
                         type="submit"
-                        className="bg-dark-blue hover:bg-dark-blue text-white px-4 sm:px-8 h-12 sm:h-15 w-full sm:w-55 rounded-none"
+                        disabled={isSubmitting}
+                        className="bg-dark-blue hover:bg-dark-blue text-white px-4 sm:px-8 h-12 sm:h-15 w-full sm:w-55 rounded-none disabled:opacity-50"
                       >
                         <Image
-                          src="/continue.svg"
+                          src="/placeholder.svg?height=15&width=15"
                           alt=""
                           width={15}
                           height={15}
                           className="mr-2"
-                        />{" "}
-                        CONTINUE
+                        />
+                        {isSubmitting ? "SUBMITTING..." : "CONTINUE"}
                       </Button>
                       <Button
                         type="button"
                         variant="outline"
                         className="bg-white hover:bg-white text-dark-gray border-gray-300 h-12 sm:h-15 w-full sm:w-55 rounded-none"
                         onClick={handleReset}
+                        disabled={isSubmitting}
                       >
                         <Image
-                          src="/reset.svg"
+                          src="/placeholder.svg?height=15&width=15"
                           alt=""
                           width={15}
                           height={15}
                           className="mr-2"
-                        />{" "}
+                        />
                         RESET
                       </Button>
                     </div>
@@ -1286,13 +1046,11 @@ function Senderdetails() {
           </TabsContent>
         </Tabs>
       </div>
-
       <div className="text-xs text-white-500 mt-8">
-        © 2025, Made by{" "}
-        <span className="text-bold text-dark-blue">Buy Exchange</span>.
+        © 2025, Made by <span className="text-bold text-dark-blue">Buy Exchange</span>.
       </div>
     </div>
-  );
+  )
 }
 
-export default Senderdetails;
+export default Senderdetails
