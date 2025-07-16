@@ -51,7 +51,6 @@ export const pagesData: Record<string, PageData> = {
     title: "Add receivers",
     breadcrumbs: [
       { label: "Dashboards", href: "/staff/dashboard" },
-      { label: "Manage receivers", href: "/staff/dashboard/manage-receivers" },
       { label: "Add receivers", href: "/staff/dashboard/manage-receivers/add-receivers", current: true },
     ],
   },
@@ -75,6 +74,13 @@ export const pagesData: Record<string, PageData> = {
     breadcrumbs: [
       { label: "Dashboards", href: "/staff/dashboard" },
       { label: "Manage receivers", href: "/staff/dashboard/manage-receivers/list-receivers", current: true },
+    ],
+  },
+  editReceivers: {
+    title: "Edit receivers",
+    breadcrumbs: [
+      { label: "Dashboards", href: "/staff/dashboard" },
+      { label: "Edit receivers", href: "/staff/dashboard/manage-receivers/list-receivers/edit-receiver", current: true },
     ],
   },
   manageUsers: {
