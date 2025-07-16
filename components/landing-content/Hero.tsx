@@ -37,28 +37,36 @@ export default function Home() {
               >
                 Register as consultant
               </Link>
-             
             </div>
 
             <div className="space-y-2 sm:space-y-2 text-center lg:text-left">
-              <p className="text-sm sm:text-base lg:text-lg text-light-gray">Trusted by 100+ consultancies in India</p>
-              <p className="text-sm sm:text-base lg:text-lg text-light-gray">Powered by major RBI authorized dealers</p>
+              <p className="text-sm sm:text-base lg:text-lg text-light-gray">
+                Successfully empowering 100+ education consultants across 5 Indian states, 
+                We has streamlined over $15M in student forex payments. Trusted for speed, 
+                compliance, and profitability — now scaling nationwide.
+              </p>
 
-              <div className="grid lg:grid-cols-2">
-                <div className="mt-2 grid grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
+              <div className="mt-4">
+                {/* Single row container with horizontal scroll on mobile */}
+                <div className="flex overflow-x-auto pb-2 lg:overflow-visible lg:flex-wrap gap-3 sm:gap-4 lg:gap-6">
                   {partners.map((partner, index) => (
-                    <div key={index} className="flex h-6 sm:h-7 lg:h-10 items-center justify-center lg:justify-start">
+                    <a
+                      key={index}
+                      href={partner.url} // Using the URL from your constants
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-shrink-0 h-8 sm:h-10 lg:h-12 flex items-center transition-transform hover:scale-105"
+                    >
                       <Image
                         src={partner.image}
                         alt={partner.name}
                         width={partner.width}
                         height={partner.height}
-                        className="h-full  object-contain"
+                        className="h-full object-contain max-w-[120px]"
                       />
-                    </div>
+                    </a>
                   ))}
                 </div>
-                <div></div>
               </div>
             </div>
           </div>
