@@ -94,7 +94,7 @@ type Beneficiary = {
   status: boolean;
 };
 
-const nonChangeableStatuses = ["QuoteDownloaded", "Documents placed"];
+const nonChangeableStatuses = ["QuoteDownloaded", "DocumentsPlaced"];
 const ChangeableStatuses = [
   "Received",
   "Pending",
@@ -312,7 +312,7 @@ export default function Dashboard() {
         return "bg-green-100 text-green-800 hover:bg-green-200";
       case "Authorized":
         return "bg-green-100 text-green-800 hover:bg-green-200";
-      case "documents placed":
+      case "documentsplaced":
         return "bg-yellow-100 text-yellow-800 hover:bg-yellow-200";
       case "Blocked":
         return "bg-emerald-100 text-emerald-800 hover:bg-emerald-200";

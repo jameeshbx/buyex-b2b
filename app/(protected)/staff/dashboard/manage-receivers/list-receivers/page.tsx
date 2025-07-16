@@ -211,7 +211,7 @@ export default function ReceiversTable() {
   }
 
   const handleEditReceiver = (receiverId: string) => {
-    router.push(`/staff/dashboard/manage-receivers/add-receivers?edit=${receiverId}`)
+    router.push(`/staff/dashboard/manage-receivers/list-receivers/edit-receiver?edit=${receiverId}`)
   }
 
   const filteredAndSortedData = useMemo(() => {

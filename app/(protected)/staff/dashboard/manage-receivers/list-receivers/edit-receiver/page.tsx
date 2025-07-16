@@ -15,8 +15,9 @@ import {
 } from "@/data/receiver-schema"
 import { Topbar } from "@/app/(protected)/staff/(components)/Topbar"
 import { pagesData } from "@/data/navigation"
+import { Suspense } from "react"
 
-export default function AddReceiversPage() {
+function AddReceiversPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const editId = searchParams.get("edit")
@@ -173,7 +174,7 @@ export default function AddReceiversPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Fixed Topbar */}
       <div className="sticky top-0 z-40">
-        <Topbar pageData={pagesData.addReceivers} />
+        <Topbar pageData={pagesData.editReceivers} />
       </div>
 
       {/* Main Content */}
@@ -582,5 +583,13 @@ export default function AddReceiversPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function AddReceiversPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AddReceiversPageInner />
+    </Suspense>
   )
 }
