@@ -468,6 +468,22 @@ export default function DocumentUploadForm({
         }
       }
 
+      // After successful uploads, update order status if not MANAGER
+      if (currentUserState?.role !== "MANAGER") {
+        try {
+          await fetch(`/api/orders/${orderId}`, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ status: "DocumentsPlaced" }),
+          });
+        } catch (err) {
+          console.error("Failed to update order status:", err);
+          // Optionally show a toast or handle error
+        }
+      }
+
       // Success handling - Only MANAGER gets redirected, all others get popup only
       if (
         currentUserState?.role === "MANAGER" ||

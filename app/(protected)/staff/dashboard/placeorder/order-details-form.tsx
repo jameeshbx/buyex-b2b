@@ -211,7 +211,7 @@ export default function OrderDetailsForm() {
     "United Kingdom": "GBP",
     "New Zealand": "NZD",
     Sweden: "SEK",
-    Geogia: "EUR",
+    Georgia: "USD",
     Bulgaria: "EUR",
     Ireland: "EUR",
     Latvia: "EUR",
@@ -923,6 +923,7 @@ export default function OrderDetailsForm() {
                       const usdPrimaryCountries = [
                         "United States of America",
                         "Uzbekistan",
+                        "Georgia"
                       ];
 
                       const showUsdOption =
