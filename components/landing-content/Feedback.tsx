@@ -49,14 +49,31 @@ export default function GlobalTestimonials() {
   return (
     <section className="relative w-full py-12 md:py-20 overflow-hidden bg-white lg:-mt-1.5">
       <div className="container px-4 mx-auto mb-24 lg:-mb-3">
-        <div className="text-center mb-12 md:mb-16">
-          <h2 className="text-2xl md:text-4xl font-bold font-playfair text-dark-blue mb-4">
-            Feedback That Speaks Volumes
-          </h2>
-          <p className="text-sm md:text-lg text-gray-400 max-w-2xl mx-auto">
-            A glimpse into the experiences of those who&apos;ve scaled with BuyExchange.
-          </p>
-        </div>
+       <div className="text-center mb-12 md:mb-16">
+  <h2 className="text-2xl md:text-4xl font-bold font-playfair text-dark-blue mb-4">
+    Feedback That Speaks Volumes
+  </h2>
+  
+  <p className="text-sm md:text-lg text-gray-400 max-w-2xl mx-auto mt-4">
+    A glimpse into the experiences of those who&apos;ve scaled with BuyExchange.
+  </p>
+  <div className="relative inline-block">
+  <Image 
+    src="/fivestar.png" 
+    alt="Five star rating" 
+    width={270} 
+    height={50} 
+    className="mx-auto"
+  />
+  <Image 
+    src="/logogoogle.png" // Your second image
+    alt="Badge" 
+    width={50} 
+    height={50}
+    className="absolute top-22 right-28"
+  />
+</div>
+</div>
 
         <div className="relative">
           <div className="relative w-full aspect-[1/0.8] sm:aspect-[2/1] max-w-6xl mx-auto overflow-visible">
