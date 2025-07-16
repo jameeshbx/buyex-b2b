@@ -55,6 +55,13 @@ function FeaturesAccordion() {
         "Access detailed analytics and performance metrics for each branch location, helping you optimize operations and identify growth opportunities.",
       isOpen: false,
     },
+    {
+      id: "Multiforex partner",
+      title: "Multiforex Partner Integration",
+      content:
+        "Seamlessly connect with multiple forex providers through a single API integration, enabling competitive rate shopping, automated transactions, and consolidated reporting across all your forex partners..",
+      isOpen: false,
+    },
   ])
 
   const toggleFeature = (id: string) => {

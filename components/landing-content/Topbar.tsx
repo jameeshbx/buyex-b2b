@@ -124,14 +124,14 @@ export default function Topbar() {
 
                 <div className="flex flex-col items-center mt-6 space-y-3">
                   <Link
-                    href="/register"
+                    href="/signup"
                     className="bg-dark-blue text-white px-6 py-2 rounded-full text-sm font-medium hover:bg-[#083d5a] transition-colors w-full text-center"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Register
                   </Link>
                   <Link
-                    href="/login"
+                    href="/signin"
                     className="bg-white text-gray-800 px-6 py-2 rounded-full text-sm font-medium border border-gray-200 hover:bg-gray-50 transition-colors w-full text-center"
                     onClick={() => setMobileMenuOpen(false)}
                   >
@@ -178,13 +178,13 @@ export default function Topbar() {
             {/* Auth Buttons in scrolled state */}
             <div className="hidden md:flex space-x-4">
               <Link
-                href="/register"
+                href="/signup"
                 className="bg-dark-blue text-white px-4 py-1 rounded-full text-sm font-medium hover:bg-[#083d5a] transition-colors"
               >
                 Register
               </Link>
               <Link
-                href="/login"
+                href="/signin"
                 className="bg-white text-gray-800 px-4 py-1 rounded-full text-sm font-medium border border-gray-200 hover:bg-gray-50 transition-colors"
               >
                 Sign in
@@ -231,14 +231,14 @@ export default function Topbar() {
 
               <div className="flex flex-col mt-6 space-y-3">
                 <Link
-                  href="/register"
+                  href="/signup"
                   className="bg-[#0a4d70] text-white px-6 py-2 rounded-full text-sm font-medium hover:bg-[#083d5a] transition-colors text-center"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Register
                 </Link>
                 <Link
-                  href="/login"
+                  href="/signin"
                   className="bg-white text-gray-800 px-6 py-2 rounded-full text-sm font-medium border border-gray-200 hover:bg-gray-50 transition-colors text-center"
                   onClick={() => setMobileMenuOpen(false)}
                 >
