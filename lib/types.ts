@@ -1,4 +1,4 @@
-export type UserType = "Admin" | "Staff"
+export type UserType = "Admin" | "Staff" | "Agent"
 
 export interface User {
   id: string
@@ -8,14 +8,16 @@ export interface User {
   status: boolean
   date: string
   userType: UserType
+  agentRate?: number;
   // For API compatibility
-  role?: "ADMIN" | "MANAGER"  // From your API
+  role?: "ADMIN" | "MANAGER" | "AGENT" // From your API
   createdAt?: string          // From your API
 }
 
 export interface UserFormData {
-  userType: UserType
-  userId: string
-  name: string
-  email: string
+  userType: UserType;
+  userId: string;
+  name: string;
+  email: string;
+  agentRate?: number;
 }
