@@ -117,6 +117,12 @@ function BeneficiaryDetailsContent() {
           const orderResponse = await axios.get(`/api/orders/${orderId}`)
           console.log("Fetched order:", orderResponse.data)
 
+          // Pre-populate receiver country and receiver bank country from order data
+          if (orderResponse.data.receiverBankCountry) {
+            setValue("receiverCountry", orderResponse.data.receiverBankCountry)
+            setValue("receiverBankCountry", orderResponse.data.receiverBankCountry)
+          }
+
           if (orderResponse.data.beneficiaryId) {
             console.log("Fetching beneficiary details for beneficiaryId:", orderResponse.data.beneficiaryId)
 
@@ -131,11 +137,11 @@ function BeneficiaryDetailsContent() {
               reset({
                 existingReceiver: "NO", // Set to NO to show the form
                 receiverFullName: beneficiaryResponse.data.receiverFullName || "",
-                receiverCountry: beneficiaryResponse.data.receiverCountry || "",
+                receiverCountry: beneficiaryResponse.data.receiverCountry || orderResponse.data.receiverBankCountry || "",
                 address: beneficiaryResponse.data.address || "",
                 receiverBank: beneficiaryResponse.data.receiverBank || "",
                 receiverBankAddress: beneficiaryResponse.data.receiverBankAddress || "",
-                receiverBankCountry: beneficiaryResponse.data.receiverBankCountry || "",
+                receiverBankCountry: beneficiaryResponse.data.receiverBankCountry || orderResponse.data.receiverBankCountry || "",
                 receiverAccount: beneficiaryResponse.data.receiverAccount || "",
                 receiverBankSwiftCode: beneficiaryResponse.data.receiverBankSwiftCode || "",
                 iban: beneficiaryResponse.data.iban || "",
@@ -155,8 +161,13 @@ function BeneficiaryDetailsContent() {
             }
           } else {
             console.log("No existing beneficiary details found")
-            // Reset to default if no beneficiary exists
-            reset(defaultFormValues)
+            // Reset to default if no beneficiary exists, but pre-populate with order data
+            const defaultValues = {
+              ...defaultFormValues,
+              receiverCountry: orderResponse.data.receiverBankCountry || "",
+              receiverBankCountry: orderResponse.data.receiverBankCountry || "",
+            }
+            reset(defaultValues)
           }
         } catch (error) {
           console.error("Error fetching order or beneficiary:", error)
@@ -172,7 +183,7 @@ function BeneficiaryDetailsContent() {
     if (!editId && !beneficiaryId) {
       fetchOrderAndBeneficiary()
     }
-  }, [orderId, editId, beneficiaryId, reset])
+  }, [orderId, editId, beneficiaryId, reset, setValue])
 
   // Handle pre-filling form when beneficiaryId is present (coming back from document upload)
   useEffect(() => {
@@ -1012,6 +1023,7 @@ function BeneficiaryDetailsContent() {
                       }`}
                       onChange={(e) => {
                         setValue("receiverCountry", e.target.value)
+                        // Auto-sync receiver bank country with receiver country if they're the same
                         if (!receiverBankCountry || receiverBankCountry === receiverCountry) {
                           setValue("receiverBankCountry", e.target.value)
                         }

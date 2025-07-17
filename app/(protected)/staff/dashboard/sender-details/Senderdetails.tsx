@@ -309,10 +309,23 @@ function Senderdetails() {
     }
   }
 
-  const handleStatusConfirm = () => {
+  const handleStatusConfirm = async () => {
     if (selectedStatus === "Blocked") {
-      setShowStatusPopup(false)
-      setStatusError(null)
+      try {
+        // Update the order status to "Blocked"
+        if (orderId) {
+          await axios.patch(`/api/orders/${orderId}`, {
+            status: "Blocked"
+          })
+          console.log("Order status updated to Blocked")
+        }
+        
+        setShowStatusPopup(false)
+        setStatusError(null)
+      } catch (error) {
+        console.error("Failed to update order status:", error)
+        setStatusError("Failed to update order status. Please try again.")
+      }
     } else {
       setStatusError("Please select 'Blocked' to proceed.")
     }

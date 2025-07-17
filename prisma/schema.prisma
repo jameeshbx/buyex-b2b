@@ -255,7 +255,7 @@ enum DocumentRole {
 
 enum OrderStatus {
   Received
-  Verified
+  RateCovered
   Pending
   Rejected
   Completed
