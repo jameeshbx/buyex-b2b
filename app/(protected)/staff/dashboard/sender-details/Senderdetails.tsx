@@ -435,30 +435,33 @@ function Senderdetails() {
                           )}
                         />
                         {/* Phone Number */}
-                        <FormField
-                          control={form.control}
-                          name="phoneNumber"
-                          render={({ field }) => (
-                            <FormItem className="space-y-1 sm:space-y-2">
-                              <FormLabel className="font-jakarta text-sm sm:text-base text-gray-500">
-                                Phone number
-                              </FormLabel>
-                              <FormControl>
-                                <div className="flex">
-                                  <div className="flex items-center justify-center px-3 bg-blue-50 border border-r-0 border-input rounded-none text-sm sm:text-base text-gray-500">
-                                    +91
-                                  </div>
-                                  <Input
-                                    placeholder="Please enter your phone number"
-                                    className="rounded-none bg-blue-50 h-12 sm:h-14"
-                                    {...field}
-                                  />
-                                </div>
-                              </FormControl>
-                              <FormMessage className="text-xs sm:text-sm" />
-                            </FormItem>
-                          )}
-                        />
+                       {/* Phone Number - Only show when payer is "self" */}
+  {payer === "self" && (
+    <FormField
+      control={form.control}
+      name="phoneNumber"
+      render={({ field }) => (
+        <FormItem className="space-y-1 sm:space-y-2">
+          <FormLabel className="font-jakarta text-sm sm:text-base text-gray-500">
+            Phone number
+          </FormLabel>
+          <FormControl>
+            <div className="flex">
+              <div className="flex items-center justify-center px-3 bg-blue-50 border border-r-0 border-input rounded-none text-sm sm:text-base text-gray-500">
+                +91
+              </div>
+              <Input
+                placeholder="Please enter your phone number"
+                className="rounded-none bg-blue-50 h-12 sm:h-14"
+                {...field}
+              />
+            </div>
+          </FormControl>
+          <FormMessage className="text-xs sm:text-sm" />
+        </FormItem>
+      )}
+    />
+    )}
                         {/* Address Line 1 */}
                         <FormField
                           control={form.control}
@@ -655,6 +658,8 @@ function Senderdetails() {
                           />
                         </div>
                         {/* Sender Email */}
+                       <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 mt-4 sm:mt-6">
+
                         <FormField
                           control={form.control}
                           name="senderEmail"
@@ -679,6 +684,33 @@ function Senderdetails() {
                             </FormItem>
                           )}
                         />
+                        {/* Phone Number - Only show when payer is not "self" */}
+    <FormField
+      control={form.control}
+      name="phoneNumber"
+      render={({ field }) => (
+        <FormItem className="space-y-1 sm:space-y-2 mt-4 sm:mt-6">
+          <FormLabel className="font-jakarta text-sm sm:text-base text-gray-500">
+            Phone number
+          </FormLabel>
+          <FormControl>
+            <div className="flex">
+              <div className="flex items-center justify-center px-3 bg-blue-50 border border-r-0 border-input rounded-none text-sm sm:text-base text-gray-500">
+                +91
+              </div>
+              <Input
+                placeholder="Please enter your phone number"
+                className="rounded-none bg-blue-50 h-12 sm:h-14"
+                {...field}
+              />
+            </div>
+          </FormControl>
+          <FormMessage className="text-xs sm:text-sm" />
+        </FormItem>
+      )}
+    />
+    </div>
+
                         {/* Foreign bank charges */}
                         <div className="space-y-1 sm:space-y-2 mt-4 sm:mt-6">
                           <Label className="text-sm sm:text-base text-gray-500">Residence Status</Label>

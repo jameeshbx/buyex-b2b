@@ -160,7 +160,7 @@ export default function Dashboard() {
             </CardTitle>
             <Link
               className="text-dark-blue text-sm hover:text-blue-800"
-              href={"/agent/dashboard/view-orders"}
+              href={"/agent/dashboard/viewallorders"}
             >
               See More
             </Link>
