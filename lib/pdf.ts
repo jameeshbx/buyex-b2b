@@ -121,7 +121,7 @@ export async function generateA2Form(order: Order) {
     relation: order.sender?.relationship || '',
 
     forexPurpose: order.purpose || '',
-    forexAmountUSD: order.amount.toString(),
+    forexAmountUSD: order.amount.toString() + ' ' + order.currency,
     forexAmountINR: order.totalAmount.toString(),
     country: order.receiverBankCountry || '',
     source: order.sender?.sourceOfFunds || '',
