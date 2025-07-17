@@ -100,7 +100,7 @@ const ChangeableStatuses = [
   "Pending",
   "Rejected",
   "Completed",
-  "Verified",
+  "RateCovered", // <-- changed from "Rate-Covered"
   "Blocked",
   "Authorized",
 ];
@@ -627,7 +627,7 @@ export default function Dashboard() {
               {paginatedOrders.map((order) => {
                 const beneficiaryId = order.beneficiaryId || order.id;
                 const beneficiary = beneficiaries[beneficiaryId];
-                const showAuthorizeButton = order.status === "Received";
+                const showAuthorizeButton = order.status === "Received" || order.status === "RateCovered";
 
                 return (
                   <React.Fragment key={order.id}>
