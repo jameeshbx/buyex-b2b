@@ -95,7 +95,7 @@ export function Sidebar({
       active: pathname === "/agent/dashboard/placeorder",
     },
     {
-      href: "/staff/dashboard/view-orders",
+      href: "/agent/dashboard/viewallorders",
       icon: (
         <Image
           src="/orders.svg"
@@ -106,13 +106,13 @@ export function Sidebar({
         />
       ),
       label: "View All Orders",
-      active: pathname === "/staff/dashboard/view-orders",
+      active: pathname === "/agent/dashboard/viewallorders",
     },
   ];
 
   const secondaryItems = [
     {
-      href: "/staff/dashboard/settings",
+      href: "/agent/dashboard/settings",
       icon: (
         <Image
           src="/Icon-1.svg"
@@ -123,7 +123,7 @@ export function Sidebar({
         />
       ),
       label: "Settings",
-      active: pathname === "/staff/dashboard/settings",
+      active: pathname === "/agent/dashboard/settings",
     },
     {
       href: "/support",

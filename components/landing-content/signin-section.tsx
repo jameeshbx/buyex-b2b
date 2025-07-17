@@ -77,6 +77,9 @@ export default function LoginPage() {
           case "SUPERADMIN":
             router.push("/super-admin/dashboard/native-users")
             break
+            case "AGENT":
+              router.push("/agent/dashboard")
+              break
           default:
             console.log("Unknown role, redirecting to staff dashboard. Role was:", userRole)
             router.push("/staff/dashboard") // Default fallback
