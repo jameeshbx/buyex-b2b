@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/dialog"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import type { User, UserType } from "@/lib/types"
 import { ChevronDown, ChevronUp, Search, Pencil, Trash2, CheckCircle } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { clsx, type ClassValue } from "clsx"
@@ -24,6 +23,7 @@ import { twMerge } from "tailwind-merge"
 import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
+import type { User, UserType } from "@/lib/types"
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -38,14 +38,30 @@ function formatDate(dateString: string): string {
   })
 }
 
-type SortField = "date" | "userType" | "name" | "email"
+type SortField = "date" | "userType" | "name" | "email" | "agentRate"
 type SortDirection = "asc" | "desc"
 
-const editUserSchema = z.object({
-  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
-  email: z.string().email({ message: "Please enter a valid email address" }),
-  userType: z.enum(["Admin", "Staff"]),
-})
+const editUserSchema = z
+  .object({
+    name: z.string().min(2, { message: "Name must be at least 2 characters" }),
+    email: z.string().email({ message: "Please enter a valid email address" }),
+    userType: z.enum(["Admin", "Staff", "Agent"]),
+    agentRate: z
+      .number()
+      .optional()
+      .refine((val) => val === undefined || (val >= 0 && val <= 100), {
+        message: "Agent rate must be between 0 and 100",
+      }),
+  })
+  .superRefine((data, ctx) => {
+    if (data.userType === "Agent" && (data.agentRate === undefined || data.agentRate < 0 || data.agentRate > 100)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Agent rate is required and must be between 0 and 100 for Agent users",
+        path: ["agentRate"],
+      })
+    }
+  })
 
 type EditUserFormData = z.infer<typeof editUserSchema>
 
@@ -53,7 +69,10 @@ interface UserTableProps {
   users: User[]
   onToggleStatus: (id: string) => void
   onDeleteUser: (id: string) => void
-  onEditUser: (id: string, userData: { name: string; email: string; userType: UserType }) => Promise<boolean>
+  onEditUser: (
+    id: string,
+    userData: { name: string; email: string; userType: UserType; agentRate?: number },
+  ) => Promise<boolean>
   filteredUserType: UserType | "all"
   setFilteredUserType: (type: UserType | "all") => void
   searchQuery: string
@@ -77,6 +96,7 @@ export function UserTable({
   const [tempFilters, setTempFilters] = useState({
     admin: filteredUserType === "all" || filteredUserType === "Admin",
     staff: filteredUserType === "all" || filteredUserType === "Staff",
+    agent: filteredUserType === "all" || filteredUserType === "Agent",
   })
   const [statusToggleDialog, setStatusToggleDialog] = useState<{
     open: boolean
@@ -102,7 +122,6 @@ export function UserTable({
     message: "",
   })
   const [selectedUserType, setSelectedUserType] = useState<UserType>("Admin")
-
   const {
     register,
     handleSubmit,
@@ -112,7 +131,6 @@ export function UserTable({
   } = useForm<EditUserFormData>({
     resolver: zodResolver(editUserSchema),
   })
-
   const itemsPerPage = 10
 
   // Filter users based on search and user type
@@ -120,23 +138,19 @@ export function UserTable({
     const matchesSearch =
       user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase())
-
     let matchesType = false
     if (filteredUserType === "all") {
       matchesType = true
-    } else if (filteredUserType === "Admin") {
-      matchesType = user.userType === "Admin"
-    } else if (filteredUserType === "Staff") {
-      matchesType = user.userType === "Staff"
+    } else {
+      matchesType = user.userType === filteredUserType
     }
-
     return matchesSearch && matchesType
   })
 
   // Sort users
   const sortedUsers = [...filteredUsers].sort((a, b) => {
-    let aValue: string | number
-    let bValue: string | number
+    let aValue: string | number | undefined
+    let bValue: string | number | undefined
 
     switch (sortField) {
       case "date":
@@ -154,6 +168,10 @@ export function UserTable({
       case "email":
         aValue = a.email.toLowerCase()
         bValue = b.email.toLowerCase()
+        break
+      case "agentRate":
+        aValue = a.agentRate ?? 0
+        bValue = b.agentRate ?? 0
         break
       default:
         return 0
@@ -191,12 +209,14 @@ export function UserTable({
   }
 
   const handleApplyFilters = () => {
-    if (tempFilters.admin && tempFilters.staff) {
+    if (tempFilters.admin && tempFilters.staff && tempFilters.agent) {
       setFilteredUserType("all")
-    } else if (tempFilters.admin) {
+    } else if (tempFilters.admin && !tempFilters.staff && !tempFilters.agent) {
       setFilteredUserType("Admin")
-    } else if (tempFilters.staff) {
+    } else if (tempFilters.staff && !tempFilters.admin && !tempFilters.agent) {
       setFilteredUserType("Staff")
+    } else if (tempFilters.agent && !tempFilters.admin && !tempFilters.staff) {
+      setFilteredUserType("Agent")
     } else {
       setFilteredUserType("all")
     }
@@ -225,15 +245,19 @@ export function UserTable({
         name: user.name,
         email: user.email,
         userType: user.userType,
+        agentRate: user.agentRate,
       })
     }, 0)
   }
 
   const onEditSubmit = async (data: EditUserFormData) => {
     if (!editDialog.user) return
-
-    const success = await onEditUser(editDialog.user.id, data)
-
+    const success = await onEditUser(editDialog.user.id, {
+      name: data.name,
+      email: data.email,
+      userType: data.userType,
+      agentRate: data.userType === "Agent" ? data.agentRate : undefined,
+    })
     if (success) {
       setEditDialog({ open: false, user: null })
       setSuccessDialog({
@@ -247,36 +271,29 @@ export function UserTable({
   const getPageNumbers = () => {
     const pages: (number | string)[] = []
     const maxVisiblePages = 5
-
     if (totalPages <= maxVisiblePages) {
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i)
       }
     } else {
       pages.push(1)
-
       if (currentPage > 3) {
         pages.push("...")
       }
-
       const start = Math.max(2, currentPage - 1)
       const end = Math.min(totalPages - 1, currentPage + 1)
-
       for (let i = start; i <= end; i++) {
         if (i !== 1 && i !== totalPages && !pages.includes(i)) {
           pages.push(i)
         }
       }
-
       if (currentPage < totalPages - 2) {
         pages.push("...")
       }
-
       if (totalPages > 1) {
         pages.push(totalPages)
       }
     }
-
     return pages
   }
 
@@ -299,7 +316,9 @@ export function UserTable({
                   <Checkbox
                     id="admin-filter"
                     checked={tempFilters.admin}
-                    onChange={(e) => setTempFilters((prev) => ({ ...prev, admin: (e.target as HTMLInputElement).checked }))}
+                    onChange={(e) =>
+                      setTempFilters((prev) => ({ ...prev, admin: (e.target as HTMLInputElement).checked }))
+                    }
                   />
                   <label htmlFor="admin-filter" className="text-sm font-medium">
                     Admin
@@ -309,10 +328,24 @@ export function UserTable({
                   <Checkbox
                     id="staff-filter"
                     checked={tempFilters.staff}
-                    onChange={(e) => setTempFilters((prev) => ({ ...prev, staff: (e.target as HTMLInputElement).checked }))}
+                    onChange={(e) =>
+                      setTempFilters((prev) => ({ ...prev, staff: (e.target as HTMLInputElement).checked }))
+                    }
                   />
                   <label htmlFor="staff-filter" className="text-sm font-medium">
                     Staff
+                  </label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="agent-filter"
+                    checked={tempFilters.agent}
+                    onChange={(e) =>
+                      setTempFilters((prev) => ({ ...prev, agent: (e.target as HTMLInputElement).checked }))
+                    }
+                  />
+                  <label htmlFor="agent-filter" className="text-sm font-medium">
+                    Agent
                   </label>
                 </div>
               </div>
@@ -324,7 +357,6 @@ export function UserTable({
             </div>
           </PopoverContent>
         </Popover>
-
         <div className="relative w-full sm:w-auto sm:min-w-[300px]">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
@@ -338,7 +370,6 @@ export function UserTable({
           />
         </div>
       </div>
-
       <Card className="overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
@@ -376,6 +407,14 @@ export function UserTable({
                     Email {getSortIcon("email")}
                   </button>
                 </TableHead>
+                <TableHead className="whitespace-nowrap">
+                  <button
+                    className="flex items-center gap-1 hover:bg-gray-50 p-1 rounded transition-colors"
+                    onClick={() => handleSort("agentRate")}
+                  >
+                    Agent Rate {getSortIcon("agentRate")}
+                  </button>
+                </TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Action</TableHead>
               </TableRow>
@@ -383,7 +422,7 @@ export function UserTable({
             <TableBody>
               {currentUsers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                  <TableCell colSpan={7} className="text-center py-8 text-gray-500">
                     No users found
                   </TableCell>
                 </TableRow>
@@ -395,7 +434,11 @@ export function UserTable({
                       <span
                         className={cn(
                           "px-2 py-1 rounded-full text-xs font-medium",
-                          user.userType === "Admin" ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800",
+                          user.userType === "Admin"
+                            ? "bg-blue-100 text-blue-800"
+                            : user.userType === "Staff"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-purple-100 text-purple-800",
                         )}
                       >
                         {user.userType}
@@ -403,6 +446,7 @@ export function UserTable({
                     </TableCell>
                     <TableCell className="font-medium">{user.name}</TableCell>
                     <TableCell className="text-gray-600">{user.email}</TableCell>
+                    <TableCell>{user.userType === "Agent" ? `${user.agentRate ?? "-"}` : "-"}</TableCell>
                     <TableCell>
                       <div
                         className={cn(
@@ -447,7 +491,6 @@ export function UserTable({
             </TableBody>
           </Table>
         </div>
-
         {totalPages > 1 && (
           <div className="flex items-center justify-center py-6 border-t bg-white">
             <div className="flex items-center space-x-2">
@@ -460,7 +503,6 @@ export function UserTable({
               >
                 Prev
               </Button>
-
               {getPageNumbers().map((page, index) => (
                 <div key={index}>
                   {page === "..." ? (
@@ -480,7 +522,6 @@ export function UserTable({
                   )}
                 </div>
               ))}
-
               <Button
                 variant="outline"
                 size="sm"
@@ -494,7 +535,6 @@ export function UserTable({
           </div>
         )}
       </Card>
-
       {/* Status Toggle Confirmation Dialog */}
       <Dialog
         open={statusToggleDialog.open}
@@ -521,7 +561,6 @@ export function UserTable({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
       {/* Edit User Dialog */}
       <Dialog
         open={editDialog.open}
@@ -554,23 +593,37 @@ export function UserTable({
                 <SelectContent className="z-[60]">
                   <SelectItem value="Admin">Admin</SelectItem>
                   <SelectItem value="Staff">Staff</SelectItem>
+                  <SelectItem value="Agent">Agent</SelectItem>
                 </SelectContent>
               </Select>
               {errors.userType && <p className="text-red-500 text-xs">{errors.userType.message}</p>}
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="edit-name">Name</Label>
               <Input id="edit-name" placeholder="Enter user name" {...register("name")} />
               {errors.name && <p className="text-red-500 text-xs">{errors.name.message}</p>}
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="edit-email">Email</Label>
               <Input id="edit-email" type="email" placeholder="Enter email address" {...register("email")} />
               {errors.email && <p className="text-red-500 text-xs">{errors.email.message}</p>}
             </div>
-
+            {selectedUserType === "Agent" && (
+              <div className="space-y-2">
+                <Label htmlFor="edit-agentRate">Agent Rate </Label>
+                <Input
+                  id="edit-agentRate"
+                  type="number"
+                  min="0"
+                  max="100"
+                  placeholder="Enter agent rate"
+                  {...register("agentRate", {
+                    valueAsNumber: true,
+                  })}
+                />
+                {errors.agentRate && <p className="text-red-500 text-xs">{errors.agentRate.message}</p>}
+              </div>
+            )}
             <DialogFooter className="flex-col sm:flex-row gap-2">
               <Button
                 type="button"
@@ -594,7 +647,6 @@ export function UserTable({
           </form>
         </DialogContent>
       </Dialog>
-
       {/* Success Dialog */}
       <Dialog open={successDialog.open} onOpenChange={(open) => setSuccessDialog({ open, message: "" })}>
         <DialogContent className="sm:max-w-md">

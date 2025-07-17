@@ -20,11 +20,27 @@ import {
 import { CheckCircle } from "lucide-react"
 import type { UserFormData, UserType } from "@/lib/types"
 
-const formSchema = z.object({
-  userType: z.enum(["Admin", "Staff"]),
-  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
-  email: z.string().email({ message: "Please enter a valid email address" }),
-})
+const formSchema = z
+  .object({
+    userType: z.enum(["Admin", "Staff", "Agent"]),
+    name: z.string().min(2, { message: "Name must be at least 2 characters" }),
+    email: z.string().email({ message: "Please enter a valid email address" }),
+    agentRate: z
+      .number()
+      .optional()
+      .refine((val) => val === undefined || (val >= 0 && val <= 100), {
+        message: "Agent rate must be between 0 and 100",
+      }),
+  })
+  .superRefine((data, ctx) => {
+    if (data.userType === "Agent" && (data.agentRate === undefined || data.agentRate < 0 || data.agentRate > 100)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Agent rate is required and must be between 0 and 100 for Agent users",
+        path: ["agentRate"],
+      })
+    }
+  })
 
 type FormValues = z.infer<typeof formSchema>
 
@@ -42,12 +58,14 @@ export function UserForm({ onAddUser }: UserFormProps) {
     open: false,
     message: "",
   })
+  const [, setSelectedUserType] = useState<UserType>("Admin")
 
   const {
     register,
     handleSubmit,
     reset,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -55,28 +73,29 @@ export function UserForm({ onAddUser }: UserFormProps) {
       userType: "Admin",
       name: "",
       email: "",
+      agentRate: undefined,
     },
   })
+
+  const userType = watch("userType")
 
   const onSubmit = async (data: FormValues) => {
     try {
       setLoading(true)
       setError(null)
-
       await onAddUser({
         userType: data.userType,
         name: data.name,
         email: data.email,
+        agentRate: data.userType === "Agent" ? data.agentRate : undefined,
         userId: "", // This will be set by the API response
       })
-
       // Reset form on success
       reset()
-
       // Show success popup
       setSuccessDialog({
         open: true,
-        message: "User created successfully! An invitation email has been sent.",
+        message: "User created successfully! An invitation email with login details has been sent.",
       })
     } catch (err: unknown) {
       console.error("Error creating user:", err)
@@ -94,7 +113,11 @@ export function UserForm({ onAddUser }: UserFormProps) {
   }
 
   const handleUserTypeChange = (value: UserType) => {
+    setSelectedUserType(value)
     setValue("userType", value)
+    if (value !== "Agent") {
+      setValue("agentRate", undefined)
+    }
   }
 
   return (
@@ -112,23 +135,37 @@ export function UserForm({ onAddUser }: UserFormProps) {
                 <SelectContent>
                   <SelectItem value="Admin">Admin</SelectItem>
                   <SelectItem value="Staff">Staff</SelectItem>
+                  <SelectItem value="Agent">Agent</SelectItem>
                 </SelectContent>
               </Select>
               {errors.userType && <p className="text-red-500 text-xs">{errors.userType.message}</p>}
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="name">Name</Label>
               <Input id="name" placeholder="Enter user name" {...register("name")} />
               {errors.name && <p className="text-red-500 text-xs">{errors.name.message}</p>}
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="email">Email ID</Label>
               <Input id="email" type="email" placeholder="Enter email ID" {...register("email")} />
               {errors.email && <p className="text-red-500 text-xs">{errors.email.message}</p>}
             </div>
-
+            {userType === "Agent" && (
+              <div className="space-y-2">
+                <Label htmlFor="agentRate">Agent Rate</Label>
+                <Input
+                  id="agentRate"
+                  type="number"
+                  min="0"
+                  max="100"
+                  placeholder="Enter agent rate"
+                  {...register("agentRate", {
+                    valueAsNumber: true,
+                  })}
+                />
+                {errors.agentRate && <p className="text-red-500 text-xs">{errors.agentRate.message}</p>}
+              </div>
+            )}
             <div className="flex items-end">
               <Button type="submit" className="w-full bg-[#004976] hover:bg-[#003a5e]" disabled={loading}>
                 {loading ? "Creating..." : "Submit"}
@@ -137,8 +174,7 @@ export function UserForm({ onAddUser }: UserFormProps) {
           </form>
         </CardContent>
       </Card>
-
-      {/* Success Dialog */}
+      {/* Success Dialog remains the same */}
       <Dialog open={successDialog.open} onOpenChange={(open) => setSuccessDialog({ open, message: "" })}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
