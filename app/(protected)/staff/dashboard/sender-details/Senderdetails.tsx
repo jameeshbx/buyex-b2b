@@ -70,14 +70,12 @@ function Senderdetails() {
       relationship: "self",
       senderName: "",
       bankCharges: "resident",
-      mothersName: "",
       dob: "",
       senderNationality: "indian",
       senderEmail: "",
       sourceOfFunds: undefined,
       occupationStatus: undefined,
-      payerAccountNumber: "",
-      payerBankName: "",
+      
       senderAddressLine1: "",
       senderAddressLine2: "",
       senderState: "",
@@ -185,7 +183,7 @@ function Senderdetails() {
           senderDetails.bankCharges && (allowedBankCharges as readonly string[]).includes(senderDetails.bankCharges)
             ? (senderDetails.bankCharges as (typeof allowedBankCharges)[number])
             : "resident",
-        mothersName: senderDetails.mothersName ?? "",
+       
         dob: senderDetails.dob ?? "",
         senderNationality: (senderDetails.nationality ?? "indian") as
           | "indian"
@@ -201,8 +199,6 @@ function Senderdetails() {
           (allowedOccupationStatus as readonly string[]).includes(senderDetails.occupationStatus)
             ? (senderDetails.occupationStatus as (typeof allowedOccupationStatus)[number])
             : "employed",
-        payerAccountNumber: senderDetails.payerAccountNumber ?? "",
-        payerBankName: senderDetails.payerBankName ?? "",
         senderAddressLine1: senderDetails.senderAddressLine1 ?? "",
         senderAddressLine2: senderDetails.senderAddressLine2 ?? "",
         senderState: senderDetails.senderState ?? "",
@@ -803,27 +799,9 @@ function Senderdetails() {
                             </p>
                           )}
                         </div>
-                        {/* Mother's Name and DOB */}
+                        {/*  DOB */}
                         <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 mt-4 sm:mt-6">
-                          <FormField
-                            control={form.control}
-                            name="mothersName"
-                            render={({ field }) => (
-                              <FormItem className="space-y-1 sm:space-y-2">
-                                <FormLabel className="font-jakarta text-sm sm:text-base text-gray-500">
-                                  Mother&apos;s Name
-                                </FormLabel>
-                                <FormControl>
-                                  <Input
-                                    placeholder="Mother's name"
-                                    className="bg-blue-50 h-12 sm:h-14 rounded-none"
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage className="text-xs sm:text-sm" />
-                              </FormItem>
-                            )}
-                          />
+                          
                           {/* DOB - Show in Sender Details when payer is not "self" */}
                           <FormField
                             control={form.control}
@@ -1009,46 +987,7 @@ function Senderdetails() {
                           />
                         </div>
                         {/* Bank details */}
-                        <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 mt-4 sm:mt-6">
-                          {/* Payer Account Number */}
-                          <FormField
-                            control={form.control}
-                            name="payerAccountNumber"
-                            render={({ field }) => (
-                              <FormItem className="space-y-1 sm:space-y-2">
-                                <FormLabel className="font-jakarta text-sm sm:text-base">
-                                  Payer Account Number
-                                </FormLabel>
-                                <FormControl>
-                                  <Input
-                                    placeholder="ex: 8467-434-5346"
-                                    className="bg-blue-50 h-12 sm:h-14 rounded-none"
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage className="text-xs sm:text-sm" />
-                              </FormItem>
-                            )}
-                          />
-                          {/* Payer Bank Name */}
-                          <FormField
-                            control={form.control}
-                            name="payerBankName"
-                            render={({ field }) => (
-                              <FormItem className="space-y-1 sm:space-y-2">
-                                <FormLabel className="font-jakarta text-sm sm:text-base">Payer Bank Name</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    placeholder="Enter bank name"
-                                    className="bg-blue-50 h-12 sm:h-14 rounded-none"
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage className="text-xs sm:text-sm" />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
+                        
                       </div>
                     )}
                     {/* Buttons */}

@@ -33,14 +33,12 @@ interface Order {
     relationship: string;
     senderName: string;
     bankCharges: string;
-    mothersName: string;
+    
     dob: string;
     senderNationality: string;
     senderEmail: string;
     sourceOfFunds: string;
     occupationStatus: string;
-    payerAccountNumber: string;
-    payerBankName: string;
     senderAddressLine1: string;
     senderAddressLine2: string;
     senderState: string;
@@ -132,7 +130,7 @@ export async function generateA2Form(order: Order) {
     bankAddress: order.beneficiary?.receiverBankAddress || '',
     swiftCode: order.beneficiary?.receiverBankSwiftCode || '',
     abaCode: order.beneficiary?.receiverBankSwiftCode || '',
-    reference: order.sender?.payerAccountNumber || '',
+    reference:  '',
   };
 
   // Add text to first page (coordinates are approximate; adjust as per actual form layout)
