@@ -56,14 +56,11 @@ interface Order {
     relationship: string;
     senderName: string;
     bankCharges: string;
-    mothersName: string;
     dob: string;
     senderNationality: string;
     senderEmail: string;
     sourceOfFunds: string;
     occupationStatus: string;
-    payerAccountNumber: string;
-    payerBankName: string;
     senderAddressLine1: string;
     senderAddressLine2: string;
     senderState: string;
@@ -273,18 +270,15 @@ export default function TransactionDetails({
               tcs: calculatedValues.tcsApplicable || "",
               totalPayableAmount: order.totalAmount || "",
               residentStatus: "",
-              motherName: order.sender?.mothersName || "",
               relationshipWithReceiver: order.sender?.relationship || "",
               senderAddressLine1: order.sender?.addressLine1 || "",
               senderAddressLine2: order.sender?.addressLine2 || "",
               funding: order.sender?.sourceOfFunds || "",
-              senderAccountNo: order.sender?.payerAccountNumber || "",
-              ifsc: order.sender?.payerBankName || "",
-              bankName: order.sender?.payerBankName || "",
-              branchName: order.sender?.payerBankName || "",
-              agent: order.sender?.payerBankName || "",
-              supportEmail: order.sender?.payerBankName || "",
-              supportPhone: order.sender?.payerBankName || "",
+              ifsc:  "",
+              branchName:"",
+              agent:  "",
+              supportEmail: "",
+              supportPhone:  "",
             }),
           }),
         });
