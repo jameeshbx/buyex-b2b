@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useRef } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -9,6 +9,50 @@ import { signIn, getSession } from "next-auth/react"
 import { loginSchema } from "@/schema/signin-validation"
 import type { LoginInput } from "@/schema/signin-validation"
 import { toast } from "sonner"
+import { Eye, EyeOff } from "lucide-react";
+
+type PasswordInputProps = {
+  value: string;
+  onChange: React.ChangeEventHandler<HTMLInputElement>;
+  disabled?: boolean;
+  error?: string;
+};
+
+function PasswordInput({ value, onChange, disabled = false, error }: PasswordInputProps) {
+  const [showPassword, setShowPassword] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleShowPassword = () => {
+    setShowPassword(true);
+    // Hide after 2 seconds
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setShowPassword(false), 2000);
+  };
+
+  return (
+    <div className="relative">
+      <input
+        type={showPassword ? "text" : "password"}
+        placeholder="Password"
+        className={`w-full p-2 border-b border-gray-200 border-t-0 border-l-0 border-r-0 focus:border-t focus:border-gray-500 focus:ring-0 ${
+          error ? "border-red-500" : ""
+        }`}
+        value={value}
+        onChange={onChange}
+        disabled={disabled}
+      />
+      <button
+        type="button"
+        className="absolute right-2 top-1/2 -translate-y-1/2"
+        onClick={handleShowPassword}
+        tabIndex={-1}
+      >
+        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+      </button>
+      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+    </div>
+  );
+}
 
 export default function LoginPage() {
   const router = useRouter()
@@ -191,17 +235,12 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <input
-                type="password"
-                placeholder="Password"
-                className={`w-full p-2 border-b border-gray-200 border-t-0 border-l-0 border-r-0 focus:border-t focus:border-gray-500 focus:ring-0 ${
-                  errors.password ? "border-red-500" : ""
-                }`}
+              <PasswordInput
                 value={password}
                 onChange={handlePasswordChange}
                 disabled={isLoading}
+                error={errors.password}
               />
-              {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
             </div>
 
             <div className="flex justify-between items-center">
