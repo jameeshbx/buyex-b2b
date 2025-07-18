@@ -79,14 +79,11 @@ export const formSchema = z
     senderName: z.string().optional(),
     relationship: z.enum(["self", "parent", "brother", "sister", "spouse", "other"]).optional(),
     bankCharges: z.enum(["resident", "nri", "pio"]).optional(),
-    mothersName: z.string().optional(),
     dob: dobValidation.optional(),
     senderNationality: z.enum(["indian", "american", "british", "canadian", "australian"]).optional(),
     senderEmail: emailValidation.optional(),
     sourceOfFunds: z.enum(["salary", "savings", "business", "investment"]).optional(),
     occupationStatus: z.enum(["employed", "self-employed", "business-owner", "retired", "student"]).optional(),
-    payerAccountNumber: z.string().optional(),
-    payerBankName: z.string().optional(),
     senderAddressLine1: z.string().optional(),
     senderAddressLine2: z.string().optional(),
     senderState: z.string().optional(),
@@ -119,13 +116,7 @@ export const formSchema = z
         })
       }
 
-      if (!data.mothersName || data.mothersName.trim() === "") {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Mother's name is required",
-          path: ["mothersName"],
-        })
-      }
+    
 
       if (!data.dob || data.dob.trim() === "") {
         ctx.addIssue({
@@ -159,21 +150,7 @@ export const formSchema = z
         })
       }
 
-      if (!data.payerAccountNumber || data.payerAccountNumber.trim() === "") {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Payer account number is required",
-          path: ["payerAccountNumber"],
-        })
-      }
 
-      if (!data.payerBankName || data.payerBankName.trim() === "") {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Payer bank name is required",
-          path: ["payerBankName"],
-        })
-      }
 
       if (!data.senderAddressLine1 || data.senderAddressLine1.trim() === "") {
         ctx.addIssue({

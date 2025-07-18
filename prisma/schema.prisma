@@ -105,14 +105,11 @@ model Sender {
   relationship         String   @default("self")
   senderName           String?
   bankCharges          String?
-  mothersName          String?
   dob                  String?
   senderNationality    String?  @default("indian")
   senderEmail          String?
   sourceOfFunds        String?
   occupationStatus     String?
-  payerAccountNumber   String?
-  payerBankName        String?
   senderAddressLine1   String?
   senderAddressLine2   String?
   senderState          String?
