@@ -20,6 +20,7 @@ model User {
   updatedAt      DateTime             @updatedAt
   organisationId String?
   status         Boolean              @default(true)
+  agentRate      Float?               @default(0)
   accounts       Account[]
   resetTokens    PasswordResetToken[]
   sessions       Session[]
@@ -72,7 +73,7 @@ model Organisation {
   id          String   @id @default(cuid())
   name        String
   slug        String   @unique
-  email       String
+  email       String   @unique
   commission  Float    @default(0)
   phoneNumber String
   logoUrl     String?

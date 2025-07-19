@@ -97,4 +97,11 @@ export const pagesData: Record<string, PageData> = {
       { label: "Native users", href: "/super-admin/dashboard/native-users", current: true },
     ],
   },
+  organisations: {
+    title: "Manage Organizations",
+    breadcrumbs: [
+      { label: "Dashboard", href: "/super-admin/dashboard" },
+      { label: "Organizations", href: "/super-admin/dashboard/organisation", current: true },
+    ],
+  },
 }

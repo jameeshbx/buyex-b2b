@@ -262,9 +262,8 @@ export default function OrderDetailsForm() {
   useEffect(() => {
     if (currency) {
       getLiveRate(currency, "INR").then((rate: number) => {
-        //@ts-expect-error - Organisation is not defined in the user type
-        const agentRate = rate + (user?.organisation?.commission ?? 0);
-        form.setValue("ibrRate", agentRate.toString());
+        const ibrRate = rate + (user?.agentRate ?? 0);
+        form.setValue("ibrRate", ibrRate.toString());
       });
     }
   }, [currency, form, user]);
@@ -690,25 +689,6 @@ export default function OrderDetailsForm() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
-                  name="margin"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-gray-700 font-normal">
-                        Margin
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          className="bg-blue-50/50 border-blue-200 shadow-lg h-12"
-                          placeholder="Enter margin"
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
                   name="ibrRate"
                   render={({ field }) => (
                     <FormItem>
@@ -720,6 +700,24 @@ export default function OrderDetailsForm() {
                           {...field}
                           className="bg-blue-50/50 border-blue-200 shadow-lg h-12"
                           readOnly
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="margin"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-700 font-normal">
+                        Margin
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          className="bg-blue-50/50 border-blue-200 shadow-lg h-12"
+                          placeholder="Enter margin"
                         />
                       </FormControl>
                     </FormItem>
