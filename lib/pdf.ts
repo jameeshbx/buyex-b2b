@@ -33,14 +33,12 @@ interface Order {
     relationship: string;
     senderName: string;
     bankCharges: string;
-    mothersName: string;
+    
     dob: string;
     senderNationality: string;
     senderEmail: string;
     sourceOfFunds: string;
     occupationStatus: string;
-    payerAccountNumber: string;
-    payerBankName: string;
     senderAddressLine1: string;
     senderAddressLine2: string;
     senderState: string;
@@ -121,7 +119,7 @@ export async function generateA2Form(order: Order) {
     relation: order.sender?.relationship || '',
 
     forexPurpose: order.purpose || '',
-    forexAmountUSD: order.amount.toString(),
+    forexAmountUSD: order.amount.toString() + ' ' + order.currency,
     forexAmountINR: order.totalAmount.toString(),
     country: order.receiverBankCountry || '',
     source: order.sender?.sourceOfFunds || '',
@@ -132,7 +130,7 @@ export async function generateA2Form(order: Order) {
     bankAddress: order.beneficiary?.receiverBankAddress || '',
     swiftCode: order.beneficiary?.receiverBankSwiftCode || '',
     abaCode: order.beneficiary?.receiverBankSwiftCode || '',
-    reference: order.sender?.payerAccountNumber || '',
+    reference:  '',
   };
 
   // Add text to first page (coordinates are approximate; adjust as per actual form layout)
@@ -153,6 +151,7 @@ export async function generateA2Form(order: Order) {
 
   // Add text to second page
   if (secondPage) {
+    drawText(data.forexAmountUSD, 150, height - 120, 10, secondPage);
     drawText(data.forexAmountUSD, 450, height - 150, 10, secondPage);
     drawText(data.forexAmountINR, 150, height - 150, 10, secondPage);
     drawText(data.country, 200, height - 175, 10, secondPage);

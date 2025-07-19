@@ -13,9 +13,9 @@ export default function WhyUs() {
       desc: "We partner with RBI-authorized forex providers to deliver compliant, efficient, and scalable foreign exchange solutions. Our platform bridges the gap between forex institutions and consultancies.",
     },
     {
-      value: "5000+",
-      title: "Forex Service Locations Across India",
-      desc: "With a vast network of over 5000 forex service locations nationwide, we ensure fast and convenient access to foreign exchange services wherever you are.",
+      value: "3500+",
+      title: "International student payments",
+      desc: "We’re proud to have enabled smooth university fee transfers for over 2,500 students, making global payments to institutions faster and easier. With a focus on transparency, reliability, and growing trust, we continue to support study abroad journeys through efficient and dependable cross-border payment solutions..",
     },
   ];
 
@@ -55,15 +55,7 @@ export default function WhyUs() {
             />
           </div>
 
-          {/* Chart image - Only visible on lg screens and above */}
-          <div className="hidden lg:flex justify-center mt-10 md:mt-12 lg:mt-0 relative lg:absolute lg:right-[10%] lg:top-[20%]">
-            <Image
-              src="/Frame.png"
-              alt="Parameter B Chart"
-              width={200}
-              height={120}
-            />
-          </div>
+          
 
           {/* Responsive Cards */}
           <div className="flex flex-col md:flex-row md:justify-around md:gap-6 mt-12 text-center relative lg:static">

@@ -34,28 +34,28 @@ export default function Footer() {
             </ul>
           </div>
 
-         {/* Explore */}
-<div>
-  <h3 className="font-semibold text-lg mb-4 font-jakarta">Explore</h3>
-  <ul className="space-y-2 font-jakarta">
-    {[
-      { name: "BE News", path: "/benews" },
-      { name: "Testimonials", path: "/testimonials" },
-      { name: "Awards and Recognitions", path: "/awards" },
-      { name: "Terms and Conditions", path: "/terms-and-conditions" },
-      { name: "Privacy Policy", path: "/privacy-policy" }
-    ].map((item) => (
-      <li key={item.name}>
-        <Link 
-          href={item.path} 
-          className="text-gray-600 hover:text-gray-900"
-        >
-          {item.name}
-        </Link>
-      </li>
-    ))}
-  </ul>
-</div>
+          {/* Explore */}
+          <div>
+            <h3 className="font-semibold text-lg mb-4 font-jakarta">Explore</h3>
+            <ul className="space-y-2 font-jakarta">
+              {[
+                { name: "BE News", path: "/benews" },
+                { name: "Testimonials", path: "/testimonials" },
+                { name: "Awards and Recognitions", path: "/awards" },
+                { name: "Terms and Conditions", path: "/terms-and-conditions" },
+                { name: "Privacy Policy", path: "/privacy-policy" }
+              ].map((item) => (
+                <li key={item.name}>
+                  <Link
+                    href={item.path}
+                    className="text-gray-600 hover:text-gray-900"
+                  >
+                    {item.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
 
           {/* Office Location */}
           <div>
@@ -85,25 +85,36 @@ export default function Footer() {
             </button>
           </div>
         </div>
-     
+
 
         {/* Disclaimer */}
         <div className="border-t border-gray-300 mt-12 pt-6 text-center">
-        <div className="flex justify-center space-x-6 mt-12">
-          {[
-            { href: "#", src: "/twitter.png", alt: "Twitter" },
-            { href: "#", src: "/linkedin.png", alt: "LinkedIn" },
-            { href: "#", src: "/facebook.png", alt: "Facebook" },
-          ].map(({ href, src, alt }) => (
-            <Link key={alt} href={href} className="text-gray-600 hover:text-gray-900">
-              <Image src={src} alt={alt} width={24} height={24} />
-              <span className="sr-only">{alt}</span>
-            </Link>
-          ))}
-        </div>
-          <p className="text-sm text-gray-500 mb-4 font-jakarta">© 2025 Buy Exchange. All Rights Reserved.</p>
+          <div className="flex justify-center space-x-6 mt-12">
+            {[
+              { href: "#", src: "/twitter.png", alt: "Twitter" },
+              { href: "#", src: "/linkedin.png", alt: "LinkedIn" },
+              { href: "#", src: "/facebook.png", alt: "Facebook" },
+            ].map(({ href, src, alt }) => (
+              <Link key={alt} href={href} className="text-gray-600 hover:text-gray-900">
+                <Image src={src} alt={alt} width={24} height={24} />
+                <span className="sr-only">{alt}</span>
+              </Link>
+            ))}
+          </div>
+          <p className="text-sm text-gray-500 mb-4 font-jakarta">
+           Coded by{" "}
+            <a
+              href="https://lotusbluesolutions.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500 hover:underline"
+            >
+              Lotus Blue Technologies
+            </a> | © 2025 Buyex Fintech Solutions Pvt Ltd. <br/>All Rights Reserved.
+          </p>
+
           <p className="text-xs text-gray-500 max-w-4xl mx-auto font-jakarta">
-            Buyexchange.in is a digital platform - it is not an Authorised Dealer and does not hold or claim to hold an
+            Buy exchange.in is a digital platform - it is not an Authorised Dealer and does not hold or claim to hold an
             AD licence by RBI. The forex services offered on the Buy Exchange portal are powered by our Partner Banks &
             RBI Authorised Dealers, following all security standards and FEMA regulations as per RBI norms.
           </p>

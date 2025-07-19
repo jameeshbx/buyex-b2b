@@ -13,8 +13,23 @@ type ApiUser = {
   name: string
   email: string
   status: boolean
-  createdAt: string
+  createdAt: string // ISO string
   role: string
+  agentRate?: number | null // agentRate can be null if not an agent
+}
+
+// Helper function to convert UserType to API role
+const convertUserTypeToRole = (userType: UserType): string => {
+  switch (userType) {
+    case "Admin":
+      return "ADMIN"
+    case "Staff":
+      return "MANAGER"
+    case "Agent":
+      return "AGENT"
+    default:
+      return "MANAGER" // default fallback
+  }
 }
 
 export default function UserManagement() {
@@ -29,15 +44,17 @@ export default function UserManagement() {
     const fetchUsers = async () => {
       try {
         setLoading(true)
+        // Pass the current user's role to the API for access control simulation
         const response = await axios.get(`/api/users?role=${session?.user?.role}`)
         const transformedUsers = response.data.map((apiUser: ApiUser) => ({
           id: apiUser.id,
-          userId: apiUser.id,
+          userId: apiUser.id, // Keeping userId for consistency with existing client code
           name: apiUser.name,
           email: apiUser.email,
           status: apiUser.status,
-          date: apiUser.createdAt,
-          userType: apiUser.role === "ADMIN" ? "Admin" : "Staff",
+          date: apiUser.createdAt, // Already an ISO string from API
+          userType: convertRoleToUserType(apiUser.role),
+          agentRate: apiUser.agentRate ?? undefined, // Convert null to undefined for client type
         }))
         setUsers(transformedUsers)
       } catch (error) {
@@ -53,32 +70,46 @@ export default function UserManagement() {
     }
   }, [session])
 
+  // Helper function to convert API role to UserType
+  const convertRoleToUserType = (role: string): UserType => {
+    switch (role) {
+      case "ADMIN":
+        return "Admin"
+      case "MANAGER":
+        return "Staff"
+      case "AGENT":
+        return "Agent"
+      default:
+        return "Staff" // default fallback
+    }
+  }
+
   const handleAddUser = async (user: UserFormData) => {
     try {
       const response = await axios.post("/api/users", {
         userType: user.userType,
         name: user.name,
         email: user.email,
-        status: true,
+        agentRate: user.userType === "Agent" ? user.agentRate : undefined,
+        // status is defaulted to true on the server
       })
-
       if (response.status === 201) {
-        const newUser = {
+        const newUser: User = {
           id: response.data.user.id,
           userId: response.data.user.id,
           name: response.data.user.name,
           email: response.data.user.email,
           status: response.data.user.status,
-          date: response.data.user.createdAt,
-          userType: response.data.user.role === "ADMIN" ? ("Admin" as UserType) : ("Staff" as UserType),
+          date: response.data.user.date, // API now returns 'date' as ISO string
+          userType: convertRoleToUserType(response.data.user.userType), // API returns userType directly
+          agentRate: response.data.user.agentRate ?? undefined,
         }
-
         setUsers([newUser, ...users])
       }
     } catch (err) {
       console.error("Error adding user:", err)
       setError("Failed to add user")
-      throw err // Re-throw to let the form handle the error
+      throw err
     }
   }
 
@@ -86,11 +117,9 @@ export default function UserManagement() {
     try {
       const user = users.find((u) => u.id === id)
       if (!user) return
-
       const response = await axios.put(`/api/users?id=${id}`, {
         status: !user.status,
       })
-
       if (response.status === 200) {
         setUsers(users.map((u) => (u.id === id ? { ...u, status: !u.status } : u)))
       }
@@ -103,7 +132,6 @@ export default function UserManagement() {
   const handleDeleteUser = async (id: string) => {
     try {
       const response = await axios.delete(`/api/users?id=${id}`)
-
       if (response.status === 200) {
         setUsers(users.filter((u) => u.id !== id))
       }
@@ -113,28 +141,38 @@ export default function UserManagement() {
     }
   }
 
-  const handleEditUser = async (id: string, userData: { name: string; email: string; userType: UserType }) => {
+  const handleEditUser = async (
+    id: string,
+    userData: {
+      name: string
+      email: string
+      userType: UserType
+      agentRate?: number
+    },
+  ) => {
     try {
       const response = await axios.put(`/api/users?id=${id}`, {
         name: userData.name,
         email: userData.email,
-        role: userData.userType === "Admin" ? "ADMIN" : "MANAGER",
+        role: convertUserTypeToRole(userData.userType), // Convert client userType to DB role
+        agentRate: userData.userType === "Agent" ? userData.agentRate : undefined,
       })
-
       if (response.status === 200) {
         setUsers(
           users.map((u) =>
             u.id === id
               ? {
-                ...u,
-                name: userData.name,
-                email: userData.email,
-                userType: userData.userType,
-              }
+                  ...u,
+                  name: response.data.name,
+                  email: response.data.email,
+                  userType: convertRoleToUserType(response.data.role), // Convert DB role back to client userType
+                  agentRate: response.data.agentRate ?? undefined,
+                  status: response.data.status, // Ensure status is updated from API response
+                }
               : u,
           ),
         )
-        return true // Success
+        return true
       }
       return false
     } catch (error) {
@@ -164,7 +202,6 @@ export default function UserManagement() {
           </button>
         </div>
       )}
-
       <UserForm onAddUser={handleAddUser} />
       <UserTable
         users={users}

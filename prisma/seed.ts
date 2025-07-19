@@ -15,6 +15,16 @@ async function main() {
       },
     });
 
+    const org1 = await prisma.organisation.create({
+      data: {
+        name: "Agent 1",
+        slug: "agent-1",
+        email: "agent1@buyex.com",
+        phoneNumber: "+1234567890",
+        commission: 0.2,
+      },
+    });
+
     // Create Super Admin
     const superAdminPassword = await bcrypt.hash("@Password123", 10);
     const superAdmin = await prisma.user.create({
@@ -41,7 +51,36 @@ async function main() {
       },
     });
 
-    console.log("Successfully created users:", { superAdmin, admin });
+    const staffPassword = await bcrypt.hash("Staff@123", 10);
+    const staff = await prisma.user.create({
+      data: {
+        email: "staff@buyex.com",
+        name: "Staff User",
+        password: staffPassword,
+        role: UserRole.MANAGER,
+        emailVerified: new Date(),
+        organisationId: mainOrg.id,
+      },
+    });
+
+    const agent1Password = await bcrypt.hash("Agent@123", 10);
+    const agent1 = await prisma.user.create({
+      data: {
+        email: "agent1@buyex.com",
+        name: "Agent 1",
+        password: agent1Password,
+        role: UserRole.AGENT,
+        emailVerified: new Date(),
+        organisationId: org1.id,
+      },
+    });
+
+    console.log("Successfully created users:", {
+      superAdmin,
+      admin,
+      staff,
+      agent1,
+    });
   } catch (error) {
     console.error("Error seeding database:", error);
     throw error;

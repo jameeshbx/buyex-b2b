@@ -66,7 +66,7 @@ export default function DocumentUploadForm({
   const [isLoadingDocuments, setIsLoadingDocuments] = useState(false);
 
   useEffect(() => {
-    if (currentUser === undefined) {
+    if (currentUser === null) {
       // Only fetch if not provided
       const fetchCurrentUser = async () => {
         try {
@@ -74,6 +74,7 @@ export default function DocumentUploadForm({
             withCredentials: true,
           });
           setCurrentUserState(response.data);
+          console.log("Current user:", response.data.role);
         } catch {
           setCurrentUserState(null);
         }
@@ -144,17 +145,15 @@ export default function DocumentUploadForm({
             // Staff user - must have sender details to proceed
             if (order.data.senderId) {
               try {
-                const sender = await axios.get(
-                  `/api/senders/${order.data.senderId}`
-                );
+                const sender = await axios.get(`
+                  /api/senders/${order.data.senderId}`);
                 if (sender.data) {
                   setSenderDetails(sender.data);
                 } else {
                   // Sender ID exists but no sender data found
                   toast.error("Sender details not found");
-                  router.push(
-                    `/staff/dashboard/sender-details?orderId=${orderId}`
-                  );
+                  router.push(`
+                    /staff/dashboard/sender-details?orderId=${orderId}`);
                   return;
                 }
               } catch {
@@ -174,9 +173,8 @@ export default function DocumentUploadForm({
             // Student, user, or not logged in - allow upload without sender details check
             if (order.data.senderId) {
               try {
-                const sender = await axios.get(
-                  `/api/senders/${order.data.senderId}`
-                );
+                const sender = await axios.get(`
+                  /api/senders/${order.data.senderId}`);
                 if (sender.data) {
                   setSenderDetails(sender.data);
                 }
@@ -314,6 +312,14 @@ export default function DocumentUploadForm({
     e.preventDefault();
     setIsSubmitting(true);
 
+    // If MANAGER and documents already exist, just redirect
+    if (currentUserState?.role === "MANAGER" && existingDocuments.length > 0) {
+      toast.info("Documents already uploaded. Redirecting to order preview...");
+      router.push(`/staff/dashboard/order-preview?orderId=${orderId}`);
+      setIsSubmitting(false);
+      return;
+    }
+
     if (!validateForm()) {
       toast.error("Please fill all required fields");
       setIsSubmitting(false);
@@ -356,7 +362,7 @@ export default function DocumentUploadForm({
       const uploadedBy = getUploadedBy();
 
       // Add KYC files
-      if (formState.kyc.pan) {
+      if (formState.kyc.pan || formState.kyc.panUrl) {
         filesArray.push({
           role: "SENDER",
           type: "PAN",
@@ -366,10 +372,11 @@ export default function DocumentUploadForm({
           name: "Pancard",
           uploadedBy,
           comment: "Sender Pancard",
+          fileSize: formState.kyc.pan?.size || null,
         });
       }
 
-      if (formState.kyc.identity) {
+      if (formState.kyc.identity || formState.kyc.identityUrl) {
         filesArray.push({
           role: "SENDER",
           type: "IDENTITY",
@@ -379,6 +386,7 @@ export default function DocumentUploadForm({
           name: "Identity Document",
           uploadedBy,
           comment: "Sender Identity document",
+          fileSize: formState.kyc.identity?.size || null,
         });
       }
 
@@ -387,7 +395,7 @@ export default function DocumentUploadForm({
         for (const item of CHECKLIST_FIELDS[purpose]) {
           const file = formState.checklist?.[item.type];
           const fileUrl = formState.checklist?.[`${item.type}Url`];
-          if (file) {
+          if (file || fileUrl) {
             filesArray.push({
               role: "SENDER",
               type: item.type,
@@ -397,6 +405,7 @@ export default function DocumentUploadForm({
               name: item.label,
               uploadedBy,
               comment: `Sender ${item.label}`,
+              fileSize: file instanceof File ? file.size : null,
             });
           }
         }
@@ -406,7 +415,7 @@ export default function DocumentUploadForm({
       if (educationLoan === "yes") {
         const file = formState.checklist?.["LOAN_SANCTION_LETTER"];
         const fileUrl = formState.checklist?.["LOAN_SANCTION_LETTERUrl"];
-        if (file) {
+        if (file || fileUrl) {
           filesArray.push({
             role: "SENDER",
             type: "LOAN_SANCTION_LETTER",
@@ -416,6 +425,7 @@ export default function DocumentUploadForm({
             name: "Loan Sanction Letter",
             uploadedBy,
             comment: "Loan Sanction Letter",
+            fileSize: file instanceof File ? file.size : null,
           });
         }
       }
@@ -453,8 +463,24 @@ export default function DocumentUploadForm({
           console.log("Document uploaded successfully:", result);
           uploadedCount++;
         } catch (fileError) {
-          console.error(`Error uploading ${file.name}:`, fileError);
+          console.error(`Error uploading ${file.name}:, fileError`);
           throw fileError;
+        }
+      }
+
+      // After successful uploads, update order status if not MANAGER
+      if (currentUserState?.role !== "MANAGER") {
+        try {
+          await fetch(`/api/orders/${orderId}`, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ status: "DocumentsPlaced" }),
+          });
+        } catch (err) {
+          console.error("Failed to update order status:", err);
+          // Optionally show a toast or handle error
         }
       }
 
@@ -687,7 +713,7 @@ export default function DocumentUploadForm({
                         typeof formState.checklist?.[`${item.type}S3Key`] ===
                         "string"
                           ? (formState.checklist?.[
-                              `${item.type}S3Key`
+                              ` ${item.type}S3Key`
                             ] as string)
                           : undefined
                       }

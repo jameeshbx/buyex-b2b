@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { generateOrderId } from "@/lib/utils";
 // GET /api/orders - Get all orders
 export async function GET() {
   try {
@@ -77,8 +78,23 @@ export async function POST(req: Request) {
       return new NextResponse(`Invalid status: ${status}`, { status: 400 })
     }
     
+    // Generate custom order id
+    const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+    const countToday = await db.order.count({
+      where: {
+        createdAt: {
+          gte: todayStart,
+          lt: todayEnd,
+        },
+      },
+    });
+    const customId = generateOrderId(countToday + 1, today);
+
     const order = await db.order.create({
       data: {
+        id: customId,
         purpose,
         foreignBankCharges: parseFloat(foreignBankCharges) || 0,
         payer,

@@ -1,13 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
-import Link from "next/link"
+import Link from "next/link";
 import {
   ChevronDown,
   ChevronRight,
   Upload,
   Search,
   Filter,
-  
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -95,15 +94,15 @@ type Beneficiary = {
   status: boolean;
 };
 
-const nonChangeableStatuses = ["QuoteDownloaded", "Documents placed"];
+const nonChangeableStatuses = ["QuoteDownloaded", "DocumentsPlaced"];
 const ChangeableStatuses = [
   "Received",
   "Pending",
   "Rejected",
   "Completed",
-  "Verified",
+  "RateCovered", // <-- changed from "Rate-Covered"
   "Blocked",
-  "Authorize",
+  "Authorized",
 ];
 
 export default function Dashboard() {
@@ -123,7 +122,6 @@ export default function Dashboard() {
   const [ibrRate, setIbrRate] = useState<string>("");
   const [customerRate, setCustomerRate] = useState<string>("");
   const [settlementRate, setSettlementRate] = useState<string>("");
-  const [visibleRows, setVisibleRows] = useState(5);
   const [selectedPurpose, setSelectedPurpose] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -147,6 +145,8 @@ export default function Dashboard() {
     >
   >({});
   const [AuthorizeOrders] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const ordersPerPage = 10; // Adjust as needed
 
   // Fetch beneficiary details
   const fetchBeneficiary = async (beneficiaryId: string) => {
@@ -304,18 +304,15 @@ export default function Dashboard() {
     }
   };
 
-  const handleSeeMoreClick = () => setVisibleRows((prev) => prev + 5);
-  const handleSeeLessClick = () => setVisibleRows(5);
-
   const getStatusBadgeColor = (status: string) => {
     switch (status.toLowerCase()) {
       case "received":
         return "bg-blue-100 text-blue-800 hover:bg-blue-200";
       case "QuoteDownloaded":
         return "bg-green-100 text-green-800 hover:bg-green-200";
-      case "Authorize":
+      case "Authorized":
         return "bg-green-100 text-green-800 hover:bg-green-200";
-      case "documents placed":
+      case "documentsplaced":
         return "bg-yellow-100 text-yellow-800 hover:bg-yellow-200";
       case "Blocked":
         return "bg-emerald-100 text-emerald-800 hover:bg-emerald-200";
@@ -339,7 +336,7 @@ export default function Dashboard() {
       const statusRes = await fetch(`/api/orders/${orderId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "Authorize" }),
+        body: JSON.stringify({ status: "Authorized" }),
       });
 
       if (!statusRes.ok) throw new Error("Failed to update status");
@@ -455,6 +452,12 @@ export default function Dashboard() {
     return matchesPurpose && matchesSearch;
   });
 
+  const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
+  const paginatedOrders = filteredOrders.slice(
+    (currentPage - 1) * ordersPerPage,
+    currentPage * ordersPerPage
+  );
+
   // Modify the IBR submit handler to only update the rate
   const handleIbrSubmit = async (e?: React.FormEvent) => {
     if (e) {
@@ -551,24 +554,7 @@ export default function Dashboard() {
                 Order history
               </CardTitle>
               <div className="flex gap-2">
-                {visibleRows < filteredOrders.length && (
-                  <Button
-                    variant="ghost"
-                    className="text-dark-blue hover:text-blue-800 text-sm sm:text-base"
-                    onClick={handleSeeMoreClick}
-                  >
-                    See More
-                  </Button>
-                )}
-                {visibleRows > 5 && (
-                  <Button
-                    variant="ghost"
-                    className="text-dark-blue hover:text-blue-800 text-sm sm:text-base"
-                    onClick={handleSeeLessClick}
-                  >
-                    See Less
-                  </Button>
-                )}
+                {/* Removed See More/See Less buttons */}
               </div>
             </div>
             {/* Filter and Search Section */}
@@ -638,10 +624,10 @@ export default function Dashboard() {
                 <div>Action</div>
               </div>
               {/* Order Rows - Only show visibleRows */}
-              {filteredOrders.slice(0, visibleRows).map((order) => {
+              {paginatedOrders.map((order) => {
                 const beneficiaryId = order.beneficiaryId || order.id;
                 const beneficiary = beneficiaries[beneficiaryId];
-                const showAuthorizeButton = order.status === "Received";
+                const showAuthorizeButton = order.status === "Received" || order.status === "RateCovered";
 
                 return (
                   <React.Fragment key={order.id}>
@@ -700,15 +686,17 @@ export default function Dashboard() {
                           {renderStatusElement(order)}
                         </div>
                         <div onClick={(e) => e.stopPropagation()}>
-                        <Link href={`/admin/dashboard/upload-files/${order.id}`}>
-                          <Button
-                            size="sm"
-                            className="bg-dark-blue hover:bg-blue-700 text-white px-2 py-2 text-xs h-7"
+                          <Link
+                            href={`/admin/dashboard/upload-files/${order.id}`}
                           >
-                            <Upload className="h-2 w-2" />
-                            Uploads
-                          </Button>
-                        </Link>
+                            <Button
+                              size="sm"
+                              className="bg-dark-blue hover:bg-blue-700 text-white px-2 py-2 text-xs h-7"
+                            >
+                              <Upload className="h-2 w-2" />
+                              Uploads
+                            </Button>
+                          </Link>
                         </div>
                       </div>
                       {/* Mobile/Tablet Layout */}
@@ -771,15 +759,17 @@ export default function Dashboard() {
                             {order.fxRateUpdated ? "UPDATED" : "UPDATE RATE"}
                           </button>
                           <div onClick={(e) => e.stopPropagation()}>
-                          <Link href={`/admin/dashboard/upload-files/${order.id}`}>
-                          <Button
-                            size="sm"
-                            className="bg-dark-blue hover:bg-blue-700 text-white px-2 py-2 text-xs h-7"
-                          >
-                            <Upload className="h-2 w-2" />
-                            Uploads
-                          </Button>
-                        </Link>
+                            <Link
+                              href={`/admin/dashboard/upload-files/${order.id}`}
+                            >
+                              <Button
+                                size="sm"
+                                className="bg-dark-blue hover:bg-blue-700 text-white px-2 py-2 text-xs h-7"
+                              >
+                                <Upload className="h-2 w-2" />
+                                Uploads
+                              </Button>
+                            </Link>
                           </div>
                         </div>
                       </div>
@@ -872,7 +862,7 @@ export default function Dashboard() {
                                       className="w-8 h-8 sm:w-6 sm:h-6"
                                     />
                                     <span className="text-sm sm:text-base">
-                                      Authorize
+                                      Authorized
                                     </span>
                                     <div className="flex ml-1">
                                       <span className="text-white font-bold">
@@ -1309,7 +1299,7 @@ export default function Dashboard() {
                                       style={{
                                         background:
                                           AuthorizeOrders.has(order.id) ||
-                                          order.status === "Authorize"
+                                          order.status === "Authorized"
                                             ? "linear-gradient(to right, #61C454, #414143)"
                                             : "linear-gradient(to right, #614385, #516395)",
                                       }}
@@ -1323,9 +1313,9 @@ export default function Dashboard() {
                                       />
                                       <span className="text-sm sm:text-base">
                                         {AuthorizeOrders.has(order.id) ||
-                                        order.status === "Authorize"
-                                          ? "Authorize"
-                                          : "Authorize"}
+                                        order.status === "Authorized"
+                                          ? "Authorized"
+                                          : "Authorized"}
                                       </span>
                                       <div className="flex ml-1">
                                         <span className="text-white font-bold animate-bounce-slower">
@@ -1344,6 +1334,29 @@ export default function Dashboard() {
                   </React.Fragment>
                 );
               })}
+            </div>
+            <div className="flex justify-center items-center gap-2 my-4">
+              <Button
+                variant="outline"
+                className="px-3 py-1"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              >
+                Previous
+              </Button>
+              <span className="mx-2 text-sm">
+                Page {currentPage} of {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                className="px-3 py-1"
+                disabled={currentPage === totalPages}
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
+              >
+                Next
+              </Button>
             </div>
           </CardContent>
         </Card>

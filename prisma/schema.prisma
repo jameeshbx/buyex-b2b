@@ -73,6 +73,7 @@ model Organisation {
   name        String
   slug        String   @unique
   email       String
+  commission  Float    @default(0)
   phoneNumber String
   logoUrl     String?
   settings    Json?
@@ -105,14 +106,11 @@ model Sender {
   relationship         String   @default("self")
   senderName           String?
   bankCharges          String?
-  mothersName          String?
   dob                  String?
   senderNationality    String?  @default("indian")
   senderEmail          String?
   sourceOfFunds        String?
   occupationStatus     String?
-  payerAccountNumber   String?
-  payerBankName        String?
   senderAddressLine1   String?
   senderAddressLine2   String?
   senderState          String?
@@ -156,7 +154,7 @@ model Beneficiary {
 }
 
 model Order {
-  id                  String       @id @default(cuid())
+  id                  String       @id
   purpose             String
   foreignBankCharges  Float
   payer               String
@@ -225,6 +223,8 @@ enum UserRole {
   ADMIN
   USER
   MANAGER
+  AGENT
+  SUB_AGENT
   ORGANISATION_ADMIN
   ORGANISATION_USER
 }
@@ -253,12 +253,12 @@ enum DocumentRole {
 
 enum OrderStatus {
   Received
-  Verified
+  RateCovered
   Pending
   Rejected
   Completed
   QuoteDownloaded
-  Authorize
+  Authorized
   DocumentsPlaced
   RateExpired
   Blocked

@@ -106,8 +106,8 @@ export default function Dashboard() {
         return "bg-blue-100 text-blue-800 hover:bg-blue-200";
       case "QuoteDownloaded":
         return "bg-green-100 text-green-800 hover:bg-green-200";
-      case "authorize":
-        return "bg-red-100 text-red-800 hover:bg-red-200";
+      case "authorized":
+        return "bg-green-100 text-green-800 hover:bg-green-200";
       case "documents placed":
         return "bg-yellow-100 text-yellow-800 hover:bg-yellow-200";
       case "blocked":
@@ -123,10 +123,17 @@ export default function Dashboard() {
     }
   };
 
-  const getCustomerRateColor = (rate: number) => {
-    if (rate >= 0.4) return "bg-red-100 text-red-800";
-    if (rate >= 0.3) return "bg-green-100 text-green-800";
-    return "bg-gray-100 text-gray-800";
+  const getCustomerRateColor = (rate: number, status: string) => {
+    // Normalize status for comparison
+    const normalizedStatus = status.replace(/\s+/g, "").toLowerCase();
+    
+    // If status is QuoteDownloaded or DocumentsPlaced, return red color
+    if (normalizedStatus === "quotedownloaded" || normalizedStatus === "documentsplaced") {
+      return "bg-red-100 text-red-800";
+    }
+    
+    // For all other statuses, return green color
+    return "bg-green-100 text-green-800";
   };
 
   const formatDate = (dateString: string) => {
@@ -314,7 +321,8 @@ export default function Dashboard() {
                       <div>
                         <Badge
                           className={`${getCustomerRateColor(
-                            order.customerRate
+                            order.customerRate,
+                            orderStatuses[order.id] || order.status
                           )} border-0`}
                         >
                           {order.customerRate}
@@ -389,7 +397,8 @@ export default function Dashboard() {
                         <div className="flex items-center gap-2">
                           <Badge
                             className={`${getCustomerRateColor(
-                              order.customerRate
+                              order.customerRate,
+                              orderStatuses[order.id] || order.status
                             )} border-0`}
                           >
                             {order.customerRate}

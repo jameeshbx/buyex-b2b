@@ -17,14 +17,11 @@ export const orderReceivedTemplate = ({
   tcs,
   totalPayableAmount,
   residentStatus,
-  motherName,
   relationshipWithReceiver,
   senderAddressLine1,
   senderAddressLine2,
   funding,
-  senderAccountNo,
   ifsc,
-  bankName,
   branchName,
   agent,
   supportEmail,
@@ -48,14 +45,11 @@ export const orderReceivedTemplate = ({
   tcs: string | number;
   totalPayableAmount: string | number;
   residentStatus: string;
-  motherName: string;
   relationshipWithReceiver: string;
   senderAddressLine1: string;
   senderAddressLine2: string;
   funding: string;
-  senderAccountNo: string;
   ifsc: string;
-  bankName: string;
   branchName: string;
   agent: string;
   supportEmail: string;
@@ -112,14 +106,13 @@ export const orderReceivedTemplate = ({
           <h3 style="margin:0 0 12px 0;font-size:16px;font-weight:600;color:#1a1a2e;">Other Details</h3>
           <table style="width:100%;font-size:14px;color:#222;">
             <tr><td style="padding:4px 0;width:40%;">Resident status</td><td style="padding:4px 0;">${residentStatus}</td></tr>
-            <tr><td style="padding:4px 0;">Mother's name</td><td style="padding:4px 0;">${motherName}</td></tr>
             <tr><td style="padding:4px 0;">Relationship with receiver</td><td style="padding:4px 0;">${relationshipWithReceiver}</td></tr>
             <tr><td style="padding:4px 0;">Sender address line 1</td><td style="padding:4px 0;">${senderAddressLine1}</td></tr>
             <tr><td style="padding:4px 0;">Sender address line 2</td><td style="padding:4px 0;">${senderAddressLine2}</td></tr>
             <tr><td style="padding:4px 0;">Funding</td><td style="padding:4px 0;">${funding}</td></tr>
-            <tr><td style="padding:4px 0;">Sender account no.</td><td style="padding:4px 0;">${senderAccountNo}</td></tr>
+            
             <tr><td style="padding:4px 0;">IFSC</td><td style="padding:4px 0;">${ifsc}</td></tr>
-            <tr><td style="padding:4px 0;">Bank name</td><td style="padding:4px 0;">${bankName}</td></tr>
+           
             <tr><td style="padding:4px 0;">Branch name</td><td style="padding:4px 0;">${branchName}</td></tr>
             <tr><td style="padding:4px 0;">Agent</td><td style="padding:4px 0;">${agent}</td></tr>
           </table>
@@ -280,14 +273,14 @@ if (require.main === module) {
     tcs: 0,
     totalPayableAmount: 312939,
     residentStatus: 'Resident',
-    motherName: '',
+   
     relationshipWithReceiver: 'Self',
     senderAddressLine1: 'KANJIRAKATTUKUNNEL,MARIYAPURAM PO,IDUKKI',
     senderAddressLine2: 'PIN:685602,KERALA,INDIA',
     funding: 'Self',
-    senderAccountNo: '7736654323',
+    
     ifsc: '',
-    bankName: '',
+    
     branchName: 'University Fee Transfer',
     agent: '#AGT002 - Sample agent',
     supportEmail: 'support@buyexchange.in',
