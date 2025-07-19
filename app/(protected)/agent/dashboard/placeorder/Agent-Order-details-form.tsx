@@ -688,24 +688,7 @@ export default function OrderDetailsForm() {
               />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="margin"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-gray-700 font-normal">
-                        Margin
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          className="bg-blue-50/50 border-blue-200 shadow-lg h-12"
-                          placeholder="Enter margin"
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+             
 
                 <FormField
                   control={form.control}
@@ -720,6 +703,24 @@ export default function OrderDetailsForm() {
                           {...field}
                           className="bg-blue-50/50 border-blue-200 shadow-lg h-12"
                           readOnly
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                   <FormField
+                  control={form.control}
+                  name="margin"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-700 font-normal">
+                        Margin
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          className="bg-blue-50/50 border-blue-200 shadow-lg h-12"
+                          placeholder="Enter margin"
                         />
                       </FormControl>
                     </FormItem>
