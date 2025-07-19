@@ -196,6 +196,8 @@ export async function GET(req: Request) {
           name: true,
           email: true,
           createdAt: true,
+          organisationId: true,
+          agentRate: true,
         },
       });
 
@@ -208,36 +210,59 @@ export async function GET(req: Request) {
 
       return NextResponse.json(user);
     }
-if(role === "SUPER_ADMIN"){
-  const users = await db.user.findMany({
-    select: {
-      id: true,
-      role: true,
-      name: true,
-      email: true,
-      createdAt: true,
-      organisationId: true,
-      agentRate: true,
-    },
-  });
-  return NextResponse.json(users);
-} else {
-  const users = await db.user.findMany({
-    where: {
-      role: "MANAGER",
-    },
-    select: {
-      id: true,
-      role: true,
-      name: true,
-      email: true,
-      createdAt: true,
-      organisationId: true,
-      agentRate: true,
-    },
-  });
-    return NextResponse.json(users);
-}
+
+    // Handle role-based filtering
+    if (role === "SUPER_ADMIN") {
+      const users = await db.user.findMany({
+        select: {
+          id: true,
+          role: true,
+          name: true,
+          email: true,
+          createdAt: true,
+          organisationId: true,
+          agentRate: true,
+        },
+      });
+      return NextResponse.json(users);
+    } else if (role === "AGENT") {
+      // Fetch only agents for consultancy dropdown
+      const agents = await db.user.findMany({
+        where: {
+          role: "AGENT",
+          status: true, // Only active agents
+        },
+        select: {
+          id: true,
+          role: true,
+          name: true,
+          email: true,
+          createdAt: true,
+          organisationId: true,
+          agentRate: true,
+        },
+        orderBy: {
+          name: 'asc', // Sort by name alphabetically
+        },
+      });
+      return NextResponse.json(agents);
+    } else {
+      const users = await db.user.findMany({
+        where: {
+          role: "MANAGER",
+        },
+        select: {
+          id: true,
+          role: true,
+          name: true,
+          email: true,
+          createdAt: true,
+          organisationId: true,
+          agentRate: true,
+        },
+      });
+      return NextResponse.json(users);
+    }
   } catch (error) {
     console.error("Error fetching users:", error);
     return NextResponse.json(
