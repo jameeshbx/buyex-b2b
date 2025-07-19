@@ -44,7 +44,7 @@ export const sendEmailToForexPartner = async (documents: string[]) => {
     // Generate zip file
     const zipBuffer = await zip.generateAsync({ type: 'nodebuffer' });
     
-    const email = "jameesh@buyexchange.in";
+    const email = "amrutha@buyexchange.in";
     const subject = "New Order - Documents Attached";
     const html = `
       <p>A new order has been created.</p>
@@ -54,7 +54,8 @@ export const sendEmailToForexPartner = async (documents: string[]) => {
     
     // Send email with zip attachment
     await sendEmailWithAttachment({ 
-      to: email, 
+      to: email,
+      cc: "ratheesh@buyexchange.in",
       subject, 
       html,
       attachments: [{
