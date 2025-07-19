@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "users" ADD COLUMN     "agentRate" DOUBLE PRECISION DEFAULT 0;

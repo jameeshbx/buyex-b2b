@@ -19,5 +19,6 @@ export interface UserFormData {
   userId: string;
   name: string;
   email: string;
+  organisationId?: string;
   agentRate?: number;
 }
