@@ -89,10 +89,17 @@ export default function Dashboard() {
     }
   };
 
-  const getCustomerRateColor = (rate: number) => {
-    if (rate >= 0.4) return "bg-red-100 text-red-800";
-    if (rate >= 0.3) return "bg-green-100 text-green-800";
-    return "bg-gray-100 text-gray-800";
+  const getCustomerRateColor = (rate: number, status: string) => {
+    // Normalize status for comparison
+    const normalizedStatus = status.replace(/\s+/g, "").toLowerCase();
+    
+    // If status is QuoteDownloaded or DocumentsPlaced, return red color
+    if (normalizedStatus === "quotedownloaded" || normalizedStatus === "documentsplaced") {
+      return "bg-red-100 text-red-800";
+    }
+    
+    // For all other statuses, return green color
+    return "bg-green-100 text-green-800";
   };
 
   const formatDate = (dateString: string) => {
@@ -221,20 +228,21 @@ export default function Dashboard() {
                         {order.totalAmount}
                       </div>
                       <div>
-                        <Badge
-                          className={`${getCustomerRateColor(
-                            order.customerRate
-                          )} border-0`}
-                        >
-                          {order.customerRate}
-                        </Badge>
+                      <Badge
+                            className={`${getCustomerRateColor(
+                              order.customerRate,
+                              order.status
+                            )} border-0`}
+                          >
+                            {order.customerRate}
+                          </Badge>
                       </div>
                       <div>
                         {renderStatusElement(order)}
                       </div>
                       <div onClick={(e) => e.stopPropagation()}>
                         <Link
-                          href={`/staff/dashboard/upload-files/${order.id}`}
+                          href={`/agent/dashboard/upload-files/${order.id}`}
                         >
                           <Button
                             size="sm"
@@ -296,9 +304,10 @@ export default function Dashboard() {
 
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <Badge
+                        <Badge
                             className={`${getCustomerRateColor(
-                              order.customerRate
+                              order.customerRate,
+                              order.status
                             )} border-0`}
                           >
                             {order.customerRate}
@@ -309,7 +318,7 @@ export default function Dashboard() {
                         </div>
                         <div onClick={(e) => e.stopPropagation()}>
                           <Link
-                            href={`/staff/dashboard/upload-files/${order.id}`}
+                            href={`/agent/dashboard/upload-files/${order.id}`}
                           >
                             <Button
                               size="sm"
