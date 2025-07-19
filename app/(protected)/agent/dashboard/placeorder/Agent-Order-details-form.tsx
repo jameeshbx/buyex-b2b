@@ -262,9 +262,8 @@ export default function OrderDetailsForm() {
   useEffect(() => {
     if (currency) {
       getLiveRate(currency, "INR").then((rate: number) => {
-        //@ts-expect-error - Organisation is not defined in the user type
-        const agentRate = rate + (user?.organisation?.commission ?? 0);
-        form.setValue("ibrRate", agentRate.toString());
+        const ibrRate = rate + (user?.agentRate ?? 0);
+        form.setValue("ibrRate", ibrRate.toString());
       });
     }
   }, [currency, form, user]);
@@ -688,8 +687,6 @@ export default function OrderDetailsForm() {
               />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-             
-
                 <FormField
                   control={form.control}
                   name="ibrRate"
@@ -708,7 +705,7 @@ export default function OrderDetailsForm() {
                     </FormItem>
                   )}
                 />
-                   <FormField
+                <FormField
                   control={form.control}
                   name="margin"
                   render={({ field }) => (
