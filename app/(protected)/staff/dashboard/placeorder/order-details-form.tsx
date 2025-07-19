@@ -54,6 +54,13 @@ interface JsPDFWithAutoTable extends jsPDF {
   };
 }
 
+interface Agent {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
 async function generateQuotePDF(
   formData: OrderDetailsFormValues,
   calculatedValues: CalculatedValues,
@@ -168,6 +175,8 @@ export default function OrderDetailsForm() {
   const [isQuoteDownloaded, setIsQuoteDownloaded] = useState(false);
   const { data: session, status } = useSession();
   const [orderId, setOrderId] = useState<string | null>(null);
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [isLoadingAgents, setIsLoadingAgents] = useState(false);
   const router = useRouter();
 
   const [calculatedValues, setCalculatedValues] = useState<CalculatedValues>({
@@ -406,6 +415,23 @@ export default function OrderDetailsForm() {
       router.push("/signin");
     }
   }, [status, router]);
+
+  // Fetch agents on component mount
+  useEffect(() => {
+    const fetchAgents = async () => {
+      setIsLoadingAgents(true);
+      try {
+        const response = await axios.get("/api/users?role=AGENT");
+        setAgents(response.data);
+      } catch (error) {
+        console.error("Error fetching agents:", error);
+      } finally {
+        setIsLoadingAgents(false);
+      }
+    };
+
+    fetchAgents();
+  }, []);
 
   if (status === "loading") {
     return (
@@ -701,15 +727,14 @@ export default function OrderDetailsForm() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="Nium Forex India Pvt Ltd">
-                          Nium Forex India Pvt Ltd
-                        </SelectItem>
-                        <SelectItem value="Ebix Cash World Money Ltd">
-                          Ebix Cash World Money Ltd
-                        </SelectItem>
-                        <SelectItem value="WSFX Global Pay Ltd">
-                          WSFX Global Pay Ltd
-                        </SelectItem>
+                        {forexPartnerData.map((partner) => (
+                          <SelectItem
+                            key={partner.accountName}
+                            value={partner.accountName}
+                          >
+                            {partner.accountName}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </FormItem>
@@ -857,33 +882,32 @@ export default function OrderDetailsForm() {
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
+                      disabled={isLoadingAgents}
                     >
                       <FormControl>
                         <SelectTrigger className="bg-blue-50/50 border-blue-200 shadow-lg h-12 w-full">
-                          <SelectValue placeholder="Select consultancy" />
+                          <SelectValue
+                            placeholder={
+                              isLoadingAgents
+                                ? "Loading agents..."
+                                : "Select consultancy"
+                            }
+                          />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="SPAN">SPAN</SelectItem>
-                        <SelectItem value="Orion Study Abroad">
-                          Orion Study Abroad
-                        </SelectItem>
-                        <SelectItem value="Join in campus">
-                          Join in campus
-                        </SelectItem>
-                        <SelectItem value="Scope overseas">
-                          Scope overseas
-                        </SelectItem>
-                        <SelectItem value="Triumph Education Centre">
-                          Triumph Education Centre
-                        </SelectItem>
-                        <SelectItem value="Career Gyan">Career Gyan</SelectItem>
-                        <SelectItem value="Entry Fly">Entry Fly</SelectItem>
-                        <SelectItem value="Buy Exchange">
-                          Buy Exchange
-                        </SelectItem>
+                        {agents.map((agent) => (
+                          <SelectItem key={agent.id} value={agent.name}>
+                            {agent.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
+                    {form.formState.errors.consultancy && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {form.formState.errors.consultancy.message}
+                      </p>
+                    )}
                   </FormItem>
                 )}
               />
@@ -923,7 +947,7 @@ export default function OrderDetailsForm() {
                       const usdPrimaryCountries = [
                         "United States of America",
                         "Uzbekistan",
-                        "Georgia"
+                        "Georgia",
                       ];
 
                       const showUsdOption =
