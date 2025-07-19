@@ -256,7 +256,7 @@ export function UserForm({ onAddUser }: UserFormProps) {
             )}
             {userType === "Agent" && (
               <div className="space-y-2">
-                <Label htmlFor="agentRate">Agent Rate</Label>
+                <Label htmlFor="agentRate">Agent SettlementRate</Label>
                 <Input
                   id="agentRate"
                   type="number"
