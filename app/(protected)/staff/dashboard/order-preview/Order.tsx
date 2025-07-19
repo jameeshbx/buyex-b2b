@@ -151,7 +151,10 @@ export default function TransactionDetails({
   };
 
   // Helper function to generate A2 form PDF and upload to S3
-  const generateA2FormPDF = async (order: Order, calculatedValues: CalculatedValues) => {
+  const generateA2FormPDF = async (
+    order: Order,
+    calculatedValues: CalculatedValues
+  ) => {
     const cleanOrder = {
       ...order,
       forexPartner:
@@ -159,7 +162,7 @@ export default function TransactionDetails({
           ? order.forexPartner
           : order.forexPartner?.bankName || "N/A",
     };
-    
+
     try {
       const pdfBytes = await generateA2Form(cleanOrder);
 
@@ -168,7 +171,9 @@ export default function TransactionDetails({
         new Date().toISOString().split("T")[0]
       }.pdf`;
       const pdfBlob = new Blob([pdfBytes], { type: "application/pdf" });
-      const pdfFile = new File([pdfBlob], fileName, { type: "application/pdf" });
+      const pdfFile = new File([pdfBlob], fileName, {
+        type: "application/pdf",
+      });
 
       // Step 1: Get presigned URL for S3 upload
       const presignedResponse = await fetch("/api/upload/s3", {
@@ -249,7 +254,11 @@ export default function TransactionDetails({
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            to: "jameesh@buyex.in",
+            to:
+              typeof order.forexPartner === "string"
+                ? order.forexPartner
+                : order.forexPartner?.email || "amrutha@buyexchange.in",
+            cc: "ratheesh@buyexchange.in",
             subject: "A2 Form Generated",
             html: orderReceivedTemplate({
               orderDate: new Date().toISOString(),
@@ -274,11 +283,11 @@ export default function TransactionDetails({
               senderAddressLine1: order.sender?.addressLine1 || "",
               senderAddressLine2: order.sender?.addressLine2 || "",
               funding: order.sender?.sourceOfFunds || "",
-              ifsc:  "",
-              branchName:"",
-              agent:  "",
+              ifsc: "",
+              branchName: "",
+              agent: "",
               supportEmail: "",
-              supportPhone:  "",
+              supportPhone: "",
             }),
           }),
         });
@@ -343,10 +352,7 @@ export default function TransactionDetails({
       const inrAmount = numAmount * calculatedValues.customerRate;
       const gstAmount = Number.parseFloat(calculateGst(inrAmount));
       const tcsAmount = Number.parseFloat(
-        calculateTcs(
-          inrAmount,
-          order.educationLoan === "yes"
-        )
+        calculateTcs(inrAmount, order.educationLoan === "yes")
       );
       const totalPayable = Number.parseFloat(
         calculateTotalPayable(

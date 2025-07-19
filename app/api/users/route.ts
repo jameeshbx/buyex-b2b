@@ -7,16 +7,37 @@ import { hash } from "bcryptjs";
 
 // Validation schema for user creation
 const createUserSchema = z.object({
-  userType: z.enum(["Admin", "Staff"]),
+  userType: z.enum(["Admin", "Staff", "Agent"]),
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
-  email: z.string().email({ message: "Please enter a valid email address" })
+  email: z.string().email({ message: "Please enter a valid email address" }),
+  organisationId: z.string().optional(),
+  agentRate: z.number().min(0).max(100).optional(),
+}).superRefine((data, ctx) => {
+  if (data.userType === "Agent") {
+    if (!data.organisationId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Organisation is required for Agent users",
+        path: ["organisationId"],
+      });
+    }
+    if (data.agentRate === undefined || data.agentRate < 0 || data.agentRate > 100) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Agent rate is required and must be between 0 and 100 for Agent users",
+        path: ["agentRate"],
+      });
+    }
+  }
 });
 
 // Validation schema for user update
 const updateUserSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }).optional(),
   email: z.string().email({ message: "Please enter a valid email address" }).optional(),
-  role: z.enum(["ADMIN", "MANAGER"]).optional(),
+  role: z.enum(["ADMIN", "MANAGER", "AGENT"]).optional(),
+  organisationId: z.string().optional(),
+  agentRate: z.number().min(0).max(100).optional(),
 });
 
 // Create invitation email template
@@ -98,23 +119,31 @@ export async function POST(req: Request) {
     // Create user in database
     const user = await db.user.create({
       data: {
-        role: validatedData.userType === "Staff" ? "MANAGER" : "ADMIN",
+        role: validatedData.userType === "Staff" ? "MANAGER" : 
+              validatedData.userType === "Agent" ? "AGENT" : "ADMIN",
         name: validatedData.name,
         email: validatedData.email,
         password: hashedPassword,
+        organisationId: validatedData.organisationId || null,
+        agentRate: validatedData.agentRate || null,
       },
     });
 
     // Send invitation email
-    await sendEmail({
-      to: validatedData.email,
-      subject: "Welcome to Buy Exchange",
-      html: createInvitationEmail(
-        validatedData.name,
-        validatedData.email,
-        temporaryPassword
-      ),
-    });
+    try {
+      await sendEmail({
+        to: validatedData.email,
+        subject: "Welcome to Buy Exchange",
+        html: createInvitationEmail(
+          validatedData.name,
+          validatedData.email,
+          temporaryPassword
+        ),
+      });
+    } catch (emailError) {
+      console.error("Failed to send email, but user was created:", emailError);
+      // Continue with user creation even if email fails
+    }
 
     return NextResponse.json(
       { 
@@ -125,6 +154,8 @@ export async function POST(req: Request) {
           userRole: user.role,
           name: user.name,
           email: user.email,
+          organisationId: user.organisationId,
+          agentRate: user.agentRate,
         }
       },
       { status: 201 }
@@ -138,6 +169,10 @@ export async function POST(req: Request) {
     }
 
     console.error("Error creating user:", error);
+    console.error("Error details:", {
+      message: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -181,6 +216,8 @@ if(role === "SUPER_ADMIN"){
       name: true,
       email: true,
       createdAt: true,
+      organisationId: true,
+      agentRate: true,
     },
   });
   return NextResponse.json(users);
@@ -195,6 +232,8 @@ if(role === "SUPER_ADMIN"){
       name: true,
       email: true,
       createdAt: true,
+      organisationId: true,
+      agentRate: true,
     },
   });
     return NextResponse.json(users);
@@ -260,6 +299,8 @@ export async function PUT(req: Request) {
         name: true,
         email: true,
         createdAt: true,
+        organisationId: true,
+        agentRate: true,
       },
     });
 
