@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Download, ArrowRight, RotateCcw, Play, Loader2 } from "lucide-react";
+import { Download, ArrowRight, RotateCcw, Loader2 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import axios from "axios";
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -38,7 +39,7 @@ import {
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { forexPartnerData } from "@/data/forex-partner";
-import { User } from "@prisma/client";
+
 
 interface CalculatedValues {
   inrAmount: string;
@@ -165,14 +166,29 @@ async function generateQuotePDF(
   return pdfUrl;
 }
 
+interface ApiUser {
+  id: string;
+  name: string | null;
+  email: string;
+  role: string;
+  image: string | null;
+  emailVerified: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  agentRate: number | null;
+  organisation?: {
+    commission: number;
+  } | null;
+}
+
 export default function OrderDetailsForm() {
   const [showCalculation, setShowCalculation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isQuoteDownloaded, setIsQuoteDownloaded] = useState(false);
   const { data: session, status } = useSession();
-  const [orderId, setOrderId] = useState<string | null>(null);
+  const [, setOrderId] = useState<string | null>(null);
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<ApiUser | null>(null); // Fixed: Use proper type instead of any
 
   const [calculatedValues, setCalculatedValues] = useState<CalculatedValues>({
     inrAmount: "0",
@@ -221,17 +237,7 @@ export default function OrderDetailsForm() {
     Uzbekistan: "USD",
   };
 
-  function onSubmit() {
-    if (!isQuoteDownloaded) {
-      alert("Please download the quote first before proceeding.");
-      return;
-    }
-    if (orderId) {
-      router.push(`/staff/dashboard/sender-details?orderId=${orderId}`);
-    } else {
-      alert("Order ID not found. Please try again.");
-    }
-  }
+
 
   function resetForm() {
     form.reset();
@@ -262,9 +268,10 @@ export default function OrderDetailsForm() {
   useEffect(() => {
     if (currency) {
       getLiveRate(currency, "INR").then((rate: number) => {
-        //@ts-expect-error - Organisation is not defined in the user type
-        const agentRate = rate + (user?.organisation?.commission ?? 0);
-        form.setValue("ibrRate", agentRate.toString());
+        console.log("user",user);
+        
+        const ibrRate = rate + (user?.agentRate ?? 0);
+        form.setValue("ibrRate", ibrRate.toString());
       });
     }
   }, [currency, form, user]);
@@ -395,6 +402,7 @@ export default function OrderDetailsForm() {
         localStorage.setItem("educationLoan", order.data.educationLoan || "no");
         localStorage.setItem("fromPlaceOrder", "true");
       }
+      toast.success("Quote downloaded successfully!");
     } catch (error) {
       console.error("Error generating quote:", error);
       if (axios.isAxiosError(error)) {
@@ -427,10 +435,6 @@ export default function OrderDetailsForm() {
     <>
       <Form {...form}>
         <form
-          onSubmit={(e) => {
-            console.log("Form submit triggered");
-            form.handleSubmit(onSubmit)(e);
-          }}
           className="space-y-6"
         >
           {Object.keys(form.formState.errors).length > 0 && (
@@ -1079,24 +1083,15 @@ export default function OrderDetailsForm() {
               }}
               disabled={isSubmitting || isQuoteDownloaded}
             >
-              <Download className="h-5 w-5" />
-              <span>Download Quote</span>
-              <div className="flex ml-1">
-                <span className="text-white font-bold">&gt;&gt;&gt;</span>
-              </div>
-            </Button>
-
-            <Button
-              type="submit"
-              className="bg-dark-blue hover:bg-medium-blue text-white flex items-center gap-2 h-12 rounded-md px-6 border-none"
-              disabled={isSubmitting || !isQuoteDownloaded}
-            >
               {isSubmitting ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <>
-                  <Play className="h-4 w-4" />
-                  <span className="font-medium">PROCEED</span>
+                  <Download className="h-5 w-5" />
+                  <span>Download Quote</span>
+                  <div className="flex ml-1">
+                    <span className="text-white font-bold">&gt;&gt;&gt;</span>
+                  </div>
                 </>
               )}
             </Button>
