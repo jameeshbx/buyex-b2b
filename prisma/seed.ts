@@ -21,6 +21,7 @@ async function main() {
         slug: "agent-1",
         email: "agent1@buyex.com",
         phoneNumber: "+1234567890",
+        commission: 0.2,
       },
     });
 

@@ -73,6 +73,7 @@ model Organisation {
   name        String
   slug        String   @unique
   email       String
+  commission  Float    @default(0)
   phoneNumber String
   logoUrl     String?
   settings    Json?

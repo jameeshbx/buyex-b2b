@@ -37,8 +37,8 @@ import {
 } from "@/lib/financial";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import {  forexPartnerData } from "@/data/forex-partner";
-
+import { forexPartnerData } from "@/data/forex-partner";
+import { User } from "@prisma/client";
 
 interface CalculatedValues {
   inrAmount: string;
@@ -101,7 +101,7 @@ async function generateQuotePDF(
 
   // Using default forex partner since we removed the selection
   const defaultForexPartner = forexPartnerData[0];
-  
+
   autoTable(doc, {
     startY: lastY + 15,
     styles: { fontSize: 10 },
@@ -133,8 +133,9 @@ async function generateQuotePDF(
   );
   doc.setTextColor(0, 0, 255);
   doc.textWithLink("www.buyexchange.in/document-uploads", 14, lastY + 12, {
-    url: `${process.env.NEXT_PUBLIC_APP_URL}/document-uploads/${orderId || "pending"
-      }`,
+    url: `${process.env.NEXT_PUBLIC_APP_URL}/document-uploads/${
+      orderId || "pending"
+    }`,
   });
 
   doc.setTextColor(0);
@@ -171,6 +172,7 @@ export default function OrderDetailsForm() {
   const { data: session, status } = useSession();
   const [orderId, setOrderId] = useState<string | null>(null);
   const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
 
   const [calculatedValues, setCalculatedValues] = useState<CalculatedValues>({
     inrAmount: "0",
@@ -249,12 +251,23 @@ export default function OrderDetailsForm() {
   const ibrRate = form.watch("ibrRate");
 
   useEffect(() => {
+    const fetchUser = async () => {
+      const user = await fetch("/api/users/me").then((res) => res.json());
+
+      setUser(user);
+    };
+    fetchUser();
+  }, []);
+
+  useEffect(() => {
     if (currency) {
       getLiveRate(currency, "INR").then((rate: number) => {
-        form.setValue("ibrRate", rate.toString());
+        //@ts-expect-error - Organisation is not defined in the user type
+        const agentRate = rate + (user?.organisation?.commission ?? 0);
+        form.setValue("ibrRate", agentRate.toString());
       });
     }
-  }, [currency, form]);
+  }, [currency, form, user]);
 
   useEffect(() => {
     if (foreignBankCharges === "OUR") {
@@ -306,8 +319,8 @@ export default function OrderDetailsForm() {
     const currencyValue = form.watch("currency");
     const countryCurrency = selectedCountry
       ? COUNTRY_CURRENCY_MAP[
-      selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP
-      ]
+          selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP
+        ]
       : "USD";
 
     if (selectedCountry && currencyValue !== "USD") {
@@ -328,8 +341,8 @@ export default function OrderDetailsForm() {
 
     try {
       // Using default forex partner since we removed the selection
-      const defaultForexPartner = forexPartnerData[0];
-      
+      const defaultForexPartner = "NIUM Forex India Pvt Ltd";
+
       const order = await axios.post("/api/orders", {
         purpose: formData.purpose,
         foreignBankCharges: formData.foreignBankCharges,
@@ -344,6 +357,7 @@ export default function OrderDetailsForm() {
         totalAmount: formData.totalAmount,
         customerRate: formData.customerRate,
         pancardNumber: formData.pancardNumber,
+        consultancy: "BuyExchange",
         status: "QuoteDownloaded",
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -354,7 +368,7 @@ export default function OrderDetailsForm() {
           currency:
             formData.currency ||
             COUNTRY_CURRENCY_MAP[
-            formData.receiverBankCountry as keyof typeof COUNTRY_CURRENCY_MAP
+              formData.receiverBankCountry as keyof typeof COUNTRY_CURRENCY_MAP
             ] ||
             "",
         },
@@ -457,7 +471,7 @@ export default function OrderDetailsForm() {
                           );
                           const countryCurrency =
                             COUNTRY_CURRENCY_MAP[
-                            selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP
+                              selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP
                             ] || "";
                           form.setValue("currency", countryCurrency);
                         }
@@ -729,7 +743,7 @@ export default function OrderDetailsForm() {
                         field.onChange(value);
                         const currency =
                           COUNTRY_CURRENCY_MAP[
-                          value as keyof typeof COUNTRY_CURRENCY_MAP
+                            value as keyof typeof COUNTRY_CURRENCY_MAP
                           ] || "USD";
                         form.setValue("currency", currency, {
                           shouldValidate: true,
@@ -766,17 +780,21 @@ export default function OrderDetailsForm() {
                         <SelectItem value="Sweden">Sweden</SelectItem>
                         <SelectItem value="Switzerland">Switzerland</SelectItem>
                         <SelectItem value="UAE">UAE</SelectItem>
-                        <SelectItem value="United Kingdom">United Kingdom</SelectItem>
-                        <SelectItem value="United States of America">United States of America</SelectItem>
+                        <SelectItem value="United Kingdom">
+                          United Kingdom
+                        </SelectItem>
+                        <SelectItem value="United States of America">
+                          United States of America
+                        </SelectItem>
                         <SelectItem value="Uzbekistan">Uzbekistan</SelectItem>
                       </SelectContent>
                     </Select>
                     {(form.watch("purpose") === "Blocked account transfer" ||
                       form.watch("purpose") === "GIC Canada fee deposite") && (
-                        <p className="text-xs text-gray-500 mt-1">
-                          Country automatically set based on purpose selection
-                        </p>
-                      )}
+                      <p className="text-xs text-gray-500 mt-1">
+                        Country automatically set based on purpose selection
+                      </p>
+                    )}
                   </FormItem>
                 )}
               />
@@ -829,8 +847,8 @@ export default function OrderDetailsForm() {
                       const selectedCountry = form.watch("receiverBankCountry");
                       const countryCurrency = selectedCountry
                         ? COUNTRY_CURRENCY_MAP[
-                        selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP
-                        ]
+                            selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP
+                          ]
                         : "USD";
 
                       const usdPrimaryCountries = [
@@ -1022,27 +1040,27 @@ export default function OrderDetailsForm() {
             </div>
 
             <div className="pt-4 mb-2 md:mb-0 gap-6">
-            <FormField  
-              control={form.control}
-              name="pancardNumber"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>PAN Card</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      placeholder="ABCDE1234F"
-                      className="bg-gray-150 border-blue-200 shadow-lg h-12 -mt-1.5"
-                      onChange={(e) => {
-                        const value = e.target.value.toUpperCase();
-                        field.onChange(value);
-                        form.setValue('pancardNumber', value); 
-                      }}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="pancardNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>PAN Card</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="ABCDE1234F"
+                        className="bg-gray-150 border-blue-200 shadow-lg h-12 -mt-1.5"
+                        onChange={(e) => {
+                          const value = e.target.value.toUpperCase();
+                          field.onChange(value);
+                          form.setValue("pancardNumber", value);
+                        }}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
             </div>
           </div>
 

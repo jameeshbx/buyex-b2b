@@ -10,6 +10,14 @@ export interface ForexPartner {
 
 export const forexPartnerData = [
   {
+    accountNumber: "123456789",
+    accountName: "Test Account",
+    bankName: "Test Bank",
+    ifscCode: "TEST0000000",
+    branch: "Test Branch",
+    email: "jameesh@buyexchange.in",
+  },
+  {
     accountNumber: "35544886567",
     accountName: "Ebix Cash World Money Ltd",
     bankName: "State Bank of India",
