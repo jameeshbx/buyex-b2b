@@ -55,7 +55,7 @@ export const sendEmailToForexPartner = async (documents: string[]) => {
     // Send email with zip attachment
     await sendEmailWithAttachment({ 
       to: email,
-      cc: "ratheesh@buyexchange.in",
+      cc: "forex@buyexchange.in",
       subject, 
       html,
       attachments: [{

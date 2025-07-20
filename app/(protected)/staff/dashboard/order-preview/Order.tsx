@@ -258,7 +258,7 @@ export default function TransactionDetails({
               typeof order.forexPartner === "string"
                 ? order.forexPartner
                 : order.forexPartner?.email || "amrutha@buyexchange.in",
-            cc: "ratheesh@buyexchange.in",
+            cc: "forex@buyexchange.in",
             subject: "A2 Form Generated",
             html: orderReceivedTemplate({
               orderDate: new Date().toISOString(),
