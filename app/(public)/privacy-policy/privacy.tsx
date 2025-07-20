@@ -174,45 +174,89 @@ export default function PrivacyPolicy() {
           </div>
 
           {/* Background image block */}
-          <div className="relative bg-white py-16 lg:-ml-20 lg:w-[1250px] lg:p-12 lg:rounded-5xl">
-            <div className="absolute inset-0 z-0 overflow-hidden">
-              <Image src="/blue.svg" alt="Background" className="object-cover object-center w-full" priority  width={1250} height={100}/>
-            </div>
+         <div className="relative bg-white py-12 sm:py-16 lg:-ml-20 lg:w-[1250px] lg:p-12 lg:rounded-5xl">
+  <div className="absolute inset-0 z-0 overflow-hidden">
+    <Image 
+      src="/blue.svg" 
+      alt="Background" 
+      className="object-cover object-center w-full" 
+      priority  
+      width={1250} 
+      height={100}
+    />
+  </div>
 
-            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <h2 className="text-3xl sm:text-4xl font-bold mb-12 text-dark-blue font-playfair text-center sm:text-left">
-                Get in touch
-              </h2>
+  <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-8 sm:mb-12 text-dark-blue font-playfair text-center sm:text-left">
+      Get in touch
+    </h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                {/* Sales Enquiries */}
-                <div>
-                  <h3 className="text-xl font-semibold mb-4 text-dark-blue font-jakarta">Sales Enquiries</h3>
-                  <div className="flex items-center gap-3 mb-2">
-                    <Image src="/phone.png" alt="Phone icon" className="w-5 h-5" width={10} height={100}/>
-                    <p className="text-lg text-dark-blue font-jakarta">+919072243243</p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Image src="/email.png" alt="Email icon" className="w-5 h-5" width={10} height={100}/>
-                    <p className="text-lg text-dark-blue font-jakarta">sales@buyexchange.in</p>
-                  </div>
-                </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12">
+      {/* Sales Enquiries */}
+      <div className="bg-white/90 sm:bg-transparent p-4 sm:p-0 rounded-lg sm:rounded-none">
+        <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-dark-blue font-jakarta">
+          Sales Enquiries
+        </h3>
+        <div className="flex items-center gap-3 mb-2">
+          <Image 
+            src="/phone.png" 
+            alt="Phone icon" 
+            className="w-4 h-4 sm:w-5 sm:h-5" 
+            width={20}
+            height={20}
+          />
+          <p className="text-base sm:text-lg text-dark-blue font-jakarta">
+            +919072243243
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Image 
+            src="/email.png" 
+            alt="Email icon" 
+            className="w-4 h-4 sm:w-5 sm:h-5" 
+            width={20}
+            height={20}
+          />
+          <p className="text-base sm:text-lg text-dark-blue font-jakarta">
+            sales@buyexchange.in
+          </p>
+        </div>
+      </div>
 
-                {/* Forex Consultation */}
-                <div className="lg:ml-[-235px]">
-                  <h3 className="text-xl font-semibold mb-4 text-dark-blue font-jakarta">Forex Consultation</h3>
-                  <div className="flex items-center gap-3 mb-2">
-                    <Image src="/phone.png" alt="Phone icon" className="w-5 h-5" width={10} height={100} />
-                    <p className="text-lg text-dark-blue font-jakarta">+919072243243</p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Image src="/email.png" alt="Email icon" className="w-5 h-5" width={10} height={100}/>
-                    <p className="text-lg text-dark-blue font-jakarta">forex@buyexchange.in</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+      {/* Forex Consultation */}
+      <div className="bg-white/90 sm:bg-transparent p-4 sm:p-0 rounded-lg sm:rounded-none lg:ml-[-235px]">
+        <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-dark-blue font-jakarta">
+          Forex Consultation
+        </h3>
+        <div className="flex items-center gap-3 mb-2">
+          <Image 
+            src="/phone.png" 
+            alt="Phone icon" 
+            className="w-4 h-4 sm:w-5 sm:h-5" 
+            width={20}
+            height={20}
+          />
+          <p className="text-base sm:text-lg text-dark-blue font-jakarta">
+            +919072243243
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Image 
+            src="/email.png" 
+            alt="Email icon" 
+            className="w-4 h-4 sm:w-5 sm:h-5" 
+            width={20}
+            height={20}
+          />
+          <p className="text-base sm:text-lg text-dark-blue font-jakarta">
+            forex@buyexchange.in
+          </p>
+        </div>
+      </div>
+        <div className="hidden lg:block"></div>
+    </div>
+  </div>
+</div>
         </div>
 
         {/* Table of Contents Sidebar */}

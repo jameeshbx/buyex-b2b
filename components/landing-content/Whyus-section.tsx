@@ -20,7 +20,7 @@ export default function WhyUs() {
   ];
 
   return (
-    <section className="bg-white py-16 px-6 md:px-12 lg:px-20">
+    <section id="why-us" className="bg-white py-16 px-6 md:px-12 lg:px-20">
       <div className="max-w-20xl mx-auto px-4">
         {/* Header */}
         <div className="w-full md:w-4/5 lg:w-1/2 md:mx-auto lg:ml-[76px] text-center lg:text-left">

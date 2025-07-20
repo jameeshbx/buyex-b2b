@@ -1,3 +1,4 @@
+"use client"
 import React from 'react'
 import PrivacyPolicy from './privacy'
 import Topbar from '@/components/landing-content/Topbar'

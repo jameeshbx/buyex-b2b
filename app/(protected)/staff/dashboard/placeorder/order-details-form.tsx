@@ -507,7 +507,6 @@ export default function OrderDetailsForm() {
                       </FormControl>
                       <SelectContent
                         className="w-full min-w-[var(--radix-select-trigger-width)] max-w-[95vw] max-h-[min(400px,60vh)] overflow-y-auto"
-                        position="popper"
                         sideOffset={5}
                         align="start"
                         avoidCollisions={true}
