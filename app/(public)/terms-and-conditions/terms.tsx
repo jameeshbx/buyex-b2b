@@ -303,54 +303,80 @@ export default function terms() {
         </div>
       </div>
 
-      <div className="relative bg-medium-gray py-10 sm:py-6 lg:py-8 mt-10 px-4 sm:px-6 lg:px-8 rounded-xl">
-        {/* Background image - hidden on small screens, visible on lg and above */}
-        <div className="absolute inset-0 z-0 overflow-hidden hidden lg:block">
-          <Image
-            src="/blue.svg"
-            alt="Background"
-            className="object-cover object-center w-full"
-            priority
-            width={1250}
-            height={100}
-          />
-        </div>
-  
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-8 text-dark-blue font-playfair text-center sm:text-left">
-            Get in touch
-          </h2>
-  
-          <div className="grid grid-cols-2 lg:grid-cols-3 lg:grid-cols-3 gap-6">
-            {/* Sales Enquiries */}
-            <div>
-              <h3 className="lg:text-xl md:text-lg font-semibold mb-4 text-dark-blue font-jakarta">Sales Enquiries</h3>
-              <div className="flex items-center gap-3 mb-2">
-                <Image src="/phone.png" alt="Phone icon" className="w-5 h-5" width={10} height={100} />
-                <p className="text-sm md:text-lg text-dark-blue font-jakarta">+919072243243</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <Image src="/email.png" alt="Email icon" className="w-5 h-5" width={10} height={100} />
-                <p className="text-sm md:text-lg  text-dark-blue font-jakarta">sales@buyexchange.in</p>
-              </div>
-            </div>
-  
-            {/* Forex Consultation */}
-            <div>
-              <h3 className="lg:text-xl md:text-lg font-semibold mb-4 text-dark-blue font-jakarta">Forex Consultation</h3>
-              <div className="flex items-center gap-3 mb-2">
-                <Image src="/phone.png" alt="Phone icon" className="w-5 h-5" width={10} height={100} />
-                <p className="text-sm md:text-lg  text-dark-blue font-jakarta">+919072243243</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <Image src="/email.png" alt="Email icon" className="w-5 h-5" width={10} height={100} />
-                <p className="text-sm md:text-lg text-dark-blue font-jakarta">forex@buyexchange.in</p>
-              </div>
-            </div>
-            <div></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
+     <div className="relative bg-medium-gray py-10 sm:py-6 lg:py-8 mt-10 px-4 sm:px-6 lg:px-8 rounded-xl">
+           {/* Background image - hidden on small screens, visible on lg and above */}
+           <div className="absolute inset-0 z-0 overflow-hidden hidden lg:block">
+             <Image
+               src="/blue.svg"
+               alt="Background"
+               className="object-cover object-center w-full"
+               priority
+               width={1250}
+               height={100}
+             />
+           </div>
+     
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+       <h2 className="text-3xl sm:text-4xl font-bold mb-6 sm:mb-8 text-dark-blue font-playfair text-center sm:text-left">
+         Get in touch
+       </h2>
+     
+       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+         {/* Sales Enquiries */}
+         <div className="bg-white p-4 sm:p-0 sm:bg-transparent rounded-lg sm:rounded-none shadow-sm sm:shadow-none">
+           <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-dark-blue font-jakarta">Sales Enquiries</h3>
+           <div className="flex items-center gap-3 mb-2">
+             <Image 
+               src="/phone.png" 
+               alt="Phone icon" 
+               width={20} 
+               height={20} 
+               className="w-4 h-4 sm:w-5 sm:h-5" 
+             />
+             <p className="text-sm sm:text-base md:text-lg text-dark-blue font-jakarta">+919072243243</p>
+           </div>
+           <div className="flex items-center gap-3">
+             <Image 
+               src="/email.png" 
+               alt="Email icon" 
+               width={20} 
+               height={20} 
+               className="w-4 h-4 sm:w-5 sm:h-5" 
+             />
+             <p className="text-sm sm:text-base md:text-lg text-dark-blue font-jakarta">sales@buyexchange.in</p>
+           </div>
+         </div>
+     
+         {/* Forex Consultation */}
+         <div className="bg-white p-4 sm:p-0 sm:bg-transparent rounded-lg sm:rounded-none shadow-sm sm:shadow-none">
+           <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-dark-blue font-jakarta">Forex Consultation</h3>
+           <div className="flex items-center gap-3 mb-2">
+             <Image 
+               src="/phone.png" 
+               alt="Phone icon" 
+               width={20} 
+               height={20} 
+               className="w-4 h-4 sm:w-5 sm:h-5" 
+             />
+             <p className="text-sm sm:text-base md:text-lg text-dark-blue font-jakarta">+919072243243</p>
+           </div>
+           <div className="flex items-center gap-3">
+             <Image 
+               src="/email.png" 
+               alt="Email icon" 
+               width={20} 
+               height={20} 
+               className="w-4 h-4 sm:w-5 sm:h-5" 
+             />
+             <p className="text-sm sm:text-base md:text-lg text-dark-blue font-jakarta">forex@buyexchange.in</p>
+           </div>
+         </div>
+         
+         {/* Empty div preserved for layout */}
+         <div className="hidden lg:block"></div>
+       </div>
+     </div>
+         </div>
+         </div>
+       )
+     }

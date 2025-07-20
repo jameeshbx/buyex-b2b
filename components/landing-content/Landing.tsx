@@ -56,8 +56,8 @@ function FeaturesAccordion() {
       isOpen: false,
     },
     {
-      id: "Multiforex partner",
-      title: "Multiforex Partner Integration",
+      id: "Multi Forex partner",
+      title: "Multi Forex Partner Integration",
       content:
         "Seamlessly connect with multiple forex providers through a single API integration, enabling competitive rate shopping, automated transactions, and consolidated reporting across all your forex partners..",
       isOpen: false,
@@ -69,7 +69,7 @@ function FeaturesAccordion() {
   }
 
   return (
-    <div className="space-y-4 ">
+    <div id="what-we-provide" className="space-y-4 ">
       {features.map((feature) => (
         <div key={feature.id} className="rounded-lg overflow-hidden">
           <button

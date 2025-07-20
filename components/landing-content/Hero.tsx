@@ -16,7 +16,7 @@ export default function Home() {
           <div className="z-10 w-full max-w-full text-center lg:text-left lg:max-w-xl xl:max-w-2xl lg:relative">
             <div className="mb-3 sm:mb-4 inline-flex items-center rounded-full bg-blue-100 px-2 sm:px-3 py-1 mx-auto lg:mx-0">
               <span className="mr-1 sm:mr-2 rounded-full bg-dark-blue px-1.5 sm:px-2 py-0.5 text-xs font-medium text-white">New</span>
-              <span className="text-xs text-deep-blue font-jakarta">Just onboarded: BrightStone Advisory Group</span>
+              <span className="text-xs text-deep-blue font-jakarta">Rate Check API Integration</span>
             </div>
 
             <h1 className="mb-4 sm:mb-5 lg:mb-6 text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight font-playfair text-dark-blue md:relative md:z-20">
@@ -41,8 +41,11 @@ export default function Home() {
 
             <div className="space-y-2 sm:space-y-2 text-center lg:text-left">
               <p className="text-sm sm:text-base lg:text-lg text-light-gray">
-                Successfully empowering 100+ education consultants across 5 Indian states, 
-                We has streamlined over $15M in student forex payments. Trusted for speed, 
+                Successfully empowering 100+ education consultants
+                <br/> across 5 Indian states, 
+                We has streamlined over
+                <br/> $15M in student forex payments.
+                <br/> Trusted for speed, 
                 compliance, and profitability — now scaling nationwide.
               </p>
 

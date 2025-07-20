@@ -47,7 +47,7 @@ export default function GlobalTestimonials() {
   }, [activeTestimonial])
 
   return (
-    <section className="relative w-full py-12 md:py-20 overflow-hidden bg-white lg:-mt-1.5">
+    <section id="testimonial" className="relative w-full py-12 md:py-20 overflow-hidden bg-white lg:-mt-1.5">
       <div className="container px-4 mx-auto mb-24 lg:-mb-3">
        <div className="text-center mb-12 md:mb-16">
   <h2 className="text-2xl md:text-4xl font-bold font-playfair text-dark-blue mb-4">

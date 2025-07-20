@@ -1,15 +1,32 @@
 import Image from "next/image"
 import Link from "next/link"
-import { Mail } from "lucide-react"
+
 
 export default function Footer() {
+  // Define your section IDs mapping with special handling for Help Center
+  const sectionLinks = [
+    { name: "What we provide", id: "what-we-provide" },
+    { name: "About Us", id: "about-us" },
+    { name: "Why Us", id: "why-us" },
+    { name: "What you gain", id: "benefits" },
+    { name: "Who all can benefit", id: "whoall" },
+    { 
+      name: "Help Center", 
+      id: "help-center",
+      isExternal: true,
+      url: "https://www.instagram.com/buyexchange_forex/" // Instagram URL
+    }
+  ]
+
   return (
-    <footer className="bg-[#f0f7ff] w-full">
+    <footer className="bg-[#f0f7ff] w-full" id="footer">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Logo */}
-        <div className="mb-10 flex justify-center md:justify-start">
-          <Image src="/header-logo.png" alt="Buy Exchange Logo" width={200} height={50} className="h-auto" />
-        </div>
+        <Link href="/" passHref>
+          <div className="mb-10 flex justify-center md:justify-start cursor-pointer">
+            <Image src="/header-logo.png" alt="Buy Exchange Logo" width={200} height={50} className="h-auto" />
+          </div>
+        </Link>
 
         {/* Main Footer Content */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
@@ -17,18 +34,32 @@ export default function Footer() {
           <div>
             <h3 className="font-semibold text-lg mb-4 font-jakarta">Quick Links</h3>
             <ul className="space-y-2 font-jakarta">
-              {[
-                "What we provide",
-                "About Us",
-                "Why Us",
-                "What you gain",
-                "Who all can benefit",
-                "Help Center"
-              ].map((link) => (
-                <li key={link}>
-                  <Link href="#" className="text-gray-600 hover:text-gray-900">
-                    {link}
-                  </Link>
+              {sectionLinks.map((link) => (
+                <li key={link.id}>
+                  {link.isExternal ? (
+                    <a
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-gray-600 hover:text-gray-900"
+                    >
+                      {link.name}
+                    </a>
+                  ) : (
+                    <Link 
+                      href={`#${link.id}`}
+                      className="text-gray-600 hover:text-gray-900"
+                      scroll={false}
+                      onClick={(e) => {
+                        e.preventDefault()
+                        document.getElementById(link.id)?.scrollIntoView({
+                          behavior: 'smooth'
+                        })
+                      }}
+                    >
+                      {link.name}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>
@@ -40,8 +71,11 @@ export default function Footer() {
             <ul className="space-y-2 font-jakarta">
               {[
                 { name: "BE News", path: "/benews" },
-                { name: "Testimonials", path: "/testimonials" },
-                { name: "Awards and Recognitions", path: "/awards" },
+                { 
+                  name: "Testimonials", 
+                  path: "/#testimonial",
+                  isAnchor: true 
+                },
                 { name: "Terms and Conditions", path: "/terms-and-conditions" },
                 { name: "Privacy Policy", path: "/privacy-policy" }
               ].map((item) => (
@@ -49,6 +83,19 @@ export default function Footer() {
                   <Link
                     href={item.path}
                     className="text-gray-600 hover:text-gray-900"
+                    scroll={!item.isAnchor}
+                    onClick={(e) => {
+                      if (item.isAnchor) {
+                        e.preventDefault();
+                        if (window.location.pathname === '/') {
+                          document.getElementById(item.path.split('#')[1])?.scrollIntoView({
+                            behavior: 'smooth'
+                          });
+                        } else {
+                          window.location.href = item.path;
+                        }
+                      }
+                    }}
                   >
                     {item.name}
                   </Link>
@@ -71,46 +118,27 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Newsletter */}
-        <div className="mt-12">
-          <h3 className="font-semibold text-lg mb-4 text-center mr-80">Newsletter</h3>
-          <div className="flex max-w-md mx-auto">
-            <input
-              type="email"
-              placeholder="Enter your email address"
-              className="flex-grow px-4 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <button className="bg-[#0081FE] text-white p-2 rounded-r-md hover:bg-blue-600 transition-colors">
-              <Mail className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
-
-
         {/* Disclaimer */}
         <div className="border-t border-gray-300 mt-12 pt-6 text-center">
           <div className="flex justify-center space-x-6 mt-12">
             {[
-              { href: "#", src: "/twitter.png", alt: "Twitter" },
-              { href: "#", src: "/linkedin.png", alt: "LinkedIn" },
-              { href: "#", src: "/facebook.png", alt: "Facebook" },
-            ].map(({ href, src, alt }) => (
-              <Link key={alt} href={href} className="text-gray-600 hover:text-gray-900">
-                <Image src={src} alt={alt} width={24} height={24} />
+              { href: "https://www.instagram.com/buyexchange_forex/?igsh=dWRndXh0cGZuamdr", src: "/instagram.svg", alt: "Instagram" },
+              { href: "https://www.linkedin.com/company/buyexchange/posts/?feedView=all", src: "/linkedin-in-brands.svg", alt: "LinkedIn" },
+              { 
+                href: "https://www.facebook.com/share/16sF8XjkKA/", 
+                src: "/facebook-brands.svg", 
+                alt: "Facebook",
+                className: "p-1"
+              },
+            ].map(({ href, src, alt, className }) => (
+              <Link key={alt} href={href} className={`text-gray-600 hover:text-gray-900 ${className || ''}`}>
+                <Image src={src} alt={alt} width={24} height={24} className="p-0.5"/>
                 <span className="sr-only">{alt}</span>
               </Link>
             ))}
           </div>
           <p className="text-sm text-gray-500 mb-4 font-jakarta">
-           Coded by{" "}
-            <a
-              href="https://lotusbluesolutions.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-500 hover:underline"
-            >
-              Lotus Blue Technologies
-            </a> | © 2025 Buyex Fintech Solutions Pvt Ltd. <br/>All Rights Reserved.
+            © 2025 Buyex Fintech Solutions Pvt Ltd. <br/>All Rights Reserved.
           </p>
 
           <p className="text-xs text-gray-500 max-w-4xl mx-auto font-jakarta">
