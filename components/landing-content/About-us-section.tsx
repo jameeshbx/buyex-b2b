@@ -3,7 +3,7 @@ import { aboutUsData } from "../../data/about-data"
 
 export default function AboutUsSection() {
     return (
-        <section className="w-full">
+        <section id="about-us" className="w-full">
             {/* About Us Section */}
             <div className="container md:ml-12 ml-2   py-6 md:py-6 relative">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 ml-6 ">
