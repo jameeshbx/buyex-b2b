@@ -28,7 +28,7 @@ export default function WhyUs() {
             Why Us?
           </h2>
           <p className="text-gray-600 mb-8 font-manrope text-base md:text-lg leading-relaxed">
-            At BuyExchange, we are committed to making international payments
+            At Buy Exchange, we are committed to making international payments
             straightforward and stress-free. Based in Kochi, Kerala, our mission
             is to empower individuals, especially students, by providing seamless
             and efficient forex solutions. With competitive exchange rates,
