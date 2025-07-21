@@ -10,52 +10,54 @@ export default function Home() {
   return (
     <section className="relative overflow-hidden bg-white pt-6 sm:pt-8 md:pt-10 lg:pt-12">
       <div className="container mx-auto px-4 sm:px-6">
-        {/* Main content container with relative positioning */}
         <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between">
-          {/* Left content section with z-index to ensure it appears above the image */}
+          {/* Left content section */}
           <div className="z-10 w-full max-w-full text-center lg:text-left lg:max-w-xl xl:max-w-2xl lg:relative">
+            {/* New badge */}
             <div className="mb-3 sm:mb-4 inline-flex items-center rounded-full bg-blue-100 px-2 sm:px-3 py-1 mx-auto lg:mx-0">
               <span className="mr-1 sm:mr-2 rounded-full bg-dark-blue px-1.5 sm:px-2 py-0.5 text-xs font-medium text-white">New</span>
               <span className="text-xs text-deep-blue font-jakarta">Rate Check API Integration</span>
             </div>
 
-            <h1 className="mb-4 sm:mb-5 lg:mb-6 text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight font-playfair text-dark-blue md:relative md:z-20">
-              Powering <br className="hidden sm:block" />
-              Study Abroad Forex <br className="hidden sm:block" />
-              for Your Students.
+            {/* Main heading */}
+            <h1 className="mb-4 sm:mb-5 lg:mb-6 text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.15] tracking-tight font-playfair text-dark-blue">
+              Powering <span className="whitespace-nowrap">Study Abroad Forex</span><br /> for Your Students.
             </h1>
 
+            {/* Description */}
             <p 
-              className="mb-6 sm:mb-7 lg:mb-8 text-light-gray text-base sm:text-lg"
+              className="mb-6 sm:mb-7 lg:mb-8 text-light-gray text-base sm:text-lg md:text-[1.1rem] leading-relaxed"
               dangerouslySetInnerHTML={{ __html: description }}
             />
 
+            {/* CTA Button */}
             <div className="mb-4 sm:mb-4 flex flex-wrap gap-3 sm:gap-4 lg:gap-6 justify-center lg:justify-start">
               <Link
                 href="#"
-                className="rounded-md bg-dark-rose px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-medium font-jakarta text-white transition hover:bg-pink-600 sm:px-8"
+                className="rounded-md bg-dark-rose px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-medium font-jakarta text-white transition hover:bg-pink-600 hover:shadow-sm sm:px-8"
               >
                 Register as consultant
               </Link>
             </div>
 
+            {/* Stats and partners */}
             <div className="space-y-2 sm:space-y-2 text-center lg:text-left">
-              <p className="text-sm sm:text-base lg:text-lg text-light-gray">
-                Successfully empowering 100+ education consultants
-                <br/> across 5 Indian states, 
-                We has streamlined over
-                <br/> $15M in student forex payments.
-                <br/> Trusted for speed, 
-                compliance, and profitability — now scaling nationwide.
+              <p className="text-sm sm:text-base lg:text-lg text-light-gray leading-relaxed">
+                Successfully empowering <span className="font-semibold">100+ education consultants</span>
+                <br /> across <span className="font-semibold">5 Indian states</span>, 
+                we have streamlined over
+                <br /> <span className="font-semibold">$15M in student forex payments</span>.
+                <br /> Trusted for <span className="font-semibold">speed</span>, 
+                <span className="font-semibold"> compliance</span>, and <span className="font-semibold">profitability</span> — now scaling nationwide.
               </p>
 
               <div className="mt-4">
-                {/* Single row container with horizontal scroll on mobile */}
-                <div className="flex overflow-x-auto pb-2 lg:overflow-visible lg:flex-wrap gap-3 sm:gap-4 lg:gap-6">
+                {/* Partner logos */}
+                <div className="flex overflow-x-auto pb-2 lg:overflow-visible lg:flex-wrap gap-3 sm:gap-4 lg:gap-6 scrollbar-hide">
                   {partners.map((partner, index) => (
                     <a
                       key={index}
-                      href={partner.url} // Using the URL from your constants
+                      href={partner.url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex-shrink-0 h-8 sm:h-10 lg:h-12 flex items-center transition-transform hover:scale-105"
@@ -65,7 +67,8 @@ export default function Home() {
                         alt={partner.name}
                         width={partner.width}
                         height={partner.height}
-                        className="h-full object-contain max-w-[120px]"
+                        className="h-full w-auto object-contain max-w-[120px]"
+                        loading="lazy"
                       />
                     </a>
                   ))}
@@ -74,7 +77,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Hero Image - responsive positioning with increased size */}
+          {/* Hero Image */}
           <div className="w-full mt-6 sm:mt-8 md:mt-10 lg:mt-0 lg:w-3/5 xl:w-2/3 lg:absolute lg:right-0 lg:top-0">
             <div className="relative mx-auto h-[350px] xs:h-[400px] sm:h-[480px] md:h-[550px] lg:h-[700px] w-full max-w-xl lg:max-w-none">
               <Image
