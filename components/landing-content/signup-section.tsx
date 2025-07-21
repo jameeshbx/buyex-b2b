@@ -274,18 +274,28 @@ export default function SignupSection() {
                         className="border-gray-300 h-4 w-4 mt-1"
                       />
                     </FormControl>
-                    <div className="text-sm text-gray-600 leading-tight">
+                    <div className="text-xs sm:text-sm text-gray-600 leading-tight">
                       <FormLabel className="font-normal">
                         I accept the{" "}
-                        <Link href="/terms-and-conditions" className="text-dark-blue hover:underline">
-                          Terms of Service
-                        </Link>{" "}
-                        and{" "}
-                        <Link href="/privacy-policy" className="text-dark-blue hover:underline">
-                          Privacy Policy
-                        </Link>
+                        <span className="block sm:inline">
+                          <Link
+                            href="/terms-and-conditions"
+                            className="text-dark-blue hover:underline break-words"
+                          >
+                            Terms of Service
+                          </Link>
+                        </span>
+                        <span className="hidden sm:inline"> and </span>
+                        <span className="block sm:inline">
+                          <Link
+                            href="/privacy-policy"
+                            className="text-dark-blue hover:underline break-words"
+                          >
+                            Privacy Policy
+                          </Link>
+                        </span>
                       </FormLabel>
-                      <FormMessage className="text-xs" />
+                      <FormMessage className="text-xs mt-1" />
                     </div>
                   </FormItem>
                 )}
