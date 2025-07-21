@@ -47,7 +47,7 @@ export default function AdvantageSection() {
   }, [controls]);
 
   return (
-    <section id="benefits" className="py-12 md:py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto overflow-hidden">
+    <section id="benefits" className="py-10 -mt-28 lg:mt-10 md:py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto overflow-hidden">
       <div className="text-center mb-8 md:mb-12">
         <motion.h2 
           className="text-3xl sm:text-4xl md:text-5xl font-bold font-playfair text-dark-blue mb-3"

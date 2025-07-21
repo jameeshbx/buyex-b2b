@@ -10,8 +10,8 @@ export default function Footer() {
     { name: "Why Us", id: "why-us" },
     { name: "What you gain", id: "benefits" },
     { name: "Who all can benefit", id: "whoall" },
-    { 
-      name: "Help Center", 
+    {
+      name: "Help Center",
       id: "help-center",
       isExternal: true,
       url: "https://www.instagram.com/buyexchange_forex/" // Instagram URL
@@ -24,7 +24,7 @@ export default function Footer() {
         {/* Logo */}
         <Link href="/" passHref>
           <div className="mb-10 flex justify-center md:justify-start cursor-pointer">
-            <Image src="/header-logo.png" alt="Buy Exchange Logo" width={200} height={50} className="h-auto" />
+            <Image src="/BE.svg" alt="Buy Exchange Logo" width={200} height={50} className="h-auto" />
           </div>
         </Link>
 
@@ -46,7 +46,7 @@ export default function Footer() {
                       {link.name}
                     </a>
                   ) : (
-                    <Link 
+                    <Link
                       href={`#${link.id}`}
                       className="text-gray-600 hover:text-gray-900"
                       scroll={false}
@@ -71,10 +71,10 @@ export default function Footer() {
             <ul className="space-y-2 font-jakarta">
               {[
                 { name: "BE News", path: "/benews" },
-                { 
-                  name: "Testimonials", 
+                {
+                  name: "Testimonials",
                   path: "/#testimonial",
-                  isAnchor: true 
+                  isAnchor: true
                 },
                 { name: "Terms and Conditions", path: "/terms-and-conditions" },
                 { name: "Privacy Policy", path: "/privacy-policy" }
@@ -108,7 +108,7 @@ export default function Footer() {
           <div>
             <h3 className="font-semibold text-lg mb-4 font-jakarta">Office Location</h3>
             <address className="not-italic text-gray-600 space-y-1 font-jakarta">
-              <p>Buy Exchange Fintech,</p>
+              <p>Buyex Fintech Solutions Pvt Ltd,</p>
               <p>First Floor, Integrated Startup Complex,</p>
               <p>Kerala Technology Innovation Zone HMT Colony, Kalamassery -</p>
               <p>Kochi, Kerala-683503</p>
@@ -124,25 +124,25 @@ export default function Footer() {
             {[
               { href: "https://www.instagram.com/buyexchange_forex/?igsh=dWRndXh0cGZuamdr", src: "/instagram.svg", alt: "Instagram" },
               { href: "https://www.linkedin.com/company/buyexchange/posts/?feedView=all", src: "/linkedin-in-brands.svg", alt: "LinkedIn" },
-              { 
-                href: "https://www.facebook.com/share/16sF8XjkKA/", 
-                src: "/facebook-brands.svg", 
+              {
+                href: "https://www.facebook.com/share/16sF8XjkKA/",
+                src: "/facebook-brands.svg",
                 alt: "Facebook",
                 className: "p-1"
               },
             ].map(({ href, src, alt, className }) => (
               <Link key={alt} href={href} className={`text-gray-600 hover:text-gray-900 ${className || ''}`}>
-                <Image src={src} alt={alt} width={24} height={24} className="p-0.5"/>
+                <Image src={src} alt={alt} width={24} height={24} className="p-0.5" />
                 <span className="sr-only">{alt}</span>
               </Link>
             ))}
           </div>
           <p className="text-sm text-gray-500 mb-4 font-jakarta">
-            © 2025 Buyex Fintech Solutions Pvt Ltd. <br/>All Rights Reserved.
+            © 2025 Buyex Fintech Solutions Pvt Ltd. <br />All Rights Reserved.
           </p>
 
           <p className="text-xs text-gray-500 max-w-4xl mx-auto font-jakarta">
-            Buy exchange.in is a digital platform - it is not an Authorised Dealer and does not hold or claim to hold an
+            &quot;Buyexchange.in is a digital platform &quot;- it is not an Authorised Dealer and does not hold or claim to hold an
             AD licence by RBI. The forex services offered on the Buy Exchange portal are powered by our Partner Banks &
             RBI Authorised Dealers, following all security standards and FEMA regulations as per RBI norms.
           </p>
