@@ -290,6 +290,7 @@ export default function SignupSection() {
                         >
                           Privacy Policy
                         </Link>
+
                       </FormLabel>
                       <FormMessage className="text-xs mt-1" />
                     </div>
