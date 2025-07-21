@@ -13,11 +13,20 @@ export const getLiveRate = async (base: string, target: string) => {
   if (base === target) {
     return 1;
   }
-  const response = await fetch(
-    `https://api.frankfurter.app/latest?from=${base}&to=${target}`
-  );
-  const data = await response.json();
-  return data.rates[target];
+  
+  try {
+    const response = await fetch(`/api/currency?base=${target}&target=${base}`);
+    
+    if (!response.ok) {
+      throw new Error(`Currency API responded with status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data.rate;
+  } catch (error) {
+    console.error("Error fetching live rate:", error);
+    throw error;
+  }
 };
 
 export const calculateTcs = (amount: number, educationLoan?: boolean) => {
