@@ -105,17 +105,17 @@ export default function SignupSection() {
       <div className="relative w-full max-w-5xl bg-white flex flex-col lg:flex-row overflow-hidden shadow-xl rounded-lg">
         {/* Left Section */}
         <div className="w-full lg:w-1/3 bg-gradient-to-b from-dark-blue to-light-blue p-6 sm:p-8 text-white">
-           <Link href="/" passHref>
-  <div className="cursor-pointer">
-    <Image 
-      src="/whitelogo.png" 
-      alt="Buy Exchange Logo" 
-      width={165} 
-      height={50} 
-      className="mb-6"
-    />
-  </div>
-</Link>
+          <Link href="/" passHref>
+            <div className="cursor-pointer">
+              <Image
+                src="/whitelogo.png"
+                alt="Buy Exchange Logo"
+                width={165}
+                height={50}
+                className="mb-6"
+              />
+            </div>
+          </Link>
           <h1 className="text-2xl font-bold font-plus-jakarta">
             Be the Change in <br />
             Global Education.
@@ -274,18 +274,24 @@ export default function SignupSection() {
                         className="border-gray-300 h-4 w-4 mt-1"
                       />
                     </FormControl>
-                    <div className="text-sm text-gray-600 leading-tight">
-                      <FormLabel className="font-normal">
+                    <div className="text-xs sm:text-sm text-gray-600 leading-tight sm:leading-normal">
+                      <FormLabel className="font-normal flex flex-wrap gap-x-1">
                         I accept the{" "}
-                        <Link href="/terms-and-conditions" className="text-dark-blue hover:underline">
+                        <Link
+                          href="/terms-and-conditions"
+                          className="text-dark-blue hover:underline whitespace-nowrap"
+                        >
                           Terms of Service
                         </Link>{" "}
                         and{" "}
-                        <Link href="/privacy-policy" className="text-dark-blue hover:underline">
+                        <Link
+                          href="/privacy-policy"
+                          className="text-dark-blue hover:underline whitespace-nowrap"
+                        >
                           Privacy Policy
                         </Link>
                       </FormLabel>
-                      <FormMessage className="text-xs" />
+                      <FormMessage className="text-xs mt-1" />
                     </div>
                   </FormItem>
                 )}

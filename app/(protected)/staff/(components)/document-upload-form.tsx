@@ -231,7 +231,11 @@ export default function DocumentUploadForm({
     });
   };
 
-  const handleReset = () => {
+ const handleReset = (event?: React.MouseEvent<HTMLButtonElement> | boolean) => {
+  // If we get a MouseEvent (from button click), show toast
+  // If we get a boolean, use that to determine toast visibility
+  // If we get nothing (undefined), default to showing toast
+  const shouldShowToast = typeof event === 'boolean' ? event : true;
     setFormState({
       kyc: {
         pan: null,
@@ -245,7 +249,9 @@ export default function DocumentUploadForm({
     });
     console.log("reset");
     setFormErrors({});
+     if (shouldShowToast) {
     toast.info("Form has been reset");
+  }
   };
 
   const validateForm = (): boolean => {
@@ -496,7 +502,7 @@ export default function DocumentUploadForm({
         // All other roles: Only show success popup, no redirect
         toast.success("Documents uploaded successfully!");
         // Reset the form for non-manager users to allow new uploads
-        handleReset();
+        handleReset(false);
       }
     } catch (error) {
       console.error("Submission error:", error);
@@ -796,44 +802,47 @@ export default function DocumentUploadForm({
       </div>
 
       {/* Form Actions */}
-      <div className="flex justify-center gap-4 mt-8">
-        <Button
-          type="submit"
-          className="bg-dark-blue hover:bg-dark-blue text-white px-4 sm:px-8 font-jakarta h-12 sm:h-15 w-full sm:w-55 rounded-md"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? (
-            "Processing..."
-          ) : (
-            <>
-              <Image
-                src="/continue.svg"
-                alt=""
-                width={15}
-                height={15}
-                className="mr-2"
-              />{" "}
-              CONTINUE
-            </>
-          )}
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          className="bg-white hover:bg-white text-dark-gray font-jakarta border-gray-300 h-12 sm:h-15 w-full sm:w-55 rounded-md"
-          onClick={handleReset}
-          disabled={isSubmitting}
-        >
-          <Image
-            src="/reset.svg"
-            alt=""
-            width={15}
-            height={15}
-            className="mr-2"
-          />{" "}
-          RESET
-        </Button>
-      </div>
+<div className="flex justify-center gap-4 mt-8">
+  <Button
+    type="submit"
+    className="bg-dark-blue hover:bg-dark-blue text-white px-4 sm:px-8 font-jakarta h-12 sm:h-15 w-full sm:w-55 rounded-md"
+    disabled={isSubmitting}
+  >
+    {isSubmitting ? (
+      "Processing..."
+    ) : (
+      <>
+        <Image
+          src="/continue.svg"
+          alt=""
+          width={15}
+          height={15}
+          className="mr-2"
+        />{" "}
+        {/* Show "CONTINUE" for staff/admin/manager, "SUBMIT" for agent/user */}
+        {currentUserState?.role === "staff" || 
+         currentUserState?.role === "ADMIN" || 
+         currentUserState?.role === "MANAGER" ? "CONTINUE" : "SUBMIT"}
+      </>
+    )}
+  </Button>
+  <Button
+    type="button"
+    variant="outline"
+    className="bg-white hover:bg-white text-dark-gray font-jakarta border-gray-300 h-12 sm:h-15 w-full sm:w-55 rounded-md"
+    onClick={handleReset}
+    disabled={isSubmitting}
+  >
+    <Image
+      src="/reset.svg"
+      alt=""
+      width={15}
+      height={15}
+      className="mr-2"
+    />{" "}
+    RESET
+  </Button>
+</div>
     </form>
   );
 }
