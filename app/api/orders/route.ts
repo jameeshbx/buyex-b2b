@@ -1,9 +1,48 @@
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authConfig } from "@/auth.config";
 import { db } from "@/lib/db";
 import { generateOrderId } from "@/lib/utils";
+
 // GET /api/orders - Get all orders
 export async function GET() {
   try {
+    const session = await getServerSession(authConfig);
+
+    if (!session?.user?.email) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    // Get current user to check their role
+    const currentUser = await db.user.findUnique({
+      where: { email: session.user.email },
+      select: { role: true, id: true }
+    });
+
+    if (!currentUser) {
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404 }
+      );
+    }
+
+    // If user is AGENT, only return orders they created
+    if (currentUser.role === "AGENT") {
+      const orders = await db.order.findMany({
+        where: {
+          createdBy: currentUser.id,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+      return NextResponse.json(orders);
+    }
+
+    // For other roles (ADMIN, MANAGER, SUPER_ADMIN), return all orders
     const orders = await db.order.findMany({
       orderBy: {
         createdAt: "desc",
