@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: "/favicon.ico?v=2", // Add version parameter
+        url: "/favico.ico?v=2", // Add version parameter
         sizes: "32x32",
         type: "image/x-icon",
       },
