@@ -1,6 +1,6 @@
 // src/constants/hero.constants.ts
 export const HERO_CONTENT = {
-    description: "Let Us Handle The Forex Heavy Lifting, While You Deliver <br/> Exceptional Study Abroad Solutions.",
+    description: "Let Us Handle The Forex Heavy Lifting, While You Deliver  Exceptional Study Abroad Solutions.",
     partners: [
        {
         name: "Join in Campus",

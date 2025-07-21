@@ -345,32 +345,37 @@ export default function TransactionDetails({
     updateLiveRate();
   }, [currency, order]);
 
-  // Calculate values when amount, currency, or other factors change
+  // Calculate values when amount or currency change
   useEffect(() => {
-    if (amount && calculatedValues.customerRate && order) {
+    if (amount && order) {
       const numAmount = Number.parseFloat(amount);
-      const inrAmount = numAmount * calculatedValues.customerRate;
-      const gstAmount = Number.parseFloat(calculateGst(inrAmount));
-      const tcsAmount = Number.parseFloat(
-        calculateTcs(inrAmount, order.educationLoan === "yes")
-      );
-      const totalPayable = Number.parseFloat(
+      const margin = Number(order.margin || 0);
+      const ibrRate = Number(order.ibrRate || 0);
+      const bankFee = order.foreignBankCharges === 0 ? 1500 : 300;
+      const educationLoan = order.educationLoan === "yes";
+      const customerRate = ibrRate + margin;
+      const inrAmount = Math.round(numAmount * customerRate);
+      const gstAmount = Number(calculateGst(inrAmount));
+      const tcsAmount = educationLoan ? 0 : Number(calculateTcs(inrAmount));
+      const totalPayable = Number(
         calculateTotalPayable(
           inrAmount,
-          calculatedValues.bankFee,
-          order.educationLoan === "yes"
+          bankFee,
+          educationLoan
         )
       );
 
       setCalculatedValues((prev) => ({
         ...prev,
         inrAmount,
+        bankFee,
         gst: gstAmount,
         tcsApplicable: tcsAmount,
         totalPayable,
+        customerRate,
       }));
     }
-  }, [amount, calculatedValues.customerRate, calculatedValues.bankFee, order]);
+  }, [amount, currency, order]);
 
   const handleUpdateOrder = async () => {
     if (!order) return;

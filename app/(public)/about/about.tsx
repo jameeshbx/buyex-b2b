@@ -31,10 +31,16 @@ export default function AboutUs() {
             Our Mission
           </h2>
           <p className="text-lg text-gray-700 mb-6 font-jakarta">
-            Buy Exchange simplifies the process of sending money abroad for education, making it easier for students and their families. We understand the unique financial challenges of studying overseas and offer tailored forex solutions to meet those needs.
+           At Buy Exchange, we’re transforming how forex operates in the study abroad ecosystem making it smarter, more streamlined, and thoughtfully designed for education consultants.
+           Established in 2019 by ex-bankers with deep expertise in retail and trade forex, we set out to build a nimble Fintech platform that not only solves the payment challenges faced by international students and their families—but also empowers consultants with the tools they have long needed.
+          </p>
+          <p className="text-lg text-gray-700 font-jakarta mb-6">
+           We understand that in cross-border finance, compliance isn’t optional—it’s foundational. That’s why every aspect of our system is built with regulatory transparency, AML standards, and industry-best protocols at its core. Consultants can confidently manage transactions knowing that each payment is both legally sound and institutionally secure.
+           Our B2B white-labelled portal makes it easy for consultants to track transactions, lock in exchange rates, and generate revenue—all through an interface that’s sleek, intuitive, and regulation-ready. With features like downloadable quotes, API integration, and smart dashboards, we bring clarity and control to a historically opaque space.
           </p>
           <p className="text-lg text-gray-700 font-jakarta">
-            Founded by two ex-bankers with deep expertise in retail and trade forex, Buy Exchange delivers a one-stop, transparent, and compliant forex platform. By leveraging technology and industry experience, we streamline operations for both banks and customers, removing the complexity from currency transactions.
+          Whether guiding a student’s journey abroad or handling large-scale forex volumes, Buy Exchange ensures every transaction is fast, compliant, and rewarding—for students and consultants alike.
+         And we are just getting started. More innovations are on the way to make cross-border education payments even safer, simpler, and more consultant-centric.
           </p>
         </div>
       </div>
@@ -48,17 +54,17 @@ export default function AboutUs() {
           {[
             {
               title: "Transparency",
-              description: "No hidden fees or charges. We believe in clear, upfront pricing for all our services.",
+              description: " every forex quote and transaction is clear, compliant, and easy to track.",
               icon: "/trans.jpeg"
             },
             {
               title: "Expertise",
-              description: "Built by forex professionals with decades of combined banking experience.",
+              description: " backed by decades of retail and trade forex experience, we simplify the complex.",
               icon: "/expertise.jpeg"
             },
             {
               title: "Student-Centric",
-              description: "Solutions designed specifically for the needs of international students and their families.",
+              description: "our platform puts student needs first, making education payments effortless and empowering.",
               icon: "/student.jpeg"
             }
           ].map((value, index) => (
@@ -87,11 +93,11 @@ export default function AboutUs() {
         <p className="text-xl mb-8 max-w-3xl mx-auto font-jakarta">
   Whether you&rsquo;re sending money for education or need forex consultation, our team is here to help.
 </p>
-        <a href="https://www.instagram.com/buyexchange_forex?igsh=dWRndXh0cGZuamdr" target="_blank" rel="noopener noreferrer">
+   <a href="tel:+918943243543">
   <button className="bg-white text-deep-blue px-8 py-3 rounded-full font-bold hover:bg-blue-50 transition-colors font-jakarta">
     Get in Touch
   </button>
-  </a>
+</a>
       </div>
     </div>
   )

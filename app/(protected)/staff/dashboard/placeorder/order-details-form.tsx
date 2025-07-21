@@ -264,7 +264,7 @@ export default function OrderDetailsForm() {
   useEffect(() => {
     if (currency) {
       getLiveRate(currency, "INR").then((rate: number) => {
-        form.setValue("ibrRate", rate.toString());
+        form.setValue("ibrRate", rate.toFixed(2).toString());
       });
     }
   }, [currency, form]);
@@ -279,23 +279,28 @@ export default function OrderDetailsForm() {
 
   useEffect(() => {
     const currentAmount = Number.parseFloat(amount || "0");
+    console.log("currentAmount", currentAmount);
     const currentMargin = Number.parseFloat(margin || "0");
+    console.log("currentMargin", currentMargin);
     const currentIbrRate = Number.parseFloat(ibrRate || "0");
+    console.log("currentIbrRate", currentIbrRate);
     const bankFee = foreignBankCharges === "OUR" ? 1500 : 300;
 
     if (currentAmount && currentMargin) {
-      const totalAmount = (currentIbrRate + currentMargin) * currentAmount;
+      const totalAmount = ((currentIbrRate + currentMargin) * currentAmount);
+      const roundedTotalAmount = Math.round(totalAmount); // 101680
+      console.log("totalAmount", totalAmount);
       form.setValue(
         "customerRate",
         (currentIbrRate + currentMargin).toFixed(2).toString()
       );
       setCalculatedValues((prev) => ({
         ...prev,
-        inrAmount: totalAmount.toString(),
-        gst: calculateGst(totalAmount).toString(),
-        tcsApplicable: calculateTcs(totalAmount, educationLoan === "yes"),
+        inrAmount: roundedTotalAmount.toString(),
+        gst: calculateGst(roundedTotalAmount).toString(),
+        tcsApplicable: calculateTcs(roundedTotalAmount, educationLoan === "yes"),
         totalPayable: calculateTotalPayable(
-          totalAmount,
+          roundedTotalAmount,
           bankFee,
           educationLoan === "yes"
         ).toString(),

@@ -30,7 +30,7 @@ export const testimonials: Testimonial[] = [
     flag: "/germany.webp",
     position: { x: 43, y: 80 },
     flagPosition: { top: "mt-[390px]", right: "mr-[30px]" },
-    image: "/alex.png",
+    image: "/hills.jpg",
     quote: "I really had a great experience with the team. Excellent customer service and fast processing.",
     company: "Germany Resident"
   },
@@ -94,9 +94,6 @@ export const testimonials: Testimonial[] = [
     company: "Student UK"
   },
 
-  
- 
-
   // United States
   {
     id: "usa-1",
@@ -131,10 +128,10 @@ export const testimonials: Testimonial[] = [
     quote: "Very good service and excellent exchange rates.",
     company: "USA Resident"
   },
-   {
+  {
     id: "usa-4",
     name: "Hari Santoor",
-    country: "United states",
+    country: "United States",  // Changed from "United states" to "United States"
     flag: "/uniteds.png",
     position: { x: 70, y: 35 },
     flagPosition: { top: "mt-[450px]", right: "mr-[40px]" },

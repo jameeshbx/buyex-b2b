@@ -1,8 +1,9 @@
 export const aboutUsData = {
     title: "About Us",
     paragraphs: [
-      "Buy Exchange simplifies the process of sending money abroad for education, making it easier for students and their families. We understand the unique financial challenges of studying overseas and offer tailored forex solutions to meet those needs.",
-      "Founded by two ex-bankers with deep expertise in retail and trade forex, Buy Exchange delivers a one-stop, transparent, and compliant forex platform. By leveraging technology and industry experience, we streamline operations for both banks and customers, removing the complexity from currency transactions.",
+      "Buy Exchange simplifies international education payments—making the forex process seamless and stress-free for education consultants. We understand the financial complexities students and families face when studying abroad, and we provide tailored currency exchange solutions that are transparent, secure, and easy to manage.",
+      "Our platform is a one-stop fintech solution, built on the pillars of compliance, technology, and trust. From API Integration to a consultant-first design, we remove the traditional roadblocks of cross-border transactions—delivering clarity, control, and confidence at every stage.",
+      "Whether you're helping students plan their futures abroad or handling large-scale education payments, Buy Exchange equips you with the tools and trust to make every transaction smarter and simpler."
     ],
     dashboardImage: "/images/aboutus/dashboard.png?height=500&width=600",
     recognitions: {
