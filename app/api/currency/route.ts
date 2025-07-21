@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -16,9 +17,12 @@ export async function GET(request: NextRequest) {
     if (base === target) {
       return NextResponse.json({ rate: 1 });
     }
+     /* old values=/*3470db91b029770df12da2a66baa038b*/ 
 
-    const liveRateUrl = `http://apilayer.net/api/live?access_key=3470db91b029770df12da2a66baa038b&currencies=${base}&source=${target}&format=1`;
+    const liveRateUrl = `http://apilayer.net/api/live?access_key=c9004e1911575e473bce4dd8d383493b&currencies=${base}&source=${target}&format=1`;
     
+    
+
     const response = await fetch(liveRateUrl, {
       headers: {
         'Content-Type': 'application/json',
