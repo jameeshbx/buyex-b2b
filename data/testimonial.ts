@@ -30,7 +30,7 @@ export const testimonials: Testimonial[] = [
     flag: "/germany.webp",
     position: { x: 43, y: 80 },
     flagPosition: { top: "mt-[390px]", right: "mr-[30px]" },
-    image: "/alex.png",
+    image: "/hills.jpg",
     quote: "I really had a great experience with the team. Excellent customer service and fast processing.",
     company: "Germany Resident"
   },
