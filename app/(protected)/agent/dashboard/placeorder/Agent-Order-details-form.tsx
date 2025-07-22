@@ -249,6 +249,7 @@ export default function OrderDetailsForm() {
   const foreignBankCharges = form.watch("foreignBankCharges");
   const margin = form.watch("margin");
   const ibrRate = form.watch("ibrRate");
+  const educationLoan = form.watch("educationLoan");
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -263,7 +264,7 @@ export default function OrderDetailsForm() {
     if (currency) {
       getLiveRate(currency, "INR").then((rate: number) => {
         const ibrRate = rate + (user?.agentRate ?? 0);
-        form.setValue("ibrRate", ibrRate.toString());
+        form.setValue("ibrRate", ibrRate.toFixed(2).toString());
       });
     }
   }, [currency, form, user]);
@@ -284,30 +285,37 @@ export default function OrderDetailsForm() {
 
   useEffect(() => {
     const currentAmount = Number.parseFloat(amount || "0");
+    console.log("currentAmount", currentAmount);
     const currentMargin = Number.parseFloat(margin || "0");
-    const currentIbrRate = Number.parseFloat(ibrRate || "0");
-
+    console.log("currentMargin", currentMargin);
+    const currentIbrRate = Number(Number.parseFloat(ibrRate || "0").toFixed(2));
+    console.log("currentIbrRate", currentIbrRate);
+   
     if (currentAmount && currentMargin) {
-      const totalAmount = (currentIbrRate + currentMargin) * currentAmount;
+      const totalAmount = ((currentIbrRate + currentMargin) * currentAmount);
+      const roundedTotalAmount = Math.round(totalAmount); // 101680
+      console.log("totalAmount", totalAmount);
       form.setValue(
         "customerRate",
         (currentIbrRate + currentMargin).toFixed(2).toString()
       );
+      console.log("customerRate", (currentIbrRate + currentMargin).toFixed(2));
       setCalculatedValues((prev) => ({
         ...prev,
-        inrAmount: totalAmount.toString(),
-        gst: calculateGst(totalAmount).toString(),
+        inrAmount: roundedTotalAmount.toString(),
+        gst: calculateGst(roundedTotalAmount).toString(),
         tcsApplicable:
-          form.watch("educationLoan") === "yes"
+        educationLoan === "yes"
             ? "0"
-            : calculateTcs(totalAmount).toString(),
+            : calculateTcs(roundedTotalAmount).toString(),
         totalPayable: calculateTotalPayable(
-          totalAmount,
-          Number.parseFloat(prev.bankFee)
+          roundedTotalAmount,
+          Number.parseFloat(prev.bankFee),
+          educationLoan === "yes"
         ).toString(),
       }));
     }
-  }, [amount, margin, ibrRate, calculatedValues.bankFee, form]);
+  }, [amount, margin, ibrRate, calculatedValues.bankFee,educationLoan, form]);
 
   useEffect(() => {
     form.setValue("totalAmount", calculatedValues.totalPayable.toString());
