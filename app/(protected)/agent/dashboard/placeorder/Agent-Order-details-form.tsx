@@ -701,7 +701,7 @@ export default function OrderDetailsForm() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-gray-700 font-normal">
-                        Agent Rate
+                        BuyEx Rate
                       </FormLabel>
                       <FormControl>
                         <Input

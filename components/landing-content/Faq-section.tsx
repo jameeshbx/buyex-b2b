@@ -12,7 +12,7 @@ export default function FaqSection() {
   }
 
   return (
-    <div id="whoall" className="w-full max-w-6xl mx-auto px-4 sm:px-6 md:px-8 my-12 sm:my-20 md:my-32 lg:my-40 lg:mt-[64px] mb-[84px]">
+    <div id="whoall" className="pt-8 pb-16 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8 my-12 sm:my-20 md:my-32 lg:my-40 lg:mt-[64px] mb-[84px]">
       <div className="text-center mb-8 sm:mb-10 md:mb-12">
         <h1 className="text-3xl sm:text-4xl md:text-4xl font-bold text-dark-blue mb-2 font-playfair">
           All You Need To Know
