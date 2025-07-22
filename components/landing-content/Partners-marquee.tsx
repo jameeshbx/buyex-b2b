@@ -46,9 +46,9 @@ export default function PartnersMarquee() {
   }, []);
 
   return (
-    <section className="py-16 px-4 max-w-7xl mx-auto">
+    <section className="py-16 pt-8 pb-16  mx-auto w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8 my-12 sm:my-20 md:my-32 lg:my-40 lg:mt-[64px] mb-[84px]">
       <div className="text-center mb-12">
-        <h2 className="text-4xl md:text-5xl font-bold font-playfair text-dark-blue">
+        <h2 className="text-4xl md:text-5xl font-bold font-playfair text-deep-blue">
           The Force Behind Our Forex Flow
         </h2>
       </div>

@@ -38,7 +38,7 @@ function formatDate(dateString: string): string {
   })
 }
 
-type SortField = "date" | "userType" | "name" | "email" | "agentRate"
+type SortField = "date" | "userType" | "name" | "email" | "agentRate" | "forexPartner" | "buyexRate"
 type SortDirection = "asc" | "desc"
 
 const editUserSchema = z
@@ -52,14 +52,37 @@ const editUserSchema = z
       .refine((val) => val === undefined || (val >= 0 && val <= 100), {
         message: "Agent rate must be between 0 and 100",
       }),
+    forexPartner: z.string().optional(),
+    buyexRate: z
+      .number()
+      .optional()
+      .refine((val) => val === undefined || (val >= 0 && val <= 100), {
+        message: "Buyex rate must be between 0 and 100",
+      }),
   })
   .superRefine((data, ctx) => {
-    if (data.userType === "Agent" && (data.agentRate === undefined || data.agentRate < 0 || data.agentRate > 100)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Agent rate is required and must be between 0 and 100 for Agent users",
-        path: ["agentRate"],
-      })
+    if (data.userType === "Agent") {
+      if (data.agentRate === undefined || data.agentRate < 0 || data.agentRate > 100) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Agent rate is required and must be between 0 and 100 for Agent users",
+          path: ["agentRate"],
+        })
+      }
+      if (!data.forexPartner) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Forex Partner is required for Agent users",
+          path: ["forexPartner"],
+        })
+      }
+      if (data.buyexRate === undefined || data.buyexRate < 0 || data.buyexRate > 100) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Buyex rate is required and must be between 0 and 100 for Agent users",
+          path: ["buyexRate"],
+        })
+      }
     }
   })
 
@@ -71,7 +94,14 @@ interface UserTableProps {
   onDeleteUser: (id: string) => void
   onEditUser: (
     id: string,
-    userData: { name: string; email: string; userType: UserType; agentRate?: number },
+    userData: { 
+      name: string
+      email: string
+      userType: UserType
+      agentRate?: number
+      forexPartner?: string
+      buyexRate?: number
+    },
   ) => Promise<boolean>
   filteredUserType: UserType | "all"
   setFilteredUserType: (type: UserType | "all") => void
@@ -173,6 +203,14 @@ export function UserTable({
         aValue = a.agentRate ?? 0
         bValue = b.agentRate ?? 0
         break
+      case "forexPartner":
+        aValue = a.forexPartner?.toLowerCase() ?? ""
+        bValue = b.forexPartner?.toLowerCase() ?? ""
+        break
+      case "buyexRate":
+        aValue = a.buyexRate ?? 0
+        bValue = b.buyexRate ?? 0
+        break
       default:
         return 0
     }
@@ -246,6 +284,8 @@ export function UserTable({
         email: user.email,
         userType: user.userType,
         agentRate: user.agentRate,
+        forexPartner: user.forexPartner,
+        buyexRate: user.buyexRate,
       })
     }, 0)
   }
@@ -257,6 +297,8 @@ export function UserTable({
       email: data.email,
       userType: data.userType,
       agentRate: data.userType === "Agent" ? data.agentRate : undefined,
+      forexPartner: data.userType === "Agent" ? data.forexPartner : undefined,
+      buyexRate: data.userType === "Agent" ? data.buyexRate : undefined,
     })
     if (success) {
       setEditDialog({ open: false, user: null })
@@ -415,6 +457,22 @@ export function UserTable({
                     Agent Rate {getSortIcon("agentRate")}
                   </button>
                 </TableHead>
+                <TableHead className="whitespace-nowrap">
+                  <button
+                    className="flex items-center gap-1 hover:bg-gray-50 p-1 rounded transition-colors"
+                    onClick={() => handleSort("forexPartner")}
+                  >
+                    Forex Partner {getSortIcon("forexPartner")}
+                  </button>
+                </TableHead>
+                <TableHead className="whitespace-nowrap">
+                  <button
+                    className="flex items-center gap-1 hover:bg-gray-50 p-1 rounded transition-colors"
+                    onClick={() => handleSort("buyexRate")}
+                  >
+                    Buyex Rate {getSortIcon("buyexRate")}
+                  </button>
+                </TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Action</TableHead>
               </TableRow>
@@ -422,7 +480,7 @@ export function UserTable({
             <TableBody>
               {currentUsers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                  <TableCell colSpan={9} className="text-center py-8 text-gray-500">
                     No users found
                   </TableCell>
                 </TableRow>
@@ -447,6 +505,8 @@ export function UserTable({
                     <TableCell className="font-medium">{user.name}</TableCell>
                     <TableCell className="text-gray-600">{user.email}</TableCell>
                     <TableCell>{user.userType === "Agent" ? `${user.agentRate ?? "-"}` : "-"}</TableCell>
+                    <TableCell>{user.forexPartner || "-"}</TableCell>
+                    <TableCell>{user.userType === "Agent" ? `${user.buyexRate ?? "-"}` : "-"}</TableCell>
                     <TableCell>
                       <div
                         className={cn(
@@ -609,20 +669,53 @@ export function UserTable({
               {errors.email && <p className="text-red-500 text-xs">{errors.email.message}</p>}
             </div>
             {selectedUserType === "Agent" && (
-              <div className="space-y-2">
-                <Label htmlFor="edit-agentRate">Agent Rate </Label>
-                <Input
-                  id="edit-agentRate"
-                  type="number"
-                  min="0"
-                  max="100"
-                  placeholder="Enter agent rate"
-                  {...register("agentRate", {
-                    valueAsNumber: true,
-                  })}
-                />
-                {errors.agentRate && <p className="text-red-500 text-xs">{errors.agentRate.message}</p>}
-              </div>
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-agentRate">Agent Rate</Label>
+                  <Input
+                    id="edit-agentRate"
+                    type="number"
+                    min="0"
+                    max="100"
+                    placeholder="Enter agent rate"
+                    {...register("agentRate", {
+                      valueAsNumber: true,
+                    })}
+                  />
+                  {errors.agentRate && <p className="text-red-500 text-xs">{errors.agentRate.message}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-forexPartner">Forex Partner</Label>
+                  <Select
+                    defaultValue={editDialog.user?.forexPartner}
+                    onValueChange={(value) => setValue("forexPartner", value)}
+                  >
+                    <SelectTrigger id="edit-forexPartner" className="z-10">
+                      <SelectValue placeholder="Select forex partner" />
+                    </SelectTrigger>
+                    <SelectContent className="z-[60]">
+                      <SelectItem value="Ebix Cash World Money Ltd">Ebix Cash World Money Ltd</SelectItem>
+                      <SelectItem value="WSFX Global Pay Ltd">WSFX Global Pay Ltd</SelectItem>
+                      <SelectItem value="NIUM Forex India Pvt Ltd">NIUM Forex India Pvt Ltd</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {errors.forexPartner && <p className="text-red-500 text-xs">{errors.forexPartner.message}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-buyexRate">Buyex Rate</Label>
+                  <Input
+                    id="edit-buyexRate"
+                    type="number"
+                    min="0"
+                    max="100"
+                    placeholder="Enter buyex rate"
+                    {...register("buyexRate", {
+                      valueAsNumber: true,
+                    })}
+                  />
+                  {errors.buyexRate && <p className="text-red-500 text-xs">{errors.buyexRate.message}</p>}
+                </div>
+              </>
             )}
             <DialogFooter className="flex-col sm:flex-row gap-2">
               <Button
