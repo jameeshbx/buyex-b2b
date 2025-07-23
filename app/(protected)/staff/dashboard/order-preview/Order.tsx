@@ -13,6 +13,7 @@ import axios from "axios";
 import { Loader2 } from "lucide-react";
 import { generateA2Form } from "@/lib/pdf";
 import { orderReceivedTemplate } from "@/lib/email-templates";
+import { forexPartnerData } from "@/data/forex-partner";
 
 interface ForexPartner {
   bankName: string;
@@ -247,17 +248,20 @@ export default function TransactionDetails({
       throw error;
     } finally {
       // Send email notification via API route
+      const forexPartnerObject =
+        typeof order.forexPartner === "string"
+          ? forexPartnerData.find(
+              (partner) => partner.accountName === order.forexPartner
+            )
+          : order.forexPartner;
       try {
-        console.log(order);
-
         await fetch("/api/email/send", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            // @ts-expect-error - Email address added
-            to: order.forexPartner?.email || "amrutha@buyexchange.in",
+            to: forexPartnerObject?.email || "amrutha@buyexchange.in",
             cc: "forex@buyexchange.in",
             subject: "A2 Form Generated",
             html: orderReceivedTemplate({

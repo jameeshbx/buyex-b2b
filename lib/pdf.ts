@@ -107,15 +107,18 @@ export async function generateA2Form(order: Order) {
     name: order.sender?.studentName || '',
     dob: order.sender?.dob || '',
     address: order.sender?.addressLine1 || '',
+    address2: order.sender?.addressLine2 || '',
+    state: order.sender?.state || '',
+    postalCode: order.sender?.postalCode || '',
     mobile: order.sender?.phoneNumber || '',
     email: order.sender?.studentEmailOriginal || '',
     nationality: order.sender?.nationality || '',
-    pan: order.pancardNumber,
+    pan: order.pancardNumber || '',
     resStatus: 'Resident',
 
     senderName: order.sender?.senderName || '',
     senderPassportNo: '',
-    senderPAN: order.pancardNumber,
+    senderPAN: order.pancardNumber || '',
     relation: order.sender?.relationship || '',
 
     forexPurpose: order.purpose || '',
@@ -131,6 +134,7 @@ export async function generateA2Form(order: Order) {
     swiftCode: order.beneficiary?.receiverBankSwiftCode || '',
     abaCode: order.beneficiary?.receiverBankSwiftCode || '',
     reference:  '',
+    additionalInfo: order.beneficiary?.field70 || '',
   };
 
   // Add text to first page (coordinates are approximate; adjust as per actual form layout)
@@ -138,6 +142,9 @@ export async function generateA2Form(order: Order) {
   drawText(data.name, 120, height - 275);
   drawText(data.dob, 430, height - 275);  
   drawText(data.address, 100, height - 305);
+  drawText(data.address2, 50, height - 330);
+  drawText(data.state, 100, height - 345);
+  drawText(data.postalCode, 470, height - 330);
   drawText(data.mobile, 470, height - 360);  
   drawText(data.email, 100, height - 380);
   drawText(data.nationality, 410, height - 380);
@@ -152,7 +159,7 @@ export async function generateA2Form(order: Order) {
   // Add text to second page
   if (secondPage) {
     drawText(data.forexAmountUSD, 150, height - 120, 10, secondPage);
-    drawText(data.forexAmountUSD, 450, height - 150, 10, secondPage);
+    // drawText(data.forexAmountUSD, 450, height - 150, 10, secondPage);
     drawText(data.forexAmountINR, 150, height - 150, 10, secondPage);
     drawText(data.country, 200, height - 175, 10, secondPage);
     drawText(data.source, 200, height - 200, 10, secondPage);
@@ -164,6 +171,7 @@ export async function generateA2Form(order: Order) {
     drawText(data.swiftCode, 150, height - 430, 10, secondPage);
     drawText(data.abaCode, 250, height - 455, 10, secondPage);
     drawText(data.reference, 280, height - 510, 10, secondPage);
+    drawText(data.additionalInfo, 280, height - 515, 10, secondPage);
   }
 
   // Serialize and return

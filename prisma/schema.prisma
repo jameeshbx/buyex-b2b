@@ -21,6 +21,8 @@ model User {
   organisationId String?
   status         Boolean              @default(true)
   agentRate      Float?               @default(0)
+  buyexRate      Float?               @default(0)
+  forexPartner   String?
   accounts       Account[]
   resetTokens    PasswordResetToken[]
   sessions       Session[]
@@ -108,6 +110,7 @@ model Sender {
   senderName           String?
   bankCharges          String?
   dob                  String?
+  pancardNumber        String?
   senderNationality    String?  @default("indian")
   senderEmail          String?
   sourceOfFunds        String?

@@ -33,6 +33,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { forexPartnerData } from "@/data/forex-partner";
 
 // Types
 type Order = {
@@ -346,6 +347,15 @@ export default function Dashboard() {
         prevOrders.map((order) => (order.id === orderId ? updatedOrder : order))
       );
 
+      const forexPartnerObject =
+        typeof updatedOrder.forexPartner === "string"
+          ? forexPartnerData.find(
+              (partner) =>
+                partner.accountName.toLowerCase() ===
+                updatedOrder.forexPartner.toLowerCase()
+            )
+          : updatedOrder.forexPartner;
+
       // Then send email to forex partner
       try {
         const documentsRes = await fetch(`/api/upload/document/${orderId}`);
@@ -356,9 +366,7 @@ export default function Dashboard() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               orderId,
-              to:
-                updatedOrder.forexPartner?.email ||
-                "buyexchange@buyexchange.in",
+              to: forexPartnerObject?.email || "buyexchange@buyexchange.in",
               documents: documents.map(
                 (doc: { imageUrl: string }) => doc.imageUrl
               ),

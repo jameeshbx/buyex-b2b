@@ -53,7 +53,7 @@ const formSchema = z
       .refine((val) => val === undefined || (val >= 0 && val <= 100), {
         message: "Agent rate must be between 0 and 100",
       }),
-      forexPartner: z.string().optional(),
+    forexPartner: z.string().optional(),
     buyexRate: z
       .number()
       .optional()
@@ -76,17 +76,22 @@ const formSchema = z
         });
       }
 
-        if (!data.forexPartner) {
+      if (!data.forexPartner) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: "Forex Partner is required for Agent users",
           path: ["forexPartner"],
         });
       }
-      if (data.buyexRate === undefined || data.buyexRate < 0 || data.buyexRate > 100) {
+      if (
+        data.buyexRate === undefined ||
+        data.buyexRate < 0 ||
+        data.buyexRate > 100
+      ) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Buyex rate is required and must be between 0 and 100 for Agent users",
+          message:
+            "Buyex rate is required and must be between 0 and 100 for Agent users",
           path: ["buyexRate"],
         });
       }
@@ -164,6 +169,8 @@ export function UserForm({ onAddUser }: UserFormProps) {
         organisationId:
           data.userType === "Agent" ? data.organisationId : undefined,
         agentRate: data.userType === "Agent" ? data.agentRate : undefined,
+        forexPartner: data.userType === "Agent" ? data.forexPartner : undefined,
+        buyexRate: data.userType === "Agent" ? data.buyexRate : undefined,
         userId: "", // This will be set by the API response
       });
       // Reset form on success
@@ -298,44 +305,54 @@ export function UserForm({ onAddUser }: UserFormProps) {
               </div>
             )}
             {userType === "Agent" && (
-  <>
-    <div className="space-y-2">
-      <Label htmlFor="forexPartner">Forex Partner</Label>
-      <Select
-        onValueChange={(value) => setValue("forexPartner", value)}
-      >
-        <SelectTrigger id="forexPartner" className="w-full">
-          <SelectValue placeholder="Select forex partner" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="Ebix Cash World Money Ltd">Ebix Cash World Money Ltd</SelectItem>
-          <SelectItem value="WSFX Global Pay Ltd">WSFX Global Pay Ltd</SelectItem>
-          <SelectItem value="NIUM Forex India Pvt Ltd">NIUM Forex India Pvt Ltd</SelectItem>
-        </SelectContent>
-      </Select>
-      {errors.forexPartner && (
-        <p className="text-red-500 text-xs">{errors.forexPartner.message}</p>
-      )}
-    </div>
-    <div className="space-y-2">
-      <Label htmlFor="buyexRate">Buyex Rate</Label>
-      <Input
-        id="buyexRate"
-        type="number"
-        min="0"
-        max="100"
-        step="0.01"
-        placeholder="Enter buyex rate"
-        {...register("buyexRate", {
-          valueAsNumber: true,
-        })}
-      />
-      {errors.buyexRate && (
-        <p className="text-red-500 text-xs">{errors.buyexRate.message}</p>
-      )}
-    </div>
-  </>
-)}
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="forexPartner">Forex Partner</Label>
+                  <Select
+                    onValueChange={(value) => setValue("forexPartner", value)}
+                  >
+                    <SelectTrigger id="forexPartner" className="w-full">
+                      <SelectValue placeholder="Select forex partner" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Ebix Cash World Money Ltd">
+                        Ebix Cash World Money Ltd
+                      </SelectItem>
+                      <SelectItem value="WSFX Global Pay Ltd">
+                        WSFX Global Pay Ltd
+                      </SelectItem>
+                      <SelectItem value="NIUM Forex India Pvt Ltd">
+                        NIUM Forex India Pvt Ltd
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {errors.forexPartner && (
+                    <p className="text-red-500 text-xs">
+                      {errors.forexPartner.message}
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="buyexRate">Buyex Rate</Label>
+                  <Input
+                    id="buyexRate"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    placeholder="Enter buyex rate"
+                    {...register("buyexRate", {
+                      valueAsNumber: true,
+                    })}
+                  />
+                  {errors.buyexRate && (
+                    <p className="text-red-500 text-xs">
+                      {errors.buyexRate.message}
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
             <div className="flex items-end">
               <Button
                 type="submit"
