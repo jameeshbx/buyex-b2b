@@ -3,7 +3,7 @@ import { sendEmailToForexPartner } from "@/lib/email-forex";
 
 export async function POST(request: NextRequest) {
   try {
-    const { documents } = await request.json();
+    const { documents, to } = await request.json();
     
     if (!documents || !Array.isArray(documents)) {
       return NextResponse.json(
@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await sendEmailToForexPartner(documents);
+    await sendEmailToForexPartner(documents, to);
     
     return NextResponse.json(
       { message: "Email sent successfully to forex partner" },

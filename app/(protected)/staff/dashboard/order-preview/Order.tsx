@@ -248,16 +248,16 @@ export default function TransactionDetails({
     } finally {
       // Send email notification via API route
       try {
+        console.log(order);
+
         await fetch("/api/email/send", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            to:
-              typeof order.forexPartner === "string"
-                ? order.forexPartner
-                : order.forexPartner?.email || "amrutha@buyexchange.in",
+            // @ts-expect-error - Email address added
+            to: order.forexPartner?.email || "amrutha@buyexchange.in",
             cc: "forex@buyexchange.in",
             subject: "A2 Form Generated",
             html: orderReceivedTemplate({
@@ -358,11 +358,7 @@ export default function TransactionDetails({
       const gstAmount = Number(calculateGst(inrAmount));
       const tcsAmount = educationLoan ? 0 : Number(calculateTcs(inrAmount));
       const totalPayable = Number(
-        calculateTotalPayable(
-          inrAmount,
-          bankFee,
-          educationLoan
-        )
+        calculateTotalPayable(inrAmount, bankFee, educationLoan)
       );
 
       setCalculatedValues((prev) => ({

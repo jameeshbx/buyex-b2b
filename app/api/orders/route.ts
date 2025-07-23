@@ -59,6 +59,28 @@ export async function GET() {
 // POST /api/orders - Create a new order
 export async function POST(req: Request) {
   try {
+    const session = await getServerSession(authConfig);
+
+    if (!session?.user?.email) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    // Get current user to check their role and get their ID
+    const currentUser = await db.user.findUnique({
+      where: { email: session.user.email },
+      select: { role: true, id: true }
+    });
+
+    if (!currentUser) {
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404 }
+      );
+    }
+
     const body = await req.json();
     const {
       purpose,
@@ -147,12 +169,13 @@ export async function POST(req: Request) {
         currency: currency || "USD",
         totalAmount: parseFloat(totalAmount),
         customerRate: parseFloat(customerRate) || 0,
-        status:status || "Pending",
-        createdBy: "system",
+        status: status || "Pending",
+        createdBy: currentUser.role === "AGENT" ? currentUser.id : "system", // Use the logged-in user's ID
+        createdUser: currentUser.id, // Use the logged-in user's ID
         quote: quote,
         calculations: calculations,
         generatedPDF: generatedPDF,
-        educationLoan: educationLoan || "no" ,
+        educationLoan: educationLoan || "no",
         pancardNumber: pancardNumber || null,
       },
     });

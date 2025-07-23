@@ -356,6 +356,9 @@ export default function Dashboard() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               orderId,
+              to:
+                updatedOrder.forexPartner?.email ||
+                "buyexchange@buyexchange.in",
               documents: documents.map(
                 (doc: { imageUrl: string }) => doc.imageUrl
               ),
@@ -627,7 +630,8 @@ export default function Dashboard() {
               {paginatedOrders.map((order) => {
                 const beneficiaryId = order.beneficiaryId || order.id;
                 const beneficiary = beneficiaries[beneficiaryId];
-                const showAuthorizeButton = order.status === "Received" || order.status === "RateCovered";
+                const showAuthorizeButton =
+                  order.status === "Received" || order.status === "RateCovered";
 
                 return (
                   <React.Fragment key={order.id}>
