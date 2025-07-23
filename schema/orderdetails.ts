@@ -25,10 +25,7 @@ export const orderDetailsFormSchema = z.object({
   currency: z.string().min(1, { message: "Currency is required" }),
   totalAmount: z.string().optional(),
   customerRate: z.string().optional(),
-  pancardNumber: z.string()
-    .min(10, "PAN must be 10 characters long")
-    .max(10, "PAN must be 10 characters long")
-    .regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, "Invalid PAN format"),
+ 
 })
 
 export type OrderDetailsFormValues = z.infer<typeof orderDetailsFormSchema>

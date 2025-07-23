@@ -46,60 +46,62 @@ export default function PartnersMarquee() {
   }, []);
 
   return (
-    <section className="py-16 pt-8 pb-16  mx-auto w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8 my-12 sm:my-20 md:my-32 lg:my-40 lg:mt-[64px] mb-[84px]">
-      <div className="text-center mb-12">
-        <h2 className="text-4xl md:text-5xl font-bold font-playfair text-deep-blue">
-          The Force Behind Our Forex Flow
-        </h2>
-      </div>
+    <section className="py-16 lg:py-16 sm:py-16 md:py-16 pt-8 pb-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-8">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl md:text-5xl font-bold font-playfair text-deep-blue">
+            The Force Behind Our Forex Flow
+          </h2>
+        </div>
 
-      <div
-        ref={marqueeRef}
-        className="overflow-hidden scroll-smooth"
-        style={{
-          scrollbarWidth: "none",
-          msOverflowStyle: "none",
-          WebkitOverflowScrolling: "touch",
-        }}
-      >
-        <div className="flex items-center">
-          {/* First set of logos with links */}
-          {partnerLogos.map((logo, index) => (
-            <a
-              key={`first-${index}`}
-              href={logo.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-shrink-0 mx-8 w-[180px] h-[80px] relative hover:opacity-80 transition-opacity"
-            >
-              <Image
-                src={logo.src}
-                alt={logo.name}
-                fill
-                style={{ objectFit: "contain" }}
-                unoptimized
-              />
-            </a>
-          ))}
+        <div
+          ref={marqueeRef}
+          className="overflow-hidden scroll-smooth"
+          style={{
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
+            WebkitOverflowScrolling: "touch",
+          }}
+        >
+          <div className="flex items-center">
+            {/* First set of logos with links */}
+            {partnerLogos.map((logo, index) => (
+              <a
+                key={`first-${index}`}
+                href={logo.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-shrink-0 mx-8 w-[180px] h-[80px] relative hover:opacity-80 transition-opacity"
+              >
+                <Image
+                  src={logo.src}
+                  alt={logo.name}
+                  fill
+                  style={{ objectFit: "contain" }}
+                  unoptimized
+                />
+              </a>
+            ))}
 
-          {/* Duplicate set for seamless looping */}
-          {partnerLogos.map((logo, index) => (
-            <a
-              key={`second-${index}`}
-              href={logo.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-shrink-0 mx-8 w-[180px] h-[80px] relative hover:opacity-80 transition-opacity"
-            >
-              <Image
-                src={logo.src}
-                alt={logo.name}
-                fill
-                style={{ objectFit: "contain" }}
-                unoptimized
-              />
-            </a>
-          ))}
+            {/* Duplicate set for seamless looping */}
+            {partnerLogos.map((logo, index) => (
+              <a
+                key={`second-${index}`}
+                href={logo.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-shrink-0 mx-8 w-[180px] h-[80px] relative hover:opacity-80 transition-opacity"
+              >
+                <Image
+                  src={logo.src}
+                  alt={logo.name}
+                  fill
+                  style={{ objectFit: "contain" }}
+                  unoptimized
+                />
+              </a>
+            ))}
+          </div>
         </div>
       </div>
     </section>
