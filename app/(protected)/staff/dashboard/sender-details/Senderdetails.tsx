@@ -24,7 +24,8 @@ import axios from "axios"
 import type { Sender } from "@prisma/client"
 
 type FormValues = OriginalFormValues & {
-  status?: string
+  status?: string;
+  pancardNumber?: string;
 }
 
 function Senderdetails() {
@@ -62,6 +63,7 @@ function Senderdetails() {
       studentEmailOriginal: "",
       studentEmailFake: "",
       phoneNumber: "",
+      
       addressLine1: "",
       addressLine2: "",
       state: "",
@@ -81,6 +83,7 @@ function Senderdetails() {
       senderState: "",
       senderPostalCode: "",
       status: "pending",
+      pancardNumber: "",
     },
   })
 
@@ -544,8 +547,58 @@ function Senderdetails() {
                             </FormItem>
                           )}
                         />
+
+                         {payer === "self" && (
+  <FormField
+    control={form.control}
+    name="pancardNumber"
+    render={({ field }) => (
+      <FormItem className="space-y-1 sm:space-y-2">
+        <FormLabel className="font-jakarta text-sm sm:text-base text-gray-500">
+          PAN Card Number
+        </FormLabel>
+        <FormControl>
+          <Input
+            {...field}
+            placeholder="ABCDE1234F"
+            className="bg-blue-50 h-12 sm:h-14 rounded-none"
+            onChange={(e) => {
+              const value = e.target.value.toUpperCase();
+              field.onChange(value);
+            }}
+          />
+        </FormControl>
+        <FormMessage className="text-xs sm:text-sm" />
+      </FormItem>
+    )}
+  />
+)}
                         {/* Nationality */}
-                        <FormField
+                        
+                        {/* DOB Field - Show in Student Details when payer is "self" */}
+                        {payer === "self" && (
+                          <FormField
+                            control={form.control}
+                            name="dob"
+                            render={({ field }) => (
+                              <FormItem className="space-y-1 sm:space-y-2">
+                                <FormLabel className="font-jakarta text-sm sm:text-base text-gray-500">
+                                  Date of Birth
+                                </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    placeholder="DD/MM/YYYY"
+                                    className="bg-blue-50 h-12 sm:h-14 rounded-none"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage className="text-xs sm:text-sm" />
+                              </FormItem>
+                            )}
+                          />
+                        )}
+
+                       <FormField
                           control={form.control}
                           name="nationality"
                           render={({ field }) => (
@@ -581,28 +634,6 @@ function Senderdetails() {
                             </FormItem>
                           )}
                         />
-                        {/* DOB Field - Show in Student Details when payer is "self" */}
-                        {payer === "self" && (
-                          <FormField
-                            control={form.control}
-                            name="dob"
-                            render={({ field }) => (
-                              <FormItem className="space-y-1 sm:space-y-2">
-                                <FormLabel className="font-jakarta text-sm sm:text-base text-gray-500">
-                                  Date of Birth
-                                </FormLabel>
-                                <FormControl>
-                                  <Input
-                                    placeholder="DD/MM/YYYY"
-                                    className="bg-blue-50 h-12 sm:h-14 rounded-none"
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage className="text-xs sm:text-sm" />
-                              </FormItem>
-                            )}
-                          />
-                        )}
                       </div>
                     </div>
                     {/* Conditionally render Sender Details Section based on payer */}
@@ -822,6 +853,30 @@ function Senderdetails() {
                               </FormItem>
                             )}
                           />
+
+                          <FormField
+  control={form.control}
+  name="pancardNumber"
+  render={({ field }) => (
+    <FormItem className="space-y-1 sm:space-y-2">
+      <FormLabel className="font-jakarta text-sm sm:text-base text-gray-500">
+        PAN Card Number
+      </FormLabel>
+      <FormControl>
+        <Input
+          {...field}
+          placeholder="ABCDE1234F"
+          className="bg-blue-50 h-12 sm:h-14 rounded-none"
+          onChange={(e) => {
+            const value = e.target.value.toUpperCase();
+            field.onChange(value);
+          }}
+        />
+      </FormControl>
+      <FormMessage className="text-xs sm:text-sm" />
+    </FormItem>
+  )}
+/>
                         </div>
                         {/* Same address checkbox */}
                         <div className="space-y-1 sm:space-y-2 mt-4 sm:mt-6">

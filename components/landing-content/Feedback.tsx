@@ -55,8 +55,8 @@ const filteredTestimonials = activeCountry
   }
 
   return (
-    <section id="testimonial" className="w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8 my-12 sm:my-20 md:my-32 lg:my-40 lg:mt-[64px] mb-[84px] bg-white">
-      <div className="container px-4 mx-auto">
+    <section id="testimonial" className="w-full bg-white py-24">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12 md:mb-16">
           <h2 className="text-3xl md:text-4xl font-bold font-playfair text-deep-blue mb-4">
             Voices From Around the World
@@ -150,7 +150,15 @@ const filteredTestimonials = activeCountry
               </svg>
             </button>
             
-          
+            {/* More reviews link */}
+            <a 
+              href="https://share.google/ffCsmi1FC4UVwgQND" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="px-6 py-2 text-deep-blue hover:text-blue-700 font-medium text-sm hover:underline"
+            >
+              More reviews
+            </a>
             
             <button 
               onClick={nextTestimonial}

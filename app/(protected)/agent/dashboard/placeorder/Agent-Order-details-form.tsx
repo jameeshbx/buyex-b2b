@@ -82,7 +82,6 @@ async function generateQuotePDF(
       ["Foreign Currency", formData.currency || ""],
       ["Foreign Currency Amount", formData.amount || ""],
       ["Exchange Rate", formData.customerRate || ""],
-      ["PAN Number", formData.pancardNumber || ""],
       ["Forex Conversion Tax", calculatedValues.gst],
       ["TCS", calculatedValues.tcsApplicable],
       ["Processing Charges", calculatedValues.bankFee],
@@ -197,7 +196,6 @@ export default function OrderDetailsForm() {
       currency: "USD",
       totalAmount: "",
       customerRate: "",
-      pancardNumber: "",
       educationLoan: "no",
     },
   });
@@ -363,7 +361,6 @@ export default function OrderDetailsForm() {
         currency: formData.currency,
         totalAmount: formData.totalAmount,
         customerRate: formData.customerRate,
-        pancardNumber: formData.pancardNumber,
         consultancy: "BuyExchange",
         status: "QuoteDownloaded",
         createdAt: new Date(),
@@ -694,7 +691,7 @@ export default function OrderDetailsForm() {
                 )}
               />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
                 <FormField
                   control={form.control}
                   name="ibrRate"
@@ -713,24 +710,15 @@ export default function OrderDetailsForm() {
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="margin"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-gray-700 font-normal">
-                        Margin
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          className="bg-blue-50/50 border-blue-200 shadow-lg h-12"
-                          placeholder="Enter margin"
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+                
+
+
+
+
+
+
+
+
               </div>
             </div>
 
@@ -907,25 +895,26 @@ export default function OrderDetailsForm() {
                   />
                 </div>
               </div>
+
               <FormField
-                control={form.control}
-                name="customerRate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-gray-700 font-normal">
-                      Customer rate
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        readOnly
-                        placeholder=" customer rate"
-                        className="bg-blue-50/50 border-blue-200 shadow-lg h-12"
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+                  control={form.control}
+                  name="margin"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-700 font-normal">
+                        Margin
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          className="bg-blue-50/50 border-blue-200 shadow-lg h-12"
+                          placeholder="Enter margin"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              
             </div>
           </div>
 
@@ -1044,30 +1033,26 @@ export default function OrderDetailsForm() {
                 </Button>
               </div>
             </div>
-
-            <div className="pt-4 mb-2 md:mb-0 gap-6">
-              <FormField
+<FormField
                 control={form.control}
-                name="pancardNumber"
+                name="customerRate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>PAN Card</FormLabel>
+                    <FormLabel className="text-gray-700 font-normal">
+                      Customer rate
+                    </FormLabel>
                     <FormControl>
                       <Input
                         {...field}
-                        placeholder="ABCDE1234F"
-                        className="bg-gray-150 border-blue-200 shadow-lg h-12 -mt-1.5"
-                        onChange={(e) => {
-                          const value = e.target.value.toUpperCase();
-                          field.onChange(value);
-                          form.setValue("pancardNumber", value);
-                        }}
+                        readOnly
+                        placeholder=" customer rate"
+                        className="bg-blue-50/50 border-blue-200 shadow-lg h-12"
                       />
                     </FormControl>
                   </FormItem>
                 )}
               />
-            </div>
+         
           </div>
 
           {/* Action Buttons */}
