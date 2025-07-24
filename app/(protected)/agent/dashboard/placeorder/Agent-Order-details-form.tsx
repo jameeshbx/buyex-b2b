@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Download, ArrowRight, RotateCcw, Play, Loader2 } from "lucide-react";
+import { Download, ArrowRight, RotateCcw, Loader2 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
@@ -39,6 +39,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { forexPartnerData } from "@/data/forex-partner";
 import { User } from "@prisma/client";
+import { toast } from "sonner"
 
 interface CalculatedValues {
   inrAmount: string;
@@ -188,7 +189,7 @@ export default function OrderDetailsForm() {
       purpose: "",
       foreignBankCharges: "OUR",
       payer: "",
-      margin: "1",
+      margin: "0",
       receiverBankCountry: "",
       studentName: "",
       ibrRate: "",
@@ -254,6 +255,8 @@ export default function OrderDetailsForm() {
       const user = await fetch("/api/users/me").then((res) => res.json());
 
       setUser(user);
+      console.log("user", user);
+      
     };
     fetchUser();
   }, []);
@@ -261,8 +264,15 @@ export default function OrderDetailsForm() {
   useEffect(() => {
     if (currency) {
       getLiveRate(currency, "INR").then((rate: number) => {
-        const ibrRate = rate + (user?.agentRate ?? 0);
+        const ibrRate = rate + (user?.buyexRate ?? 0);
+        console.log("rate", rate);
+        
         form.setValue("ibrRate", ibrRate.toFixed(2).toString());
+        form.setValue("margin", (user?.agentRate ?? 0).toString());
+        console.log("ibrRate", ibrRate);
+        console.log("margin", user?.agentRate);
+        
+        
       });
     }
   }, [currency, form, user]);
@@ -393,6 +403,10 @@ export default function OrderDetailsForm() {
       });
 
       setIsQuoteDownloaded(true);
+      toast.success("Quote downloaded successfully", {
+        description: "You can now proceed to the next step.",
+      });
+      resetForm(); // <-- Reset the form after showing the toast
       if (typeof window !== "undefined") {
         setOrderId(orderId);
         localStorage.setItem("selectedPayer", order.data.payer);
@@ -692,6 +706,7 @@ export default function OrderDetailsForm() {
               />
 
               <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
+                {/* BuyEx Rate (not editable) */}
                 <FormField
                   control={form.control}
                   name="ibrRate"
@@ -1074,21 +1089,6 @@ export default function OrderDetailsForm() {
               <div className="flex ml-1">
                 <span className="text-white font-bold">&gt;&gt;&gt;</span>
               </div>
-            </Button>
-
-            <Button
-              type="submit"
-              className="bg-dark-blue hover:bg-medium-blue text-white flex items-center gap-2 h-12 rounded-md px-6 border-none"
-              disabled={isSubmitting || !isQuoteDownloaded}
-            >
-              {isSubmitting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <>
-                  <Play className="h-4 w-4" />
-                  <span className="font-medium">PROCEED</span>
-                </>
-              )}
             </Button>
 
             <Button
