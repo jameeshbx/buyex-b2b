@@ -59,6 +59,8 @@ interface Agent {
   name: string;
   email: string;
   role: string;
+  agentRate?: number;
+  buyexRate?: number;
 }
 
 async function generateQuotePDF(
@@ -195,7 +197,7 @@ export default function OrderDetailsForm() {
       foreignBankCharges: "OUR",
       payer: "",
       forexPartner: "",
-      margin: "1",
+      margin: "0",
       receiverBankCountry: "",
       studentName: "",
       consultancy: "",
@@ -426,6 +428,7 @@ export default function OrderDetailsForm() {
       try {
         const response = await axios.get("/api/users?role=AGENT");
         setAgents(response.data);
+        console.log("agents", response.data);
       } catch (error) {
         console.error("Error fetching agents:", error);
       } finally {
@@ -435,6 +438,20 @@ export default function OrderDetailsForm() {
 
     fetchAgents();
   }, []);
+
+  // Assuming agents array contains agentRate and buyexRate for each agent
+  const handleConsultancyChange = (selectedAgentName: string) => {
+    form.setValue("consultancy", selectedAgentName);
+
+    // Find the selected agent's details
+    const selectedAgent = agents.find(agent => agent.name === selectedAgentName);
+
+    if (selectedAgent) {
+      // Calculate margin as agentRate + buyexRate
+      const margin = (Number(selectedAgent.agentRate ?? 0) + Number(selectedAgent.buyexRate ?? 0)).toString();
+      form.setValue("margin", margin);
+    }
+  };
 
   if (status === "loading") {
     return (
@@ -865,7 +882,7 @@ export default function OrderDetailsForm() {
                       Choose consultancy
                     </FormLabel>
                     <Select
-                      onValueChange={field.onChange}
+                      onValueChange={handleConsultancyChange}
                       defaultValue={field.value}
                       disabled={isLoadingAgents}
                     >
