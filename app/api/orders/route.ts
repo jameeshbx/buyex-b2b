@@ -33,7 +33,7 @@ export async function GET() {
     if (currentUser.role === "AGENT") {
       const orders = await db.order.findMany({
         where: {
-          createdBy: currentUser.id,
+          createdUser: currentUser.id,
         },
         orderBy: {
           createdAt: "desc",
