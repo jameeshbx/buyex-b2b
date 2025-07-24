@@ -1,6 +1,11 @@
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+
+import { useEffect, useState } from "react";
 
 export default function WhyUs() {
+  const [isMounted, setIsMounted] = useState(false);
+  const router = useRouter();
    const stats = [
     {
       value: "30+",
@@ -18,6 +23,15 @@ export default function WhyUs() {
       desc: "We're proud to have enabled smooth university fee transfers for over 2,500 students, making global payments to institutions faster and easier. With a focus on transparency, reliability, and growing trust, we continue to support study abroad journeys through efficient and dependable cross-border payment solutions..",
     },
   ];
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const handleClick = () => {
+    if (isMounted) {
+      router.push('/signin');
+    }
+  };
 
   return (
     <section id="why-us" className="bg-white py-8 sm:py-16 lg:py-16">
@@ -28,18 +42,20 @@ export default function WhyUs() {
             Why Us?
           </h2>
           <p className="text-gray-600 mb-6 sm:mb-8 font-manrope text-sm sm:text-base md:text-lg leading-relaxed">
-            At Buy Exchange, we are committed to making international payments
-            straightforward and stress-free. Based in Kochi, Kerala, our mission
-            is to empower individuals, especially students, by providing seamless
-            and efficient forex solutions. With competitive exchange rates,
-            transparent fee structures, and multiple payment options, we ensure a
-            smooth experience for all your foreign exchange needs.
-          </p>
-          <div className="flex justify-center lg:justify-start">
-            <button className="bg-dark-blue text-white py-2 px-6 sm:py-3 sm:px-8 rounded-md font-jakarta text-sm sm:text-base md:text-lg hover:bg-blue-800 transition-colors">
-              GET STARTED
-            </button>
-          </div>
+  At Buy Exchange, our core mission is to empower study abroad education consultants by simplifying international payment solutions for their students. We specialize in delivering reliable,
+  transparent, and hassle-free forex services that align with your business needs.
+  With competitive exchange rates, zero hidden fees, and flexible payment modes, we enable consultants to provide seamless forex guidance to students pursuing education overseas. Whether it&apos;s Tuition Fee Remittance, Living Expense Transfers, Blocked Account Deposits or Visa Fee Payments, our streamlined processes and dedicated support help you build trust and add value to your student services.
+  Together, let&apos;s turn study abroad fee payments and foreign exchange into a frictionless step in every student&apos;s journey abroad.
+</p>
+            <div className="flex justify-center lg:justify-start">
+        <button 
+          onClick={handleClick}
+          className="bg-dark-blue text-white py-2 px-6 sm:py-3 sm:px-8 rounded-md font-jakarta text-sm sm:text-base md:text-lg hover:bg-blue-800 transition-colors"
+        >
+          GET STARTED
+        </button>
+      </div>
+
         </div>
 
         {/* Visuals & Cards */}

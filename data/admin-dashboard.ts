@@ -6,15 +6,15 @@ export interface Order {
   id: string
   date: string
   purpose: string
-  name: string
+  name?: string
   currency: string
   fcyAmt: number
   fxRate: number
   fxRateUpdated: boolean
   status: string
   receiverAccount: string
-  receiverCountry: string
-  forexPartner: string
+  receiverCountry?: string
+  forexPartner?: string
 }
 
 

@@ -293,21 +293,21 @@ export default function OrderDetailsForm() {
 
   useEffect(() => {
     const currentAmount = Number.parseFloat(amount || "0");
-    console.log("currentAmount", currentAmount);
+    
     const currentMargin = Number.parseFloat(margin || "0");
-    console.log("currentMargin", currentMargin);
+    
     const currentIbrRate = Number(Number.parseFloat(ibrRate || "0").toFixed(2));
-    console.log("currentIbrRate", currentIbrRate);
+   
    
     if (currentAmount && currentMargin) {
       const totalAmount = ((currentIbrRate + currentMargin) * currentAmount);
       const roundedTotalAmount = Math.round(totalAmount); // 101680
-      console.log("totalAmount", totalAmount);
+      
       form.setValue(
         "customerRate",
         (currentIbrRate + currentMargin).toFixed(2).toString()
       );
-      console.log("customerRate", (currentIbrRate + currentMargin).toFixed(2));
+      
       setCalculatedValues((prev) => ({
         ...prev,
         inrAmount: roundedTotalAmount.toString(),
@@ -446,7 +446,6 @@ export default function OrderDetailsForm() {
       <Form {...form}>
         <form
           onSubmit={(e) => {
-            console.log("Form submit triggered");
             form.handleSubmit(onSubmit)(e);
           }}
           className="space-y-6"
