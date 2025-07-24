@@ -13,6 +13,7 @@ import axios from "axios";
 import { Loader2 } from "lucide-react";
 import { generateA2Form } from "@/lib/pdf";
 import { orderReceivedTemplate } from "@/lib/email-templates";
+import { forexPartnerData } from "@/data/forex-partner";
 
 interface ForexPartner {
   bankName: string;
@@ -57,6 +58,7 @@ interface Order {
     senderName: string;
     bankCharges: string;
     dob: string;
+    pancardNumber: string;
     senderNationality: string;
     senderEmail: string;
     sourceOfFunds: string;
@@ -247,6 +249,12 @@ export default function TransactionDetails({
       throw error;
     } finally {
       // Send email notification via API route
+      const forexPartnerObject =
+        typeof order.forexPartner === "string"
+          ? forexPartnerData.find(
+              (partner) => partner.accountName === order.forexPartner
+            )
+          : order.forexPartner;
       try {
         await fetch("/api/email/send", {
           method: "POST",
@@ -254,10 +262,7 @@ export default function TransactionDetails({
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            to:
-              typeof order.forexPartner === "string"
-                ? order.forexPartner
-                : order.forexPartner?.email || "amrutha@buyexchange.in",
+            to: forexPartnerObject?.email || "amrutha@buyexchange.in",
             cc: "forex@buyexchange.in",
             subject: "A2 Form Generated",
             html: orderReceivedTemplate({
@@ -358,11 +363,7 @@ export default function TransactionDetails({
       const gstAmount = Number(calculateGst(inrAmount));
       const tcsAmount = educationLoan ? 0 : Number(calculateTcs(inrAmount));
       const totalPayable = Number(
-        calculateTotalPayable(
-          inrAmount,
-          bankFee,
-          educationLoan
-        )
+        calculateTotalPayable(inrAmount, bankFee, educationLoan)
       );
 
       setCalculatedValues((prev) => ({

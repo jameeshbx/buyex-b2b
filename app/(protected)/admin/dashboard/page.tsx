@@ -33,6 +33,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { forexPartnerData } from "@/data/forex-partner";
 
 // Types
 type Order = {
@@ -346,6 +347,15 @@ export default function Dashboard() {
         prevOrders.map((order) => (order.id === orderId ? updatedOrder : order))
       );
 
+      const forexPartnerObject =
+        typeof updatedOrder.forexPartner === "string"
+          ? forexPartnerData.find(
+              (partner) =>
+                partner.accountName.toLowerCase() ===
+                updatedOrder.forexPartner.toLowerCase()
+            )
+          : updatedOrder.forexPartner;
+
       // Then send email to forex partner
       try {
         const documentsRes = await fetch(`/api/upload/document/${orderId}`);
@@ -356,6 +366,7 @@ export default function Dashboard() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               orderId,
+              to: forexPartnerObject?.email || "buyexchange@buyexchange.in",
               documents: documents.map(
                 (doc: { imageUrl: string }) => doc.imageUrl
               ),
@@ -627,7 +638,8 @@ export default function Dashboard() {
               {paginatedOrders.map((order) => {
                 const beneficiaryId = order.beneficiaryId || order.id;
                 const beneficiary = beneficiaries[beneficiaryId];
-                const showAuthorizeButton = order.status === "Received" || order.status === "RateCovered";
+                const showAuthorizeButton =
+                  order.status === "Received" || order.status === "RateCovered";
 
                 return (
                   <React.Fragment key={order.id}>
@@ -645,7 +657,7 @@ export default function Dashboard() {
                             <ChevronRight className="h-4 w-4 text-gray-400" />
                           )}
                           <span className="font-semibold text-sm font-jakarta text-gray-900">
-                            #{order.id.slice(0, 7)}{" "}
+                            #{order.id.slice(0, 10)}{" "}
                             {/* Trim to first 8 characters */}
                           </span>
                         </div>
@@ -798,32 +810,48 @@ export default function Dashboard() {
                                   "-"}
                               </p>
                             </div>
+                            {order.receiverAccount && (
+                              <div>
+                                <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
+                                  Receiver&apos;s account
+                                </h4>
+                                <p className="text-gray-600 text-xs sm:text-sm font-jakarta break-all bg-gray-50 p-2 sm:p-3 rounded-sm">
+                                  {beneficiary?.receiverAccount ||
+                                    order.receiverAccount ||
+                                    "-"}
+                                </p>
+                              </div>
+                            )}
+                            {order.receiverBankCountry && (
+                              <div>
+                                <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
+                                  Receiver Country
+                                </h4>
+                                <p className="text-gray-600 text-sm sm:text-base font-jakarta bg-gray-50 p-2 sm:p-3 rounded-sm">
+                                  {beneficiary?.receiverBankCountry ||
+                                    order.receiverBankCountry ||
+                                    "-"}
+                                </p>
+                              </div>
+                            )}
+                            {order.forexPartner && (
+                              <div>
+                                <h4 className="font-semibold font-jakarta text-gray-900 mb-2">
+                                  Forex Partner
+                                </h4>
+                                <p className="text-gray-600 font-jakarta bg-gray-50 p-2 rounded-sm">
+                                  {typeof order.forexPartner === "string"
+                                    ? order.forexPartner
+                                    : order.forexPartner?.bankName || "N/A"}
+                                </p>
+                              </div>
+                            )}
                             <div>
                               <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
-                                Receiver&apos;s account
-                              </h4>
-                              <p className="text-gray-600 text-xs sm:text-sm font-jakarta break-all bg-gray-50 p-2 sm:p-3 rounded-sm">
-                                {beneficiary?.receiverAccount ||
-                                  order.receiverAccount ||
-                                  "-"}
-                              </p>
-                            </div>
-                            <div>
-                              <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
-                                Receiver Country
+                                Consultancy
                               </h4>
                               <p className="text-gray-600 text-sm sm:text-base font-jakarta bg-gray-50 p-2 sm:p-3 rounded-sm">
-                                {beneficiary?.receiverBankCountry ||
-                                  order.receiverBankCountry ||
-                                  "-"}
-                              </p>
-                            </div>
-                            <div>
-                              <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
-                                Forex Partner
-                              </h4>
-                              <p className="text-gray-600 text-sm sm:text-base font-jakarta bg-gray-50 p-2 sm:p-3 rounded-sm">
-                                {order.forexPartner?.bankName || "-"}
+                                {order.consultancy}
                               </p>
                             </div>
                           </div>

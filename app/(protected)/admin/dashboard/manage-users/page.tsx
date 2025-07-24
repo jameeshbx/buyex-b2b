@@ -178,8 +178,7 @@ export default function ManageUsersPage() {
   const handleEditUser = async (userId: string) => {
     try {
       // Fetch user data for editing
-      const response = await axios.get(`/api/users?id=${userId}`)
-      console.log("User data for editing:", response.data)
+     await axios.get(`/api/users?id=${userId}`)
       // Here you would typically open a modal or form with the user data
     } catch (err) {
       console.error("Error fetching user data:", err)

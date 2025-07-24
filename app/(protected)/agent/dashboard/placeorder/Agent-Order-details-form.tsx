@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Download, ArrowRight, RotateCcw, Play, Loader2 } from "lucide-react";
+import { Download, ArrowRight, RotateCcw, Loader2 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
@@ -39,6 +39,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { forexPartnerData } from "@/data/forex-partner";
 import { User } from "@prisma/client";
+import { toast } from "sonner"
 
 interface CalculatedValues {
   inrAmount: string;
@@ -82,7 +83,6 @@ async function generateQuotePDF(
       ["Foreign Currency", formData.currency || ""],
       ["Foreign Currency Amount", formData.amount || ""],
       ["Exchange Rate", formData.customerRate || ""],
-      ["PAN Number", formData.pancardNumber || ""],
       ["Forex Conversion Tax", calculatedValues.gst],
       ["TCS", calculatedValues.tcsApplicable],
       ["Processing Charges", calculatedValues.bankFee],
@@ -189,7 +189,7 @@ export default function OrderDetailsForm() {
       purpose: "",
       foreignBankCharges: "OUR",
       payer: "",
-      margin: "1",
+      margin: "0",
       receiverBankCountry: "",
       studentName: "",
       ibrRate: "",
@@ -197,7 +197,6 @@ export default function OrderDetailsForm() {
       currency: "USD",
       totalAmount: "",
       customerRate: "",
-      pancardNumber: "",
       educationLoan: "no",
     },
   });
@@ -249,12 +248,15 @@ export default function OrderDetailsForm() {
   const foreignBankCharges = form.watch("foreignBankCharges");
   const margin = form.watch("margin");
   const ibrRate = form.watch("ibrRate");
+  const educationLoan = form.watch("educationLoan");
 
   useEffect(() => {
     const fetchUser = async () => {
       const user = await fetch("/api/users/me").then((res) => res.json());
 
       setUser(user);
+      console.log("user", user);
+      
     };
     fetchUser();
   }, []);
@@ -262,8 +264,15 @@ export default function OrderDetailsForm() {
   useEffect(() => {
     if (currency) {
       getLiveRate(currency, "INR").then((rate: number) => {
-        const ibrRate = rate + (user?.agentRate ?? 0);
-        form.setValue("ibrRate", ibrRate.toString());
+        const ibrRate = rate + (user?.buyexRate ?? 0);
+        console.log("rate", rate);
+        
+        form.setValue("ibrRate", ibrRate.toFixed(2).toString());
+        form.setValue("margin", (user?.agentRate ?? 0).toString());
+        console.log("ibrRate", ibrRate);
+        console.log("margin", user?.agentRate);
+        
+        
       });
     }
   }, [currency, form, user]);
@@ -284,30 +293,37 @@ export default function OrderDetailsForm() {
 
   useEffect(() => {
     const currentAmount = Number.parseFloat(amount || "0");
+    
     const currentMargin = Number.parseFloat(margin || "0");
-    const currentIbrRate = Number.parseFloat(ibrRate || "0");
-
+    
+    const currentIbrRate = Number(Number.parseFloat(ibrRate || "0").toFixed(2));
+   
+   
     if (currentAmount && currentMargin) {
-      const totalAmount = (currentIbrRate + currentMargin) * currentAmount;
+      const totalAmount = ((currentIbrRate + currentMargin) * currentAmount);
+      const roundedTotalAmount = Math.round(totalAmount); // 101680
+      
       form.setValue(
         "customerRate",
         (currentIbrRate + currentMargin).toFixed(2).toString()
       );
+      
       setCalculatedValues((prev) => ({
         ...prev,
-        inrAmount: totalAmount.toString(),
-        gst: calculateGst(totalAmount).toString(),
+        inrAmount: roundedTotalAmount.toString(),
+        gst: calculateGst(roundedTotalAmount).toString(),
         tcsApplicable:
-          form.watch("educationLoan") === "yes"
+        educationLoan === "yes"
             ? "0"
-            : calculateTcs(totalAmount).toString(),
+            : calculateTcs(roundedTotalAmount).toString(),
         totalPayable: calculateTotalPayable(
-          totalAmount,
-          Number.parseFloat(prev.bankFee)
+          roundedTotalAmount,
+          Number.parseFloat(prev.bankFee),
+          educationLoan === "yes"
         ).toString(),
       }));
     }
-  }, [amount, margin, ibrRate, calculatedValues.bankFee, form]);
+  }, [amount, margin, ibrRate, calculatedValues.bankFee,educationLoan, form]);
 
   useEffect(() => {
     form.setValue("totalAmount", calculatedValues.totalPayable.toString());
@@ -355,7 +371,6 @@ export default function OrderDetailsForm() {
         currency: formData.currency,
         totalAmount: formData.totalAmount,
         customerRate: formData.customerRate,
-        pancardNumber: formData.pancardNumber,
         consultancy: "BuyExchange",
         status: "QuoteDownloaded",
         createdAt: new Date(),
@@ -388,6 +403,10 @@ export default function OrderDetailsForm() {
       });
 
       setIsQuoteDownloaded(true);
+      toast.success("Quote downloaded successfully", {
+        description: "You can now proceed to the next step.",
+      });
+      resetForm(); // <-- Reset the form after showing the toast
       if (typeof window !== "undefined") {
         setOrderId(orderId);
         localStorage.setItem("selectedPayer", order.data.payer);
@@ -427,7 +446,6 @@ export default function OrderDetailsForm() {
       <Form {...form}>
         <form
           onSubmit={(e) => {
-            console.log("Form submit triggered");
             form.handleSubmit(onSubmit)(e);
           }}
           className="space-y-6"
@@ -686,14 +704,15 @@ export default function OrderDetailsForm() {
                 )}
               />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
+                {/* BuyEx Rate (not editable) */}
                 <FormField
                   control={form.control}
                   name="ibrRate"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-gray-700 font-normal">
-                        Agent Rate
+                        BuyEx Rate
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -705,24 +724,15 @@ export default function OrderDetailsForm() {
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="margin"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-gray-700 font-normal">
-                        Margin
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          className="bg-blue-50/50 border-blue-200 shadow-lg h-12"
-                          placeholder="Enter margin"
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+                
+
+
+
+
+
+
+
+
               </div>
             </div>
 
@@ -899,25 +909,26 @@ export default function OrderDetailsForm() {
                   />
                 </div>
               </div>
+
               <FormField
-                control={form.control}
-                name="customerRate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-gray-700 font-normal">
-                      Customer rate
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        readOnly
-                        placeholder=" customer rate"
-                        className="bg-blue-50/50 border-blue-200 shadow-lg h-12"
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+                  control={form.control}
+                  name="margin"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-700 font-normal">
+                        Margin
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          className="bg-blue-50/50 border-blue-200 shadow-lg h-12"
+                          placeholder="Enter margin"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              
             </div>
           </div>
 
@@ -1036,30 +1047,26 @@ export default function OrderDetailsForm() {
                 </Button>
               </div>
             </div>
-
-            <div className="pt-4 mb-2 md:mb-0 gap-6">
-              <FormField
+<FormField
                 control={form.control}
-                name="pancardNumber"
+                name="customerRate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>PAN Card</FormLabel>
+                    <FormLabel className="text-gray-700 font-normal">
+                      Customer rate
+                    </FormLabel>
                     <FormControl>
                       <Input
                         {...field}
-                        placeholder="ABCDE1234F"
-                        className="bg-gray-150 border-blue-200 shadow-lg h-12 -mt-1.5"
-                        onChange={(e) => {
-                          const value = e.target.value.toUpperCase();
-                          field.onChange(value);
-                          form.setValue("pancardNumber", value);
-                        }}
+                        readOnly
+                        placeholder=" customer rate"
+                        className="bg-blue-50/50 border-blue-200 shadow-lg h-12"
                       />
                     </FormControl>
                   </FormItem>
                 )}
               />
-            </div>
+         
           </div>
 
           {/* Action Buttons */}
@@ -1081,21 +1088,6 @@ export default function OrderDetailsForm() {
               <div className="flex ml-1">
                 <span className="text-white font-bold">&gt;&gt;&gt;</span>
               </div>
-            </Button>
-
-            <Button
-              type="submit"
-              className="bg-dark-blue hover:bg-medium-blue text-white flex items-center gap-2 h-12 rounded-md px-6 border-none"
-              disabled={isSubmitting || !isQuoteDownloaded}
-            >
-              {isSubmitting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <>
-                  <Play className="h-4 w-4" />
-                  <span className="font-medium">PROCEED</span>
-                </>
-              )}
             </Button>
 
             <Button

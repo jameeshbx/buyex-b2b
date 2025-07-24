@@ -59,6 +59,8 @@ interface Agent {
   name: string;
   email: string;
   role: string;
+  agentRate?: number;
+  buyexRate?: number;
 }
 
 async function generateQuotePDF(
@@ -89,7 +91,7 @@ async function generateQuotePDF(
       ["Foreign Currency", formData.currency || ""],
       ["Foreign Currency Amount", formData.amount || ""],
       ["Exchange Rate", formData.customerRate || ""],
-      ["PAN Number", formData.pancardNumber || ""],
+
       ["Forex Conversion Tax", calculatedValues.gst],
       ["TCS", calculatedValues.tcsApplicable],
       ["Processing Charges", calculatedValues.bankFee],
@@ -116,6 +118,7 @@ async function generateQuotePDF(
       ["Account Number", forexPartner.accountNumber],
       ["IFSC Code", forexPartner.ifscCode],
       ["Branch", forexPartner.branch],
+      ["Consultancy", formData.consultancy],
     ],
   });
 
@@ -195,7 +198,7 @@ export default function OrderDetailsForm() {
       foreignBankCharges: "OUR",
       payer: "",
       forexPartner: "",
-      margin: "1",
+      margin: "0",
       receiverBankCountry: "",
       studentName: "",
       consultancy: "",
@@ -204,7 +207,6 @@ export default function OrderDetailsForm() {
       currency: "USD",
       totalAmount: "",
       customerRate: "",
-      pancardNumber: "",
       educationLoan: "no",
     },
   });
@@ -279,17 +281,17 @@ export default function OrderDetailsForm() {
 
   useEffect(() => {
     const currentAmount = Number.parseFloat(amount || "0");
-    console.log("currentAmount", currentAmount);
+
     const currentMargin = Number.parseFloat(margin || "0");
-    console.log("currentMargin", currentMargin);
+
     const currentIbrRate = Number.parseFloat(ibrRate || "0");
-    console.log("currentIbrRate", currentIbrRate);
+
     const bankFee = foreignBankCharges === "OUR" ? 1500 : 300;
 
     if (currentAmount && currentMargin) {
-      const totalAmount = ((currentIbrRate + currentMargin) * currentAmount);
+      const totalAmount = (currentIbrRate + currentMargin) * currentAmount;
       const roundedTotalAmount = Math.round(totalAmount); // 101680
-      console.log("totalAmount", totalAmount);
+
       form.setValue(
         "customerRate",
         (currentIbrRate + currentMargin).toFixed(2).toString()
@@ -298,7 +300,10 @@ export default function OrderDetailsForm() {
         ...prev,
         inrAmount: roundedTotalAmount.toString(),
         gst: calculateGst(roundedTotalAmount).toString(),
-        tcsApplicable: calculateTcs(roundedTotalAmount, educationLoan === "yes"),
+        tcsApplicable: calculateTcs(
+          roundedTotalAmount,
+          educationLoan === "yes"
+        ),
         totalPayable: calculateTotalPayable(
           roundedTotalAmount,
           bankFee,
@@ -358,7 +363,6 @@ export default function OrderDetailsForm() {
         currency: formData.currency,
         totalAmount: formData.totalAmount,
         customerRate: formData.customerRate,
-        pancardNumber: formData.pancardNumber,
         status: "QuoteDownloaded", // Use valid enum value
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -428,6 +432,7 @@ export default function OrderDetailsForm() {
       try {
         const response = await axios.get("/api/users?role=AGENT");
         setAgents(response.data);
+        console.log("agents", response.data);
       } catch (error) {
         console.error("Error fetching agents:", error);
       } finally {
@@ -437,6 +442,25 @@ export default function OrderDetailsForm() {
 
     fetchAgents();
   }, []);
+
+  // Assuming agents array contains agentRate and buyexRate for each agent
+  const handleConsultancyChange = (selectedAgentName: string) => {
+    form.setValue("consultancy", selectedAgentName);
+
+    // Find the selected agent's details
+    const selectedAgent = agents.find(
+      (agent) => agent.name === selectedAgentName
+    );
+
+    if (selectedAgent) {
+      // Calculate margin as agentRate + buyexRate
+      const margin = (
+        Number(selectedAgent.agentRate ?? 0) +
+        Number(selectedAgent.buyexRate ?? 0)
+      ).toString();
+      form.setValue("margin", margin);
+    }
+  };
 
   if (status === "loading") {
     return (
@@ -744,7 +768,7 @@ export default function OrderDetailsForm() {
                   </FormItem>
                 )}
               />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
                 <FormField
                   control={form.control}
                   name="margin"
@@ -758,25 +782,6 @@ export default function OrderDetailsForm() {
                           {...field}
                           className="bg-blue-50/50 border-blue-200 shadow-lg h-12"
                           placeholder="Enter margin"
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="ibrRate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-gray-700 font-normal">
-                        IBR Rate
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          className="bg-blue-50/50 border-blue-200 shadow-lg h-12"
-                          readOnly
                         />
                       </FormControl>
                     </FormItem>
@@ -884,7 +889,7 @@ export default function OrderDetailsForm() {
                       Choose consultancy
                     </FormLabel>
                     <Select
-                      onValueChange={field.onChange}
+                      onValueChange={handleConsultancyChange}
                       defaultValue={field.value}
                       disabled={isLoadingAgents}
                     >
@@ -1001,18 +1006,17 @@ export default function OrderDetailsForm() {
               </div>
               <FormField
                 control={form.control}
-                name="customerRate"
+                name="ibrRate"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-gray-700 font-normal">
-                      Customer rate
+                      IBR Rate
                     </FormLabel>
                     <FormControl>
                       <Input
                         {...field}
-                        readOnly
-                        placeholder=" customer rate"
                         className="bg-blue-50/50 border-blue-200 shadow-lg h-12"
+                        readOnly
                       />
                     </FormControl>
                   </FormItem>
@@ -1140,20 +1144,18 @@ export default function OrderDetailsForm() {
             <div className="pt-4 mb-2 md:mb-0 gap-6">
               <FormField
                 control={form.control}
-                name="pancardNumber"
+                name="customerRate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>PAN Card</FormLabel>
+                    <FormLabel className="text-gray-700 font-normal">
+                      Customer rate
+                    </FormLabel>
                     <FormControl>
                       <Input
                         {...field}
-                        placeholder="ABCDE1234F"
-                        className="bg-gray-150 border-blue-200 shadow-lg h-12 -mt-1.5"
-                        onChange={(e) => {
-                          const value = e.target.value.toUpperCase();
-                          field.onChange(value);
-                          form.setValue("pancardNumber", value);
-                        }}
+                        readOnly
+                        placeholder=" customer rate"
+                        className="bg-blue-50/50 border-blue-200 shadow-lg h-12"
                       />
                     </FormControl>
                   </FormItem>

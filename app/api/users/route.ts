@@ -12,6 +12,8 @@ const createUserSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
   organisationId: z.string().optional(),
   agentRate: z.number().min(0).max(100).optional(),
+  forexPartner: z.string().optional(),
+  buyexRate: z.number().min(0).max(100).optional(),
 }).superRefine((data, ctx) => {
   if (data.userType === "Agent") {
     if (!data.organisationId) {
@@ -38,6 +40,8 @@ const updateUserSchema = z.object({
   role: z.enum(["ADMIN", "MANAGER", "AGENT"]).optional(),
   organisationId: z.string().optional(),
   agentRate: z.number().min(0).max(100).optional(),
+  forexPartner: z.string().optional(),
+  buyexRate: z.number().min(0).max(100).optional(),
 });
 
 // Create invitation email template
@@ -126,6 +130,8 @@ export async function POST(req: Request) {
         password: hashedPassword,
         organisationId: validatedData.organisationId || null,
         agentRate: validatedData.agentRate || null,
+        forexPartner: validatedData.forexPartner || null,
+        buyexRate: validatedData.buyexRate || null,
       },
     });
 
@@ -156,6 +162,8 @@ export async function POST(req: Request) {
           email: user.email,
           organisationId: user.organisationId,
           agentRate: user.agentRate,
+          forexPartner: user.forexPartner,
+          buyexRate: user.buyexRate,
         }
       },
       { status: 201 }
@@ -198,6 +206,8 @@ export async function GET(req: Request) {
           createdAt: true,
           organisationId: true,
           agentRate: true,
+          forexPartner: true,
+          buyexRate: true,
         },
       });
 
@@ -222,6 +232,8 @@ export async function GET(req: Request) {
           createdAt: true,
           organisationId: true,
           agentRate: true,
+          forexPartner: true,
+          buyexRate: true,
         },
       });
       return NextResponse.json(users);
@@ -240,6 +252,8 @@ export async function GET(req: Request) {
           createdAt: true,
           organisationId: true,
           agentRate: true,
+          forexPartner: true,
+          buyexRate: true,
         },
         orderBy: {
           name: 'asc', // Sort by name alphabetically
@@ -259,6 +273,8 @@ export async function GET(req: Request) {
           createdAt: true,
           organisationId: true,
           agentRate: true,
+          forexPartner: true,
+          buyexRate: true,
         },
       });
       return NextResponse.json(users);
@@ -326,6 +342,8 @@ export async function PUT(req: Request) {
         createdAt: true,
         organisationId: true,
         agentRate: true,
+        forexPartner: true,
+        buyexRate: true,
       },
     });
 

@@ -8,14 +8,7 @@ export default function Footer() {
     { name: "What we provide", id: "what-we-provide" },
     { name: "About Us", id: "about-us" },
     { name: "Why Us", id: "why-us" },
-    { name: "What you gain", id: "benefits" },
-    { name: "Who all can benefit", id: "whoall" },
-    {
-      name: "Help Center",
-      id: "help-center",
-      isExternal: true,
-      url: "https://www.instagram.com/buyexchange_forex/" // Instagram URL
-    }
+   
   ]
 
   return (
@@ -32,38 +25,28 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
           {/* Quick Links */}
           <div>
-            <h3 className="font-semibold text-lg mb-4 font-jakarta">Quick Links</h3>
+                        <h3 className="font-semibold text-lg mb-4 font-jakarta">Quick Links</h3>
             <ul className="space-y-2 font-jakarta">
               {sectionLinks.map((link) => (
                 <li key={link.id}>
-                  {link.isExternal ? (
-                    <a
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-gray-600 hover:text-gray-900"
-                    >
-                      {link.name}
-                    </a>
-                  ) : (
-                    <Link
-                      href={`#${link.id}`}
-                      className="text-gray-600 hover:text-gray-900"
-                      scroll={false}
-                      onClick={(e) => {
-                        e.preventDefault()
-                        document.getElementById(link.id)?.scrollIntoView({
-                          behavior: 'smooth'
-                        })
-                      }}
-                    >
-                      {link.name}
-                    </Link>
-                  )}
+                  <Link
+                    href={`#${link.id}`}
+                    className="text-gray-600 hover:text-gray-900"
+                    scroll={false}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      document.getElementById(link.id)?.scrollIntoView({
+                        behavior: 'smooth'
+                      })
+                    }}
+                  >
+                    {link.name}
+                  </Link>
                 </li>
               ))}
             </ul>
           </div>
+
 
           {/* Explore */}
           <div>

@@ -9,7 +9,7 @@ export const orderDetailsFormSchema = z.object({
   forexPartner: z.string().min(1, { message: "Forex partner is required" }),
   margin: z.string().refine((val) => {
     const num = Number(val);
-    return !isNaN(num) && num >= 0.2 && num <= 3;
+    return !isNaN(num) && num >= 0.2 && num <= 4;
   }, {
     message: "Margin must be a number between 0.20 and 3",
   }),
@@ -25,10 +25,7 @@ export const orderDetailsFormSchema = z.object({
   currency: z.string().min(1, { message: "Currency is required" }),
   totalAmount: z.string().optional(),
   customerRate: z.string().optional(),
-  pancardNumber: z.string()
-    .min(10, "PAN must be 10 characters long")
-    .max(10, "PAN must be 10 characters long")
-    .regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, "Invalid PAN format"),
+ 
 })
 
 export type OrderDetailsFormValues = z.infer<typeof orderDetailsFormSchema>

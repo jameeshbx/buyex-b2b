@@ -12,7 +12,7 @@ const convertS3KeysToCloudFrontUrls = (s3Keys: string[]): string[] => {
   });
 };
 
-export const sendEmailToForexPartner = async (documents: string[]) => {
+export const sendEmailToForexPartner = async (documents: string[], to: string) => {
   try {
     // Download documents from S3 URLs and create zip
     const zip = new JSZip();
@@ -44,7 +44,7 @@ export const sendEmailToForexPartner = async (documents: string[]) => {
     // Generate zip file
     const zipBuffer = await zip.generateAsync({ type: 'nodebuffer' });
     
-    const email = "amrutha@buyexchange.in";
+    const email = to;
     const subject = "New Order - Documents Attached";
     const html = `
       <p>A new order has been created.</p>
@@ -89,7 +89,7 @@ export const testSendEmailToForexPartner = async () => {
   });
   
   console.log('Testing sendEmailToForexPartner function...');
-  await sendEmailToForexPartner(cloudFrontUrls);
+  await sendEmailToForexPartner(cloudFrontUrls, 'jameesh@buyexchange.in');
   
   console.log('Test completed successfully!');
 };

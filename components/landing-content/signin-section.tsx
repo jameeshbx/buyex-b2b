@@ -102,13 +102,13 @@ export default function LoginPage() {
         }
 
         // Debug: Log the role to see what we're getting
-        console.log("User role from session:", session.user.role)
+       
 
         toast.success("Login successful")
 
         // Normalize the role and redirect based on user role
         const userRole = (session.user.role as string).toUpperCase().replace(/\s+/g, "_")
-        console.log("Normalized role:", userRole)
+   
 
         switch (userRole) {
           case "STAFF":
@@ -125,7 +125,7 @@ export default function LoginPage() {
               router.push("/agent/dashboard")
               break
           default:
-            console.log("Unknown role, redirecting to staff dashboard. Role was:", userRole)
+            
             router.push("/staff/dashboard") // Default fallback
         }
       } else {
@@ -260,8 +260,8 @@ export default function LoginPage() {
 
           <p className="mt-4 text-center text-gray-500 lg:mt-[-85px] font-jakarta">
             Not registered?{" "}
-            <Link href="/signup" className="text-blue-600 hover:underline font-jakarta">
-              Create an account
+            <Link href="tel:+918943243543" className="text-blue-600 hover:underline font-jakarta">           
+             Contact Sales Team
             </Link>
           </p>
         </div>

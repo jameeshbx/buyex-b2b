@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { getServerSession } from "next-auth";
+import { authConfig } from "@/auth.config";
  // Add this import if you have Prisma types
 
 // Helper function to retry database operations
@@ -27,6 +29,18 @@ export async function GET(
   try {
     const { id } = await params;
 
+    const session = await getServerSession(authConfig);
+
+    if (!session?.user?.email) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    const currentUser = await db.user.findUnique({
+      where: { email: session.user.email },
+    });
+    
+    
+
     const order = await retryOperation(async () => {
       return await db.order.findUnique({
         where: {
@@ -38,6 +52,10 @@ export async function GET(
         },
       });
     });
+
+    if (currentUser?.role === "AGENT" && currentUser.id !== order?.createdUser) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
 
     if (!order) {
       return new NextResponse("Order not found", { status: 404 });

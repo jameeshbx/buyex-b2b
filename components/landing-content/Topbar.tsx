@@ -1,51 +1,54 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { Menu, X } from "lucide-react"
+import { useState, useEffect } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { Menu, X } from "lucide-react";
 
 export default function Topbar() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [isScrolled, setIsScrolled] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   // Close mobile menu when clicking on a link or outside
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 768) {
-        setMobileMenuOpen(false)
+        setMobileMenuOpen(false);
       }
-    }
+    };
 
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10)
-    }
+      setIsScrolled(window.scrollY > 10);
+    };
 
-    window.addEventListener('resize', handleResize)
-    window.addEventListener('scroll', handleScroll)
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("scroll", handleScroll);
 
     return () => {
-      window.removeEventListener('resize', handleResize)
-      window.removeEventListener('scroll', handleScroll)
-    }
-  }, [])
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
 
   return (
-    <header className={`w-full sticky top-0 z-50 bg-light-blue shadow-md transition-all duration-300 ${isScrolled ? 'py-0' : 'py-2'}`}>
+    <header
+      className={`w-full sticky top-0 z-50 bg-light-blue shadow-md transition-all duration-300 ${
+        isScrolled ? "py-0" : "py-2"
+      }`}
+    >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-           <Link href="/" passHref>
-          <div className="flex items-center w-40">
-           
-            <Image 
-              src="/BE.svg" 
-              alt="Buy Exchange Logo" 
-              width={150} 
-              height={100}
-              priority
-            />
-          </div>
+          <Link href="/" passHref>
+            <div className="flex items-center w-40">
+              <Image
+                src="/BE.svg"
+                alt="Buy Exchange Logo"
+                width={150}
+                height={100}
+                priority
+              />
+            </div>
           </Link>
 
           {/* Desktop Navigation */}
@@ -73,12 +76,12 @@ export default function Topbar() {
 
             {/* Auth Buttons */}
             <div className="flex space-x-4 ml-8">
-              <Link
+              {/* <Link
                 href="/signup"
                 className="bg-[#0a4d70] text-white px-6 py-2 rounded-full text-sm font-medium hover:bg-[#083d5a] transition-colors duration-200 whitespace-nowrap"
               >
                 Register
-              </Link>
+              </Link> */}
               <Link
                 href="/signin"
                 className="bg-white text-gray-800 px-6 py-2 rounded-full text-sm font-medium border border-gray-200 hover:bg-gray-50 transition-colors duration-200 whitespace-nowrap"
@@ -104,7 +107,11 @@ export default function Topbar() {
         </div>
 
         {/* Mobile Navigation */}
-        <div className={`md:hidden ${mobileMenuOpen ? 'block' : 'hidden'} transition-all duration-300 ease-in-out`}>
+        <div
+          className={`md:hidden ${
+            mobileMenuOpen ? "block" : "hidden"
+          } transition-all duration-300 ease-in-out`}
+        >
           <div className="pt-2 pb-4 space-y-2 bg-white rounded-lg shadow-lg mt-2">
             <nav className="flex flex-col space-y-2 px-4">
               <Link
@@ -149,5 +156,5 @@ export default function Topbar() {
         </div>
       </div>
     </header>
-  )
+  );
 }

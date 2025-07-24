@@ -55,10 +55,10 @@ const filteredTestimonials = activeCountry
   }
 
   return (
-    <section id="testimonial" className="w-full py-12 md:py-20 bg-white">
-      <div className="container px-4 mx-auto">
+    <section id="testimonial" className="w-full bg-white py-24">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12 md:mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold font-playfair text-dark-blue mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold font-playfair text-deep-blue mb-4">
             Voices From Around the World
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -89,7 +89,7 @@ const filteredTestimonials = activeCountry
               setActiveCountry(null)
               setCurrentIndex(0)
             }}
-            className={`px-4 py-2 rounded-full text-sm font-medium ${!activeCountry ? 'bg-dark-blue text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+            className={`px-4 py-2 rounded-full text-sm font-medium ${!activeCountry ? 'bg-deep-blue text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
           >
             All Countries
           </button>
@@ -97,7 +97,7 @@ const filteredTestimonials = activeCountry
             <button
               key={country}
               onClick={() => setActiveCountry(country)}
-              className={`px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 ${activeCountry === country ? 'bg-dark-blue text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+              className={`px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 ${activeCountry === country ? 'bg-deep-blue text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
             >
               <Image 
                 src={testimonials.find(t => t.country === country)?.flag || ""} 
@@ -145,18 +145,26 @@ const filteredTestimonials = activeCountry
               onClick={prevTestimonial}
               className="bg-white p-3 rounded-full shadow-md hover:bg-gray-100"
             >
-              <svg className="w-5 h-5 text-dark-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-deep-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
               </svg>
             </button>
             
-          
+            {/* More reviews link */}
+            <a 
+              href="https://share.google/ffCsmi1FC4UVwgQND" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="px-6 py-2 text-deep-blue hover:text-blue-700 font-medium text-sm hover:underline"
+            >
+              More reviews
+            </a>
             
             <button 
               onClick={nextTestimonial}
               className="bg-white p-3 rounded-full shadow-md hover:bg-gray-100"
             >
-              <svg className="w-5 h-5 text-dark-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-deep-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
               </svg>
             </button>
@@ -225,7 +233,7 @@ const filteredTestimonials = activeCountry
 function TestimonialCard({ testimonial, onClick }: { testimonial: Testimonial, onClick: () => void }) {
   return (
     <div 
-      className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow duration-300"
+      className=" pt-8 pb-16 bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow duration-300"
       onClick={onClick}
     >
       <div className="p-6">
@@ -261,7 +269,7 @@ function TestimonialCard({ testimonial, onClick }: { testimonial: Testimonial, o
               </svg>
             ))}
           </div>
-          <button className="text-sm font-medium text-dark-blue hover:underline">
+          <button className="text-sm font-medium text-deep-blue hover:underline">
             Read full
           </button>
         </div>
