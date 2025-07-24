@@ -22,7 +22,8 @@ export const getLiveRate = async (base: string, target: string) => {
     }
     
     const data = await response.json();
-    return data.rate;
+    // Add 0.03 to the live rate before returning
+    return data.rate + 0.03;
   } catch (error) {
     console.error("Error fetching live rate:", error);
     throw error;

@@ -9,6 +9,8 @@ export interface User {
   date: string
   userType: UserType
   agentRate?: number;
+   forexPartner?: string;
+  buyexRate?: number;
   // For API compatibility
   role?: "ADMIN" | "MANAGER" | "AGENT" // From your API
   createdAt?: string          // From your API
@@ -21,4 +23,6 @@ export interface UserFormData {
   email: string;
   organisationId?: string;
   agentRate?: number;
+    forexPartner?: string;
+  buyexRate?: number;
 }

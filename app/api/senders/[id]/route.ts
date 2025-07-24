@@ -17,6 +17,7 @@ const senderSchema = z.object({
   senderName: z.string().optional(),
   bankCharges: z.string().optional(),
   dob: z.string().optional(),
+  pancardNumber: z.string().optional(),
   senderNationality: z.string().optional(),
   senderEmail: z.string().email("Invalid email format").optional(),
   sourceOfFunds: z.string().optional(),

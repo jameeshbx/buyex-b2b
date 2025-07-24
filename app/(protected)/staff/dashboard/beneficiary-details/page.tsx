@@ -111,11 +111,11 @@ function BeneficiaryDetailsContent() {
       if (orderId) {
         try {
           setLoading(true)
-          console.log("Fetching order for orderId:", orderId)
+          
 
           // Fetch order data
           const orderResponse = await axios.get(`/api/orders/${orderId}`)
-          console.log("Fetched order:", orderResponse.data)
+          
 
           // Pre-populate receiver country and receiver bank country from order data
           if (orderResponse.data.receiverBankCountry) {
@@ -124,11 +124,11 @@ function BeneficiaryDetailsContent() {
           }
 
           if (orderResponse.data.beneficiaryId) {
-            console.log("Fetching beneficiary details for beneficiaryId:", orderResponse.data.beneficiaryId)
+          
 
             // Fetch existing beneficiary data
             const beneficiaryResponse = await axios.get(`/api/beneficiaries/${orderResponse.data.beneficiaryId}`)
-            console.log("Fetched beneficiary details:", beneficiaryResponse.data)
+           
 
             if (beneficiaryResponse.data) {
               setExistingBeneficiaryData(beneficiaryResponse.data)
@@ -160,7 +160,7 @@ function BeneficiaryDetailsContent() {
               })
             }
           } else {
-            console.log("No existing beneficiary details found")
+           
             // Reset to default if no beneficiary exists, but pre-populate with order data
             const defaultValues = {
               ...defaultFormValues,

@@ -80,6 +80,10 @@ export const formSchema = z
     relationship: z.enum(["self", "parent", "brother", "sister", "spouse", "other"]).optional(),
     bankCharges: z.enum(["resident", "nri", "pio"]).optional(),
     dob: dobValidation.optional(),
+     pancardNumber: z.string()
+        .min(10, "PAN must be 10 characters long")
+        .max(10, "PAN must be 10 characters long")
+        .regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, "Invalid PAN format"),
     senderNationality: z.enum(["indian", "american", "british", "canadian", "australian"]).optional(),
     senderEmail: emailValidation.optional(),
     sourceOfFunds: z.enum(["salary", "savings", "business", "investment"]).optional(),

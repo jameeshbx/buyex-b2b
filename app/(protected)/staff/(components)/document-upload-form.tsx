@@ -74,7 +74,7 @@ export default function DocumentUploadForm({
             withCredentials: true,
           });
           setCurrentUserState(response.data);
-          console.log("Current user:", response.data.role);
+        
         } catch {
           setCurrentUserState(null);
         }
@@ -247,7 +247,7 @@ export default function DocumentUploadForm({
       },
       checklist: {},
     });
-    console.log("reset");
+   
     setFormErrors({});
      if (shouldShowToast) {
     toast.info("Form has been reset");

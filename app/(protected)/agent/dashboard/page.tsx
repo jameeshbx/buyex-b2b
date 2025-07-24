@@ -199,7 +199,7 @@ export default function Dashboard() {
                       </div>
                       <div>{renderStatusElement(order)}</div>
                       <div onClick={(e) => e.stopPropagation()}>
-                        <Link href={`/staff/dashboard/upload-files/${order.id}`}>
+                        <Link href={`/agent/dashboard/upload-files/${order.id}`}>
                           <Button size="sm" className="bg-dark-blue hover:bg-blue-700 text-white px-2 py-2 text-xs h-7">
                             <Upload className="h-2 w-2" />
                             Uploads

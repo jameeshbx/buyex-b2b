@@ -16,6 +16,8 @@ type ApiUser = {
   createdAt: string; // ISO string
   role: string;
   agentRate?: number | null; // agentRate can be null if not an agent
+  forexPartner?: string | null;
+  buyexRate?: number | null;
 };
 
 // Helper function to convert UserType to API role
@@ -59,6 +61,8 @@ export default function UserManagement() {
           date: apiUser.createdAt, // Already an ISO string from API
           userType: convertRoleToUserType(apiUser.role),
           agentRate: apiUser.agentRate ?? undefined, // Convert null to undefined for client type
+          forexPartner: apiUser.forexPartner ?? undefined,
+          buyexRate: apiUser.buyexRate ?? undefined,
         }));
         setUsers(transformedUsers);
       } catch (error) {
@@ -97,6 +101,8 @@ export default function UserManagement() {
         organisationId:
           user.userType === "Agent" ? user.organisationId : undefined,
         agentRate: user.userType === "Agent" ? user.agentRate : undefined,
+        forexPartner: user.userType === "Agent" ? user.forexPartner : undefined,
+        buyexRate: user.userType === "Agent" ? user.buyexRate : undefined,
         // status is defaulted to true on the server
       });
       if (response.status === 201) {
@@ -109,6 +115,8 @@ export default function UserManagement() {
           date: response.data.user.createdAt, // API returns createdAt as ISO string
           userType: convertRoleToUserType(response.data.user.userRole), // API returns userRole
           agentRate: response.data.user.agentRate ?? undefined,
+          forexPartner: response.data.user.forexPartner,
+          buyexRate: response.data.user.buyexRate,
         };
         setUsers([newUser, ...users]);
       }
@@ -156,6 +164,8 @@ export default function UserManagement() {
       email: string;
       userType: UserType;
       agentRate?: number;
+      forexPartner?: string;
+      buyexRate?: number;
     }
   ) => {
     try {
@@ -165,6 +175,10 @@ export default function UserManagement() {
         role: convertUserTypeToRole(userData.userType), // Convert client userType to DB role
         agentRate:
           userData.userType === "Agent" ? userData.agentRate : undefined,
+        forexPartner:
+          userData.userType === "Agent" ? userData.forexPartner : undefined,
+        buyexRate:
+          userData.userType === "Agent" ? userData.buyexRate : undefined,
       });
       if (response.status === 200) {
         setUsers(
@@ -176,7 +190,9 @@ export default function UserManagement() {
                   email: response.data.email,
                   userType: convertRoleToUserType(response.data.role), // Convert DB role back to client userType
                   agentRate: response.data.agentRate ?? undefined,
-                  status: response.data.status, // Ensure status is updated from API response
+                  status: response.data.status,
+                  forexPartner: response.data.forexPartner,
+                  buyexRate: response.data.buyexRate, // Ensure status is updated from API response
                 }
               : u
           )

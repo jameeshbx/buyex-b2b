@@ -1,6 +1,6 @@
 // src/constants/hero.constants.ts
 export const HERO_CONTENT = {
-    description: "Let Us Handle The Forex Heavy Lifting, While You Deliver  Exceptional Study Abroad Solutions.",
+    description: "Let Us Handle The Forex Heavy Lifting, While You Deliver  Exceptional  Study Abroad Solutions.",
     partners: [
        {
         name: "Join in Campus",
@@ -93,5 +93,7 @@ export const HERO_CONTENT = {
     heroImage: {
       src: "/images/hero/Hero Image.png",
       alt: "Study Abroad Illustration",
+      width: 700,
+      height: 300,
     }
   };

@@ -33,7 +33,7 @@ interface Order {
     relationship: string;
     senderName: string;
     bankCharges: string;
-    
+    pancardNumber: string;
     dob: string;
     senderNationality: string;
     senderEmail: string;
@@ -74,6 +74,36 @@ interface Order {
     updatedAt: string;
   };
 }
+
+// Helper function to split address if longer than 100 characters
+const splitAddress = (address: string, maxLength: number = 100): string[] => {
+  if (!address || address.length <= maxLength) {
+    return [address];
+  }
+  
+  // Try to split at word boundaries
+  const words = address.split(' ');
+  const lines: string[] = [];
+  let currentLine = '';
+  
+  for (const word of words) {
+    if ((currentLine + ' ' + word).trim().length <= maxLength) {
+      currentLine = (currentLine + ' ' + word).trim();
+    } else {
+      if (currentLine) {
+        lines.push(currentLine);
+      }
+      currentLine = word;
+    }
+  }
+  
+  if (currentLine) {
+    lines.push(currentLine);
+  }
+  
+  return lines;
+};
+
 export async function generateA2Form(order: Order) {
   // Fetch the PDF template from the public directory
   const formResponse = await fetch('/A2Form-a2Form.pdf');
@@ -102,20 +132,25 @@ export async function generateA2Form(order: Order) {
   };
 
   // Sample data to be filled
+  const addressLines = splitAddress(order.sender?.addressLine1 || '');
+  
   const data = {
-    date: order.createdAt,
+    date: new Date(order.createdAt).toLocaleDateString(),
     name: order.sender?.studentName || '',
     dob: order.sender?.dob || '',
-    address: order.sender?.addressLine1 || '',
+    address: addressLines[0] || '',
+    address2: addressLines[0] + ' ' + order.sender?.addressLine2 || '',
+    state: order.sender?.state || '',
+    postalCode: order.sender?.postalCode || '',
     mobile: order.sender?.phoneNumber || '',
     email: order.sender?.studentEmailOriginal || '',
     nationality: order.sender?.nationality || '',
-    pan: order.pancardNumber,
+    pan: order.sender?.pancardNumber || '',
     resStatus: 'Resident',
 
     senderName: order.sender?.senderName || '',
     senderPassportNo: '',
-    senderPAN: order.pancardNumber,
+    senderPAN: order.pancardNumber || '',
     relation: order.sender?.relationship || '',
 
     forexPurpose: order.purpose || '',
@@ -131,6 +166,7 @@ export async function generateA2Form(order: Order) {
     swiftCode: order.beneficiary?.receiverBankSwiftCode || '',
     abaCode: order.beneficiary?.receiverBankSwiftCode || '',
     reference:  '',
+    additionalInfo: order.beneficiary?.field70 || '',
   };
 
   // Add text to first page (coordinates are approximate; adjust as per actual form layout)
@@ -138,6 +174,15 @@ export async function generateA2Form(order: Order) {
   drawText(data.name, 120, height - 275);
   drawText(data.dob, 430, height - 275);  
   drawText(data.address, 100, height - 305);
+  
+  // Draw additional address lines if address was split
+  if (addressLines.length > 1) {
+    drawText(addressLines[1], 100, height - 325);
+  }
+  
+  drawText(data.address2, 50, height - 330);
+  drawText(data.state, 50, height - 350);
+  drawText(data.postalCode, 470, height - 330);
   drawText(data.mobile, 470, height - 360);  
   drawText(data.email, 100, height - 380);
   drawText(data.nationality, 410, height - 380);
@@ -152,7 +197,7 @@ export async function generateA2Form(order: Order) {
   // Add text to second page
   if (secondPage) {
     drawText(data.forexAmountUSD, 150, height - 120, 10, secondPage);
-    drawText(data.forexAmountUSD, 450, height - 150, 10, secondPage);
+    // drawText(data.forexAmountUSD, 450, height - 150, 10, secondPage);
     drawText(data.forexAmountINR, 150, height - 150, 10, secondPage);
     drawText(data.country, 200, height - 175, 10, secondPage);
     drawText(data.source, 200, height - 200, 10, secondPage);
@@ -164,6 +209,7 @@ export async function generateA2Form(order: Order) {
     drawText(data.swiftCode, 150, height - 430, 10, secondPage);
     drawText(data.abaCode, 250, height - 455, 10, secondPage);
     drawText(data.reference, 280, height - 510, 10, secondPage);
+    drawText(data.additionalInfo, 280, height - 515, 10, secondPage);
   }
 
   // Serialize and return

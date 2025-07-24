@@ -26,6 +26,8 @@ export async function GET() {
         createdAt: true,
         updatedAt: true,
         agentRate: true,
+        forexPartner: true,
+        buyexRate: true,
         organisation: {
           select: {
             commission: true,
