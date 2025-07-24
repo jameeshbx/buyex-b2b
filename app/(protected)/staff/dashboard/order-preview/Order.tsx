@@ -58,6 +58,7 @@ interface Order {
     senderName: string;
     bankCharges: string;
     dob: string;
+    pancardNumber: string;
     senderNationality: string;
     senderEmail: string;
     sourceOfFunds: string;

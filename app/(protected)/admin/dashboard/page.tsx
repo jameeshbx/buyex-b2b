@@ -657,7 +657,7 @@ export default function Dashboard() {
                             <ChevronRight className="h-4 w-4 text-gray-400" />
                           )}
                           <span className="font-semibold text-sm font-jakarta text-gray-900">
-                            #{order.id.slice(0, 7)}{" "}
+                            #{order.id.slice(0, 10)}{" "}
                             {/* Trim to first 8 characters */}
                           </span>
                         </div>
@@ -811,43 +811,42 @@ export default function Dashboard() {
                               </p>
                             </div>
                             {order.receiverAccount && (
-                            <div>
-                              <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
-                                Receiver&apos;s account
-                              </h4>
-                              <p className="text-gray-600 text-xs sm:text-sm font-jakarta break-all bg-gray-50 p-2 sm:p-3 rounded-sm">
-                                {beneficiary?.receiverAccount ||
-                                  order.receiverAccount ||
-                                  "-"}
-                              </p>
-                            </div>
+                              <div>
+                                <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
+                                  Receiver&apos;s account
+                                </h4>
+                                <p className="text-gray-600 text-xs sm:text-sm font-jakarta break-all bg-gray-50 p-2 sm:p-3 rounded-sm">
+                                  {beneficiary?.receiverAccount ||
+                                    order.receiverAccount ||
+                                    "-"}
+                                </p>
+                              </div>
                             )}
                             {order.receiverBankCountry && (
-                            <div>
-                              <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
-                                Receiver Country
-                              </h4>
-                              <p className="text-gray-600 text-sm sm:text-base font-jakarta bg-gray-50 p-2 sm:p-3 rounded-sm">
-                                {beneficiary?.receiverBankCountry ||
-                                  order.receiverBankCountry ||
-                                  "-"}
-                              </p>
-                            </div>
-                            )}
-                             {order.forexPartner && (
-                            <div>
-                              <h4 className="font-semibold font-jakarta text-gray-900 mb-2">
-                                Forex Partner
-                              </h4>
-                              <p className="text-gray-600 font-jakarta bg-gray-50 p-2 rounded-sm">
-                                {typeof order.forexPartner === "string"
-                                  ? order.forexPartner
-                                  : order.forexPartner?.bankName || "N/A"}
-                              </p>
-                            </div>
-                            
-                          )}
                               <div>
+                                <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
+                                  Receiver Country
+                                </h4>
+                                <p className="text-gray-600 text-sm sm:text-base font-jakarta bg-gray-50 p-2 sm:p-3 rounded-sm">
+                                  {beneficiary?.receiverBankCountry ||
+                                    order.receiverBankCountry ||
+                                    "-"}
+                                </p>
+                              </div>
+                            )}
+                            {order.forexPartner && (
+                              <div>
+                                <h4 className="font-semibold font-jakarta text-gray-900 mb-2">
+                                  Forex Partner
+                                </h4>
+                                <p className="text-gray-600 font-jakarta bg-gray-50 p-2 rounded-sm">
+                                  {typeof order.forexPartner === "string"
+                                    ? order.forexPartner
+                                    : order.forexPartner?.bankName || "N/A"}
+                                </p>
+                              </div>
+                            )}
+                            <div>
                               <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
                                 Consultancy
                               </h4>

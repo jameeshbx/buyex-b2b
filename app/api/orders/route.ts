@@ -19,7 +19,7 @@ export async function GET() {
     // Get current user to check their role
     const currentUser = await db.user.findUnique({
       where: { email: session.user.email },
-      select: { role: true, id: true }
+      select: { role: true, id: true, forexPartner: true }
     });
 
     if (!currentUser) {
@@ -33,7 +33,24 @@ export async function GET() {
     if (currentUser.role === "AGENT") {
       const orders = await db.order.findMany({
         where: {
-          createdUser: currentUser.id,
+          OR: [
+            {
+              createdUser: currentUser.id,
+            },
+            ...(currentUser.forexPartner ? [
+              {
+                forexPartner: {
+                  path: ['accountName'],
+                  equals: currentUser.forexPartner,
+                }
+              },
+              {
+                forexPartner: {
+                  equals: currentUser.forexPartner,
+                }
+              }
+            ] : []),
+          ],
         },
         orderBy: {
           createdAt: "desc",

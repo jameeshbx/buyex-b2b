@@ -91,7 +91,7 @@ async function generateQuotePDF(
       ["Foreign Currency", formData.currency || ""],
       ["Foreign Currency Amount", formData.amount || ""],
       ["Exchange Rate", formData.customerRate || ""],
-      
+
       ["Forex Conversion Tax", calculatedValues.gst],
       ["TCS", calculatedValues.tcsApplicable],
       ["Processing Charges", calculatedValues.bankFee],
@@ -118,6 +118,7 @@ async function generateQuotePDF(
       ["Account Number", forexPartner.accountNumber],
       ["IFSC Code", forexPartner.ifscCode],
       ["Branch", forexPartner.branch],
+      ["Consultancy", formData.consultancy],
     ],
   });
 
@@ -280,17 +281,17 @@ export default function OrderDetailsForm() {
 
   useEffect(() => {
     const currentAmount = Number.parseFloat(amount || "0");
-    
+
     const currentMargin = Number.parseFloat(margin || "0");
-   
+
     const currentIbrRate = Number.parseFloat(ibrRate || "0");
-   
+
     const bankFee = foreignBankCharges === "OUR" ? 1500 : 300;
 
     if (currentAmount && currentMargin) {
-      const totalAmount = ((currentIbrRate + currentMargin) * currentAmount);
+      const totalAmount = (currentIbrRate + currentMargin) * currentAmount;
       const roundedTotalAmount = Math.round(totalAmount); // 101680
-     
+
       form.setValue(
         "customerRate",
         (currentIbrRate + currentMargin).toFixed(2).toString()
@@ -299,7 +300,10 @@ export default function OrderDetailsForm() {
         ...prev,
         inrAmount: roundedTotalAmount.toString(),
         gst: calculateGst(roundedTotalAmount).toString(),
-        tcsApplicable: calculateTcs(roundedTotalAmount, educationLoan === "yes"),
+        tcsApplicable: calculateTcs(
+          roundedTotalAmount,
+          educationLoan === "yes"
+        ),
         totalPayable: calculateTotalPayable(
           roundedTotalAmount,
           bankFee,
@@ -444,11 +448,16 @@ export default function OrderDetailsForm() {
     form.setValue("consultancy", selectedAgentName);
 
     // Find the selected agent's details
-    const selectedAgent = agents.find(agent => agent.name === selectedAgentName);
+    const selectedAgent = agents.find(
+      (agent) => agent.name === selectedAgentName
+    );
 
     if (selectedAgent) {
       // Calculate margin as agentRate + buyexRate
-      const margin = (Number(selectedAgent.agentRate ?? 0) + Number(selectedAgent.buyexRate ?? 0)).toString();
+      const margin = (
+        Number(selectedAgent.agentRate ?? 0) +
+        Number(selectedAgent.buyexRate ?? 0)
+      ).toString();
       form.setValue("margin", margin);
     }
   };
@@ -778,8 +787,6 @@ export default function OrderDetailsForm() {
                     </FormItem>
                   )}
                 />
-
-                
               </div>
             </div>
 
@@ -997,24 +1004,24 @@ export default function OrderDetailsForm() {
                   />
                 </div>
               </div>
-             <FormField
-                  control={form.control}
-                  name="ibrRate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-gray-700 font-normal">
-                        IBR Rate
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          className="bg-blue-50/50 border-blue-200 shadow-lg h-12"
-                          readOnly
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+              <FormField
+                control={form.control}
+                name="ibrRate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-gray-700 font-normal">
+                      IBR Rate
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        className="bg-blue-50/50 border-blue-200 shadow-lg h-12"
+                        readOnly
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
             </div>
           </div>
 
