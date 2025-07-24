@@ -3,7 +3,7 @@ export interface Order {
   id: string
   date: string
   purpose: string
-  name: string
+  name?: string
   currency: string
   fcyAmt: string
   inrAmt: string

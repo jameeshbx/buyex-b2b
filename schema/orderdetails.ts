@@ -9,7 +9,7 @@ export const orderDetailsFormSchema = z.object({
   forexPartner: z.string().min(1, { message: "Forex partner is required" }),
   margin: z.string().refine((val) => {
     const num = Number(val);
-    return !isNaN(num) && num >= 0.2 && num <= 3;
+    return !isNaN(num) && num >= 0.2 && num <= 4;
   }, {
     message: "Margin must be a number between 0.20 and 3",
   }),

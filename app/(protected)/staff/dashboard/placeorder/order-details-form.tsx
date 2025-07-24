@@ -278,17 +278,17 @@ export default function OrderDetailsForm() {
 
   useEffect(() => {
     const currentAmount = Number.parseFloat(amount || "0");
-    console.log("currentAmount", currentAmount);
+    
     const currentMargin = Number.parseFloat(margin || "0");
-    console.log("currentMargin", currentMargin);
+   
     const currentIbrRate = Number.parseFloat(ibrRate || "0");
-    console.log("currentIbrRate", currentIbrRate);
+   
     const bankFee = foreignBankCharges === "OUR" ? 1500 : 300;
 
     if (currentAmount && currentMargin) {
       const totalAmount = ((currentIbrRate + currentMargin) * currentAmount);
       const roundedTotalAmount = Math.round(totalAmount); // 101680
-      console.log("totalAmount", totalAmount);
+     
       form.setValue(
         "customerRate",
         (currentIbrRate + currentMargin).toFixed(2).toString()

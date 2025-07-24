@@ -28,6 +28,7 @@ interface Order {
   totalAmount: number;
   customerRate: number;
   status: string;
+  consultancy?: string;
   receiverAccount?: string;
   receiverBankCountry?: string;
   forexPartner?:
@@ -476,8 +477,21 @@ export default function Dashboard() {
                                   : order.forexPartner?.bankName || "N/A"}
                               </p>
                             </div>
+                            
                           )}
-                        </div>
+                          {order.consultancy &&(
+                           <div>
+                              <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
+                                Consultancy
+                              </h4>
+                              <p className="text-gray-600 text-sm sm:text-base font-jakarta bg-gray-50 p-2 sm:p-3 rounded-sm">
+                                 {typeof order.consultancy === "string"
+                                  ? order.consultancy
+                                  : order.consultancy}
+                              </p>
+                            </div>
+                          )}
+                       </div>
                       </div>
                     </div>
                   )}

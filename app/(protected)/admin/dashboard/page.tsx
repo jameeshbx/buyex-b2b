@@ -810,6 +810,7 @@ export default function Dashboard() {
                                   "-"}
                               </p>
                             </div>
+                            {order.receiverAccount && (
                             <div>
                               <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
                                 Receiver&apos;s account
@@ -820,6 +821,8 @@ export default function Dashboard() {
                                   "-"}
                               </p>
                             </div>
+                            )}
+                            {order.receiverBankCountry && (
                             <div>
                               <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
                                 Receiver Country
@@ -830,12 +833,26 @@ export default function Dashboard() {
                                   "-"}
                               </p>
                             </div>
+                            )}
+                             {order.forexPartner && (
                             <div>
-                              <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
+                              <h4 className="font-semibold font-jakarta text-gray-900 mb-2">
                                 Forex Partner
                               </h4>
+                              <p className="text-gray-600 font-jakarta bg-gray-50 p-2 rounded-sm">
+                                {typeof order.forexPartner === "string"
+                                  ? order.forexPartner
+                                  : order.forexPartner?.bankName || "N/A"}
+                              </p>
+                            </div>
+                            
+                          )}
+                              <div>
+                              <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
+                                Consultancy
+                              </h4>
                               <p className="text-gray-600 text-sm sm:text-base font-jakarta bg-gray-50 p-2 sm:p-3 rounded-sm">
-                                {order.forexPartner?.bankName || "-"}
+                                {order.consultancy}
                               </p>
                             </div>
                           </div>

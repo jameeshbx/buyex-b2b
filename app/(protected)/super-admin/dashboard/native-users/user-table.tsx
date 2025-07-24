@@ -80,28 +80,28 @@ const editUserSchema = z
     agentRate: z
       .number()
       .optional()
-      .refine((val) => val === undefined || (val >= 0 && val <= 100), {
-        message: "Agent rate must be between 0 and 100",
+      .refine((val) => val === undefined || (val >= 0.2 && val <= 3), {
+        message: "Agent rate must be between 0.2 and 3",
       }),
     forexPartner: z.string().optional(),
     buyexRate: z
       .number()
       .optional()
-      .refine((val) => val === undefined || (val >= 0 && val <= 100), {
-        message: "Buyex rate must be between 0 and 100",
+      .refine((val) => val === undefined || (val >= 0.2 && val <= 3), {
+        message: "Buyex rate must be between 0.2 and 3",
       }),
   })
   .superRefine((data, ctx) => {
     if (data.userType === "Agent") {
       if (
         data.agentRate === undefined ||
-        data.agentRate < 0 ||
-        data.agentRate > 100
+        data.agentRate < 0.2 ||
+        data.agentRate > 3
       ) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message:
-            "Agent rate is required and must be between 0 and 100 for Agent users",
+            "Agent rate is required and must be between 0.2 and 3 for Agent users",
           path: ["agentRate"],
         });
       }
@@ -114,13 +114,13 @@ const editUserSchema = z
       }
       if (
         data.buyexRate === undefined ||
-        data.buyexRate < 0 ||
-        data.buyexRate > 100
+        data.buyexRate < 0.2 ||
+        data.buyexRate > 3
       ) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message:
-            "Buyex rate is required and must be between 0 and 100 for Agent users",
+            "Buyex rate is required and must be between 0.2 and 3 for Agent users",
           path: ["buyexRate"],
         });
       }
