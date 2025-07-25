@@ -291,7 +291,7 @@ export default function Dashboard() {
                               <p className="text-gray-600 font-jakarta bg-gray-50 p-2 rounded-sm">
                                 {typeof order.forexPartner === "string"
                                   ? order.forexPartner
-                                  : order.forexPartner?.bankName || "N/A"}
+                                  : order.forexPartner?.accountName || "N/A"}
                               </p>
                             </div>
                           )}

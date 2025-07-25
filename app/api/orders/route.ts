@@ -19,7 +19,7 @@ export async function GET() {
     // Get current user to check their role
     const currentUser = await db.user.findUnique({
       where: { email: session.user.email },
-      select: { role: true, id: true, forexPartner: true }
+      select: { role: true, id: true, name: true }
     });
 
     if (!currentUser) {
@@ -31,26 +31,15 @@ export async function GET() {
 
     // If user is AGENT, only return orders they created
     if (currentUser.role === "AGENT") {
+      const orConditions: import('@prisma/client').Prisma.OrderWhereInput[] = [
+        { createdUser: currentUser.id },
+      ];
+      if (currentUser.name) {
+        orConditions.push({ consultancy: currentUser.name });
+      }
       const orders = await db.order.findMany({
         where: {
-          OR: [
-            {
-              createdUser: currentUser.id,
-            },
-            ...(currentUser.forexPartner ? [
-              {
-                forexPartner: {
-                  path: ['accountName'],
-                  equals: currentUser.forexPartner,
-                }
-              },
-              {
-                forexPartner: {
-                  equals: currentUser.forexPartner,
-                }
-              }
-            ] : []),
-          ],
+          OR: orConditions,
         },
         orderBy: {
           createdAt: "desc",
