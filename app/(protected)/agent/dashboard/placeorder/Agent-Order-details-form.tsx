@@ -39,7 +39,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { forexPartnerData } from "@/data/forex-partner";
 import { User } from "@prisma/client";
-import { toast } from "sonner"
+import { toast } from "sonner";
 
 interface CalculatedValues {
   inrAmount: string;
@@ -59,6 +59,7 @@ interface JsPDFWithAutoTable extends jsPDF {
 async function generateQuotePDF(
   formData: OrderDetailsFormValues,
   calculatedValues: CalculatedValues,
+  user: User,
   orderId?: string
 ) {
   const doc = new jsPDF() as JsPDFWithAutoTable;
@@ -100,18 +101,20 @@ async function generateQuotePDF(
   doc.text("(Cash deposit not accepted)", 130, lastY);
 
   // Using default forex partner since we removed the selection
-  const defaultForexPartner = forexPartnerData[0];
+  const defaultForexPartner = forexPartnerData.find(
+    (partner) => partner.accountName === user?.forexPartner
+  );
 
   autoTable(doc, {
     startY: lastY + 15,
     styles: { fontSize: 10 },
     headStyles: { fillColor: [240, 240, 240] },
     body: [
-      ["Bank Name", defaultForexPartner.bankName],
-      ["Account Name", defaultForexPartner.accountName],
-      ["Account Number", defaultForexPartner.accountNumber],
-      ["IFSC Code", defaultForexPartner.ifscCode],
-      ["Branch", defaultForexPartner.branch],
+      ["Bank Name", defaultForexPartner?.bankName || ""],
+      ["Account Name", defaultForexPartner?.accountName || ""],
+      ["Account Number", defaultForexPartner?.accountNumber || ""],
+      ["IFSC Code", defaultForexPartner?.ifscCode || ""],
+      ["Branch", defaultForexPartner?.branch || ""],
     ],
   });
 
@@ -256,7 +259,6 @@ export default function OrderDetailsForm() {
 
       setUser(user);
       console.log("user", user);
-      
     };
     fetchUser();
   }, []);
@@ -266,13 +268,11 @@ export default function OrderDetailsForm() {
       getLiveRate(currency, "INR").then((rate: number) => {
         const ibrRate = rate + (user?.buyexRate ?? 0);
         console.log("rate", rate);
-        
+
         form.setValue("ibrRate", ibrRate.toFixed(2).toString());
         form.setValue("margin", (user?.agentRate ?? 0).toString());
         console.log("ibrRate", ibrRate);
         console.log("margin", user?.agentRate);
-        
-        
       });
     }
   }, [currency, form, user]);
@@ -293,27 +293,26 @@ export default function OrderDetailsForm() {
 
   useEffect(() => {
     const currentAmount = Number.parseFloat(amount || "0");
-    
+
     const currentMargin = Number.parseFloat(margin || "0");
-    
+
     const currentIbrRate = Number(Number.parseFloat(ibrRate || "0").toFixed(2));
-   
-   
+
     if (currentAmount && currentMargin) {
-      const totalAmount = ((currentIbrRate + currentMargin) * currentAmount);
+      const totalAmount = (currentIbrRate + currentMargin) * currentAmount;
       const roundedTotalAmount = Math.round(totalAmount); // 101680
-      
+
       form.setValue(
         "customerRate",
         (currentIbrRate + currentMargin).toFixed(2).toString()
       );
-      
+
       setCalculatedValues((prev) => ({
         ...prev,
         inrAmount: roundedTotalAmount.toString(),
         gst: calculateGst(roundedTotalAmount).toString(),
         tcsApplicable:
-        educationLoan === "yes"
+          educationLoan === "yes"
             ? "0"
             : calculateTcs(roundedTotalAmount).toString(),
         totalPayable: calculateTotalPayable(
@@ -323,7 +322,7 @@ export default function OrderDetailsForm() {
         ).toString(),
       }));
     }
-  }, [amount, margin, ibrRate, calculatedValues.bankFee,educationLoan, form]);
+  }, [amount, margin, ibrRate, calculatedValues.bankFee, educationLoan, form]);
 
   useEffect(() => {
     form.setValue("totalAmount", calculatedValues.totalPayable.toString());
@@ -356,7 +355,9 @@ export default function OrderDetailsForm() {
 
     try {
       // Using default forex partner since we removed the selection
-      const defaultForexPartner = "NIUM Forex India Pvt Ltd";
+  const defaultForexPartner = forexPartnerData.find(
+    (partner) => partner.accountName === user?.forexPartner
+  );
 
       const order = await axios.post("/api/orders", {
         purpose: formData.purpose,
@@ -371,7 +372,7 @@ export default function OrderDetailsForm() {
         currency: formData.currency,
         totalAmount: formData.totalAmount,
         customerRate: formData.customerRate,
-        consultancy: "BuyExchange",
+        consultancy: session.user.name,
         status: "QuoteDownloaded",
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -395,6 +396,7 @@ export default function OrderDetailsForm() {
       const pdfUrl = await generateQuotePDF(
         formData,
         calculatedValues,
+        user!,
         orderId
       );
 
@@ -724,15 +726,6 @@ export default function OrderDetailsForm() {
                     </FormItem>
                   )}
                 />
-                
-
-
-
-
-
-
-
-
               </div>
             </div>
 
@@ -911,24 +904,23 @@ export default function OrderDetailsForm() {
               </div>
 
               <FormField
-                  control={form.control}
-                  name="margin"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-gray-700 font-normal">
-                        Margin
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          className="bg-blue-50/50 border-blue-200 shadow-lg h-12"
-                          placeholder="Enter margin"
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              
+                control={form.control}
+                name="margin"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-gray-700 font-normal">
+                      Margin
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        className="bg-blue-50/50 border-blue-200 shadow-lg h-12"
+                        placeholder="Enter margin"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
             </div>
           </div>
 
@@ -1047,26 +1039,25 @@ export default function OrderDetailsForm() {
                 </Button>
               </div>
             </div>
-<FormField
-                control={form.control}
-                name="customerRate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-gray-700 font-normal">
-                      Customer rate
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        readOnly
-                        placeholder=" customer rate"
-                        className="bg-blue-50/50 border-blue-200 shadow-lg h-12"
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-         
+            <FormField
+              control={form.control}
+              name="customerRate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-gray-700 font-normal">
+                    Customer rate
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      readOnly
+                      placeholder=" customer rate"
+                      className="bg-blue-50/50 border-blue-200 shadow-lg h-12"
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
           </div>
 
           {/* Action Buttons */}
