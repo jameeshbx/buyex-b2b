@@ -81,14 +81,14 @@ const editUserSchema = z
       .number()
       .optional()
       .refine((val) => val === undefined || (val >= 0.2 && val <= 3), {
-        message: "Agent rate must be between 0.2 and 3",
+        message: "Agent rate must be between 0.2 and 3.0",
       }),
     forexPartner: z.string().optional(),
     buyexRate: z
       .number()
       .optional()
       .refine((val) => val === undefined || (val >= 0.2 && val <= 3), {
-        message: "Buyex rate must be between 0.2 and 3",
+        message: "Buyex rate must be between 0.2 and 3.0",
       }),
   })
   .superRefine((data, ctx) => {
@@ -100,8 +100,7 @@ const editUserSchema = z
       ) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message:
-            "Agent rate is required and must be between 0.2 and 3 for Agent users",
+          message: "Agent rate is required and must be between 0.2 and 3.0 for Agent users",
           path: ["agentRate"],
         });
       }
@@ -119,13 +118,13 @@ const editUserSchema = z
       ) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message:
-            "Buyex rate is required and must be between 0.2 and 3 for Agent users",
+          message: "Buyex rate is required and must be between 0.2 and 3.0 for Agent users",
           path: ["buyexRate"],
         });
       }
     }
   });
+
 
 type EditUserFormData = z.infer<typeof editUserSchema>;
 
@@ -572,7 +571,7 @@ export function UserTable({
                     </TableCell>
                     <TableCell>{user.forexPartner || "-"}</TableCell>
                     <TableCell>
-                      {user.userType === "Agent"
+                      {user.userType ===   "Agent"
                         ? `${user.buyexRate ?? "-"}`
                         : "-"}
                     </TableCell>
@@ -774,23 +773,24 @@ export function UserTable({
             {selectedUserType === "Agent" && (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="edit-agentRate">Agent Rate</Label>
-                  <Input
-                    id="edit-agentRate"
-                    type="number"
-                    min="0"
-                    max="100"
-                    placeholder="Enter agent rate"
-                    {...register("agentRate", {
-                      valueAsNumber: true,
-                    })}
-                  />
-                  {errors.agentRate && (
-                    <p className="text-red-500 text-xs">
-                      {errors.agentRate.message}
-                    </p>
-                  )}
-                </div>
+  <Label htmlFor="edit-agentRate">Agent Rate</Label>
+  <Input
+    id="edit-agentRate"
+    type="number"
+    step="0.1"  // This allows decimal values
+    min="0.2"
+    max="3"
+    placeholder="Enter agent rate (0.2 - 3.0)"
+    {...register("agentRate", {
+      valueAsNumber: true,
+    })}
+  />
+  {errors.agentRate && (
+    <p className="text-red-500 text-xs">
+      {errors.agentRate.message}
+    </p>
+  )}
+</div>
                 <div className="space-y-2">
                   <Label htmlFor="edit-forexPartner">Forex Partner</Label>
                   <Select
@@ -819,23 +819,24 @@ export function UserTable({
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="edit-buyexRate">Buyex Rate</Label>
-                  <Input
-                    id="edit-buyexRate"
-                    type="number"
-                    min="0"
-                    max="100"
-                    placeholder="Enter buyex rate"
-                    {...register("buyexRate", {
-                      valueAsNumber: true,
-                    })}
-                  />
-                  {errors.buyexRate && (
-                    <p className="text-red-500 text-xs">
-                      {errors.buyexRate.message}
-                    </p>
-                  )}
-                </div>
+  <Label htmlFor="edit-buyexRate">Buyex Rate</Label>
+  <Input
+    id="edit-buyexRate"
+    type="number"
+    step="0.1"  // This allows decimal values
+    min="0.2"
+    max="3"
+    placeholder="Enter buyex rate (0.2 - 3.0)"
+    {...register("buyexRate", {
+      valueAsNumber: true,
+    })}
+  />
+  {errors.buyexRate && (
+    <p className="text-red-500 text-xs">
+      {errors.buyexRate.message}
+    </p>
+  )}
+</div>
               </>
             )}
             <DialogFooter className="flex-col sm:flex-row gap-2">
