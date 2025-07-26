@@ -19,7 +19,7 @@ export default function AboutUs() {
       <div className="flex flex-col lg:flex-row gap-12 items-center mb-20">
         <div className="lg:w-1/2">
           <Image
-            src="/images/benews/Frame 25.svg?height=200&width=300" // Replace with your actual image path
+            src="/unnameds.png?height=200&width=300" // Replace with your actual image path
             alt="Buy Exchange Team"
             width={600}
             height={400}
