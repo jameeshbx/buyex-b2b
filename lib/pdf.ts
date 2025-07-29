@@ -76,7 +76,7 @@ interface Order {
 }
 
 // Helper function to split address if longer than 100 characters
-const splitAddress = (address: string, maxLength: number = 100): string[] => {
+const splitAddress = (address: string, maxLength: number = 150): string[] => {
   if (!address || address.length <= maxLength) {
     return [address];
   }
@@ -139,7 +139,7 @@ export async function generateA2Form(order: Order) {
     name: order.sender?.studentName || '',
     dob: order.sender?.dob || '',
     address: addressLines[0] || '',
-    address2: addressLines[0] + ' ' + order.sender?.addressLine2 || '',
+    address2: addressLines[1] + ' ' + order.sender?.addressLine2 || '',
     state: order.sender?.state || '',
     postalCode: order.sender?.postalCode || '',
     mobile: order.sender?.phoneNumber || '',
@@ -171,16 +171,17 @@ export async function generateA2Form(order: Order) {
 
   // Add text to first page (coordinates are approximate; adjust as per actual form layout)
   drawText(data.date, 60, height - 75);
+  drawText(data.forexPurpose, 350, height - 190);
   drawText(data.name, 120, height - 275);
   drawText(data.dob, 430, height - 275);  
-  drawText(data.address, 100, height - 305);
+  drawText(data.address, 100, height - 305, 8);
   
   // Draw additional address lines if address was split
-  if (addressLines.length > 1) {
-    drawText(addressLines[1], 100, height - 325);
-  }
+  // if (addressLines.length > 1) {
+  //   drawText(addressLines[1], 100, height - 325);
+  // }
   
-  drawText(data.address2, 50, height - 330);
+  drawText(data.address2, 50, height - 330, 8);
   drawText(data.state, 50, height - 350);
   drawText(data.postalCode, 470, height - 330);
   drawText(data.mobile, 470, height - 360);  
@@ -202,14 +203,14 @@ export async function generateA2Form(order: Order) {
     drawText(data.country, 200, height - 175, 10, secondPage);
     drawText(data.source, 200, height - 200, 10, secondPage);
     drawText(data.beneficiaryName, 200, height - 320, 10, secondPage);
-    drawText(data.beneficiaryAddress, 200, height - 345, 10, secondPage);
+    drawText(data.beneficiaryAddress, 200, height - 345, 8, secondPage);
     drawText(data.bankAccount, 200, height - 370, 10, secondPage);
     drawText(data.bankName, 250, height - 395, 10, secondPage);
-    drawText(data.bankAddress, 350, height - 395, 10, secondPage);
+    drawText(data.bankAddress, 350, height - 395, 8, secondPage);
     drawText(data.swiftCode, 150, height - 430, 10, secondPage);
     drawText(data.abaCode, 250, height - 455, 10, secondPage);
     drawText(data.reference, 280, height - 510, 10, secondPage);
-    drawText(data.additionalInfo, 280, height - 515, 10, secondPage);
+    drawText(data.additionalInfo, 280, height - 520, 8, secondPage);
   }
 
   // Serialize and return
