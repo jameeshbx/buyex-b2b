@@ -72,8 +72,8 @@ async function generateQuotePDF(
   const doc = new jsPDF() as JsPDFWithAutoTable;
   let lastY = 30;
 
-  const logo = "/header-logo.png";
-  doc.addImage(logo, "PNG", 14, 10, 50, 20);
+  // const logo = "/header-logo.png";
+  // doc.addImage(logo, "PNG", 14, 10, 50, 20);
 
   doc.setFontSize(18);
   doc.setFont("helvetica", "bold");
@@ -106,7 +106,7 @@ async function generateQuotePDF(
   doc.setFont("helvetica", "bold");
   doc.text("Forex Partner Bank Account Details ", 14, lastY);
   doc.setTextColor(255, 0, 0);
-  doc.text("(Cash deposit not accepted)", 130, lastY);
+  doc.text("(Only Bank transaction is accepted)", 130, lastY);
 
   autoTable(doc, {
     startY: lastY + 15,
@@ -118,7 +118,6 @@ async function generateQuotePDF(
       ["Account Number", forexPartner.accountNumber],
       ["IFSC Code", forexPartner.ifscCode],
       ["Branch", forexPartner.branch],
-      ["Consultancy", formData.consultancy],
     ],
   });
 

@@ -64,6 +64,7 @@ export default function DocumentUploadForm({
     ExistingDocument[]
   >([]);
   const [isLoadingDocuments, setIsLoadingDocuments] = useState(false);
+  const [reuploading, setReuploading] = useState<{ section: "kyc" | "checklist"; field: string } | null>(null);
 
   useEffect(() => {
     if (currentUser === null) {
@@ -588,27 +589,40 @@ export default function DocumentUploadForm({
           KYC Documents
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* PAN */}
           <div>
             <label className="block font-jakarta text-sm mb-2">
               PanCard of Remitter*
             </label>
-            {formState.kyc.panUrl ? (
-              <div className="p-3 bg-green-50 border border-green-200 rounded">
-                <p className="text-green-800 text-sm">✓ Pancard uploaded</p>
-                <a
-                  href={formState.kyc.panUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-800 text-xs"
+            {formState.kyc.panUrl && !(reuploading?.section === "kyc" && reuploading?.field === "pan") ? (
+              <div className="p-3 bg-green-50 border border-green-200 rounded flex items-center justify-between">
+                <div>
+                  <p className="text-green-800 text-sm">✓ Pancard uploaded</p>
+                  <a
+                    href={formState.kyc.panUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 text-xs"
+                  >
+                    View document
+                  </a>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="ml-2"
+                  onClick={() => setReuploading({ section: "kyc", field: "pan" })}
                 >
-                  View document
-                </a>
+                  Re-upload
+                </Button>
               </div>
             ) : (
               <S3FileUploader
-                onFileUpload={(file, s3Url, s3Key) =>
-                  handleFileUpload("kyc", "pan", file, s3Url, s3Key)
-                }
+                onFileUpload={(file, s3Url, s3Key) => {
+                  handleFileUpload("kyc", "pan", file, s3Url, s3Key);
+                  setReuploading(null);
+                }}
                 currentFile={formState.kyc.pan}
                 currentS3Url={formState.kyc.panUrl}
                 currentS3Key={formState.kyc.panS3Key}
@@ -624,29 +638,42 @@ export default function DocumentUploadForm({
               </p>
             )}
           </div>
+          {/* Identity */}
           <div>
             <label className="block font-jakarta text-sm mb-2">
               Aadhaar/Passport/Driving license of Remitter*
             </label>
-            {formState.kyc.identityUrl ? (
-              <div className="p-3 bg-green-50 border border-green-200 rounded">
-                <p className="text-green-800 text-sm">
-                  ✓ Identity document uploaded
-                </p>
-                <a
-                  href={formState.kyc.identityUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-800 text-xs"
+            {formState.kyc.identityUrl && !(reuploading?.section === "kyc" && reuploading?.field === "identity") ? (
+              <div className="p-3 bg-green-50 border border-green-200 rounded flex items-center justify-between">
+                <div>
+                  <p className="text-green-800 text-sm">
+                    ✓ Identity document uploaded
+                  </p>
+                  <a
+                    href={formState.kyc.identityUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 text-xs"
+                  >
+                    View document
+                  </a>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="ml-2"
+                  onClick={() => setReuploading({ section: "kyc", field: "identity" })}
                 >
-                  View document
-                </a>
+                  Re-upload
+                </Button>
               </div>
             ) : (
               <S3FileUploader
-                onFileUpload={(file, s3Url, s3Key) =>
-                  handleFileUpload("kyc", "identity", file, s3Url, s3Key)
-                }
+                onFileUpload={(file, s3Url, s3Key) => {
+                  handleFileUpload("kyc", "identity", file, s3Url, s3Key);
+                  setReuploading(null);
+                }}
                 currentFile={formState.kyc.identity}
                 currentS3Url={formState.kyc.identityUrl}
                 currentS3Key={formState.kyc.identityS3Key}
@@ -671,39 +698,44 @@ export default function DocumentUploadForm({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {purpose &&
             CHECKLIST_FIELDS[purpose]?.map((item) => {
-              const fileUrl = formState.checklist?.[
-                `${item.type}Url`
-              ] as string;
+              const fileUrl = formState.checklist?.[`${item.type}Url`] as string;
+              const isReuploading = reuploading?.section === "checklist" && reuploading?.field === item.type;
               return (
                 <div key={item.type}>
                   <label className="block text-sm font-jakarta mb-2">
                     {item.label}*
                   </label>
-                  {fileUrl ? (
-                    <div className="p-3 bg-green-50 border border-green-200 rounded">
-                      <p className="text-green-800 text-sm">
-                        ✓ {item.label} uploaded
-                      </p>
-                      <a
-                        href={fileUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 text-xs"
+                  {fileUrl && !isReuploading ? (
+                    <div className="p-3 bg-green-50 border border-green-200 rounded flex items-center justify-between">
+                      <div>
+                        <p className="text-green-800 text-sm">
+                          ✓ {item.label} uploaded
+                        </p>
+                        <a
+                          href={fileUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 text-xs"
+                        >
+                          View document
+                        </a>
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="ml-2"
+                        onClick={() => setReuploading({ section: "checklist", field: item.type })}
                       >
-                        View document
-                      </a>
+                        Re-upload
+                      </Button>
                     </div>
                   ) : (
                     <S3FileUploader
-                      onFileUpload={(file, s3Url, s3Key) =>
-                        handleFileUpload(
-                          "checklist",
-                          item.type,
-                          file,
-                          s3Url,
-                          s3Key
-                        )
-                      }
+                      onFileUpload={(file, s3Url, s3Key) => {
+                        handleFileUpload("checklist", item.type, file, s3Url, s3Key);
+                        setReuploading(null);
+                      }}
                       currentFile={
                         formState.checklist?.[item.type] instanceof File
                           ? (formState.checklist?.[item.type] as File)
@@ -737,37 +769,43 @@ export default function DocumentUploadForm({
                 </div>
               );
             })}
-          {/* Add Loan Sanction Letter if educationLoan is yes */}
+          {/* Loan Sanction Letter */}
           {educationLoan === "yes" && (
             <div>
               <label className="block text-sm font-jakarta mb-2">
                 Loan Sanction Letter*
               </label>
-              {formState.checklist?.LOAN_SANCTION_LETTERUrl ? (
-                <div className="p-3 bg-green-50 border border-green-200 rounded">
-                  <p className="text-green-800 text-sm">
-                    ✓ Loan Sanction Letter uploaded
-                  </p>
-                  <a
-                    href={formState.checklist.LOAN_SANCTION_LETTERUrl as string}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800 text-xs"
+              {formState.checklist?.LOAN_SANCTION_LETTERUrl && !(reuploading?.section === "checklist" && reuploading?.field === "LOAN_SANCTION_LETTER") ? (
+                <div className="p-3 bg-green-50 border border-green-200 rounded flex items-center justify-between">
+                  <div>
+                    <p className="text-green-800 text-sm">
+                      ✓ Loan Sanction Letter uploaded
+                    </p>
+                    <a
+                      href={formState.checklist.LOAN_SANCTION_LETTERUrl as string}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 text-xs"
+                    >
+                      View document
+                    </a>
+                  </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="ml-2"
+                    onClick={() => setReuploading({ section: "checklist", field: "LOAN_SANCTION_LETTER" })}
                   >
-                    View document
-                  </a>
+                    Re-upload
+                  </Button>
                 </div>
               ) : (
                 <S3FileUploader
-                  onFileUpload={(file, s3Url, s3Key) =>
-                    handleFileUpload(
-                      "checklist",
-                      "LOAN_SANCTION_LETTER",
-                      file,
-                      s3Url,
-                      s3Key
-                    )
-                  }
+                  onFileUpload={(file, s3Url, s3Key) => {
+                    handleFileUpload("checklist", "LOAN_SANCTION_LETTER", file, s3Url, s3Key);
+                    setReuploading(null);
+                  }}
                   currentFile={
                     formState.checklist?.LOAN_SANCTION_LETTER instanceof File
                       ? (formState.checklist?.LOAN_SANCTION_LETTER as File)

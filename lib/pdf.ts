@@ -136,7 +136,7 @@ export async function generateA2Form(order: Order) {
   
   const data = {
     date: new Date(order.createdAt).toLocaleDateString(),
-    name: order.sender?.studentName || '',
+    name: order.payer === 'Self' ? order.sender?.studentName || '' : order.sender?.senderName || '',
     dob: order.sender?.dob || '',
     address: addressLines[0] || '',
     address2: addressLines[1] + ' ' + order.sender?.addressLine2 || '',
@@ -148,7 +148,7 @@ export async function generateA2Form(order: Order) {
     pan: order.sender?.pancardNumber || '',
     resStatus: 'Resident',
 
-    senderName: order.sender?.senderName || '',
+    senderName:  '',
     senderPassportNo: '',
     senderPAN: order.pancardNumber || '',
     relation: order.sender?.relationship || '',
