@@ -126,7 +126,7 @@ export async function POST() {
         intermediaryBankIBAN: "",
         intermediaryBankSwiftCode: "",
         totalRemittance: "5000 USD",
-        field70: "Student ID: 12345, Semester: Fall 2024",
+        field70: "Student ID: 12345, Semester: Fall 2024jsdshdsjkdsdjksdnsdskjdsadskjdasjhsdsjkdsbdjhsdbsjkd",
         status: true,
         createdAt: "2024-01-15T10:30:00Z",
         updatedAt: "2024-01-15T10:30:00Z"
@@ -169,12 +169,19 @@ export async function POST() {
     drawText(data.beneficiaryName, 200, height - 320, 10, secondPage);
     drawText(data.beneficiaryAddress, 200, height - 345, 8, secondPage);
     drawText(data.bankAccount, 200, height - 370, 10, secondPage);
-    drawText(data.bankName, 250, height - 395, 10, secondPage);
-    drawText(data.bankAddress, 350, height - 395, 8, secondPage);
+    drawText(data.bankName, 220, height - 395, 10, secondPage);
+    drawText(data.bankAddress, 320, height - 395, 8, secondPage);
     drawText(data.swiftCode, 150, height - 430, 10, secondPage);
     drawText(data.abaCode, 250, height - 455, 10, secondPage);
-    drawText(data.reference, 280, height - 510, 10, secondPage);
-    drawText(data.additionalInfo, 280, height - 515, 8, secondPage);
+   
+    const maxLineLength = 70;
+    const line1 = data.beneficiary.field70.slice(0, maxLineLength);
+    const line2 = data.beneficiary.field70.slice(maxLineLength);
+
+    drawText(line1, 280, height - 516, 8, secondPage);
+    if (line2) {
+      drawText(line2, 50, height - 540, 8, secondPage); // 15 units lower for the second line
+    }
   }
 
 
