@@ -2,6 +2,28 @@ import { sendEmailWithAttachment } from "./email";
 import JSZip from "jszip";
 import axios from "axios";
 import { getCloudFrontUrl } from "./s3";
+import { forexPartnerTemplate } from "./email-templates";
+
+// Simple Order type for the email function
+type Order = {
+  id: string;
+  createdAt: string;
+  studentName?: string;
+  currency?: string;
+  customerRate?: number;
+  ibrRate?: number;
+  amount?: number;
+  totalAmount?: number;
+  purpose?: string;
+  sender?: {
+    studentName?: string;
+    phoneNumber?: string;
+    studentEmailOriginal?: string;
+  };
+  beneficiary?: {
+    receiverFullName?: string;
+  };
+};
 
 // Helper function to convert S3 keys to CloudFront URLs
 const convertS3KeysToCloudFrontUrls = (s3Keys: string[]): string[] => {
@@ -12,7 +34,11 @@ const convertS3KeysToCloudFrontUrls = (s3Keys: string[]): string[] => {
   });
 };
 
-export const sendEmailToForexPartner = async (documents: string[], to: string) => {
+export const sendEmailToForexPartner = async (
+  order: Order,
+  documents: string[],
+  to: string
+) => {
   try {
     // Download documents from S3 URLs and create zip
     const zip = new JSZip();
@@ -45,12 +71,23 @@ export const sendEmailToForexPartner = async (documents: string[], to: string) =
     const zipBuffer = await zip.generateAsync({ type: 'nodebuffer' });
     
     const email = to;
-    const subject = "New Order - Documents Attached";
-    const html = `
-      <p>A new order has been created.</p>
-      <p>Please find the attached documents in the zip file.</p>
-      <p>Total documents: ${documents.length}</p>
-    `;
+    const subject = `New Order - Documents Attached (Order Id - ${order.id})`;
+    const html: string = forexPartnerTemplate({
+      orderDate: new Date(order.createdAt).toLocaleString(),
+      orderId: order.id,
+      senderName: order.sender?.studentName || order.studentName || "",
+      phone: order.sender?.phoneNumber || "",
+      email: order.sender?.studentEmailOriginal || "",
+      purpose: order.purpose || "",
+      receiverName: order.beneficiary?.receiverFullName || "",
+      foreignCurrency: order.currency || "",
+      product: order.purpose || "",
+      rate: order.customerRate  || "",
+      tentativeAmount: order.amount || "",
+      totalPayableAmount: order.totalAmount || "",
+      supportEmail: "forex@buyexchange.in",
+      supportPhone: "+91 9633886611",
+    });
     
     // Send email with zip attachment
     await sendEmailWithAttachment({ 
@@ -88,8 +125,27 @@ export const testSendEmailToForexPartner = async () => {
     console.log(`${index + 1}. ${url}`);
   });
   
+  // Create a mock order object for testing
+  const mockOrder: Order = {
+    id: "TEST-ORDER-001",
+    createdAt: new Date().toISOString(),
+    sender: {
+      studentName: "Test Student",
+      phoneNumber: "1234567890",
+      studentEmailOriginal: "test@example.com"
+    },
+    purpose: "University fee transfer",
+    beneficiary: {
+      receiverFullName: "Test Receiver"
+    },
+    currency: "USD",
+    customerRate: 85.50,
+    amount: 1000,
+    totalAmount: 85500
+  };
+  
   console.log('Testing sendEmailToForexPartner function...');
-  await sendEmailToForexPartner(cloudFrontUrls, 'jameesh@buyexchange.in');
+  await sendEmailToForexPartner(mockOrder, cloudFrontUrls, 'jameesh@buyexchange.in');
   
   console.log('Test completed successfully!');
 };

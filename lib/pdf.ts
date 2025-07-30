@@ -143,7 +143,7 @@ export async function generateA2Form(order: Order) {
     state: order.sender?.state || '',
     postalCode: order.sender?.postalCode || '',
     mobile: order.sender?.phoneNumber || '',
-    email: order.sender?.studentEmailOriginal || '',
+    email: order.sender?.studentEmailFake || '',
     nationality: order.sender?.nationality || '',
     pan: order.sender?.pancardNumber || '',
     resStatus: 'Resident',
@@ -205,12 +205,19 @@ export async function generateA2Form(order: Order) {
     drawText(data.beneficiaryName, 200, height - 320, 10, secondPage);
     drawText(data.beneficiaryAddress, 200, height - 345, 8, secondPage);
     drawText(data.bankAccount, 200, height - 370, 10, secondPage);
-    drawText(data.bankName, 250, height - 395, 8, secondPage);
-    drawText(data.bankAddress, 400, height - 395, 8, secondPage);
+    drawText(data.bankName, 220, height - 395, 8, secondPage);
+    drawText(data.bankAddress, 320, height - 395, 8, secondPage);
     drawText(data.swiftCode, 150, height - 430, 10, secondPage);
     drawText(data.abaCode, 250, height - 455, 10, secondPage);
     drawText(data.reference, 280, height - 510, 10, secondPage);
-    drawText(data.additionalInfo, 280, height - 520, 8, secondPage);
+    const maxLineLength = 70; // or any suitable length for your layout
+    const line1 = data.additionalInfo.slice(0, maxLineLength);
+    const line2 = data.additionalInfo.slice(maxLineLength);
+
+    drawText(line1, 280, height - 516, 8, secondPage);
+    if (line2) {
+      drawText(line2, 50, height - 540, 8, secondPage); // 15 units lower for the second line
+    }
   }
 
   // Serialize and return

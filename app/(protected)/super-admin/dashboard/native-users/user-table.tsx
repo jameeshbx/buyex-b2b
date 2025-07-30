@@ -72,25 +72,25 @@ type SortField =
   | "buyexRate";
 type SortDirection = "asc" | "desc";
 
-const editUserSchema = z
-  .object({
-    name: z.string().min(2, { message: "Name must be at least 2 characters" }),
-    email: z.string().email({ message: "Please enter a valid email address" }),
-    userType: z.enum(["Admin", "Staff", "Agent"]),
-    agentRate: z
-      .number()
-      .optional()
-      .refine((val) => val === undefined || (val >= 0.2 && val <= 3), {
-        message: "Agent rate must be between 0.2 and 3.0",
-      }),
-    forexPartner: z.string().optional(),
-    buyexRate: z
-      .number()
-      .optional()
-      .refine((val) => val === undefined || (val >= 0.2 && val <= 3), {
-        message: "Buyex rate must be between 0.2 and 3.0",
-      }),
-  })
+// Define the schema properly
+const editUserSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email("Invalid email"),
+  userType: z.enum(["Admin", "Staff", "Agent"]),
+  agentRate:  z
+  .number()
+  .optional()
+  .refine((val) => val === undefined || (val >= 0.2 && val <= 3), {
+    message: "Agent rate must be between 0.2 and 3.0",
+  }),
+  forexPartner: z.string().optional(),
+  buyexRate:  z
+  .number()
+  .optional()
+  .refine((val) => val === undefined || (val >= 0.2 && val <= 3), {
+    message: "Buyex rate must be between 0.2 and 3.0",
+  }),
+})
   .superRefine((data, ctx) => {
     if (data.userType === "Agent") {
       if (
@@ -124,9 +124,6 @@ const editUserSchema = z
       }
     }
   });
-
-
-type EditUserFormData = z.infer<typeof editUserSchema>;
 
 interface UserTableProps {
   users: User[];
@@ -192,15 +189,18 @@ export function UserTable({
     message: "",
   });
   const [selectedUserType, setSelectedUserType] = useState<UserType>("Admin");
+  
+  // Move useForm hook inside the component
   const {
     register,
     handleSubmit,
     reset,
     setValue,
     formState: { errors, isSubmitting },
-  } = useForm<EditUserFormData>({
+  } = useForm<z.infer<typeof editUserSchema>>({
     resolver: zodResolver(editUserSchema),
   });
+
   const itemsPerPage = 10;
 
   // Filter users based on search and user type
@@ -330,7 +330,7 @@ export function UserTable({
     }, 0);
   };
 
-  const onEditSubmit = async (data: EditUserFormData) => {
+  const onEditSubmit = async (data: z.infer<typeof editUserSchema>) => {
     if (!editDialog.user) return;
     const success = await onEditUser(editDialog.user.id, {
       name: data.name,
@@ -777,7 +777,7 @@ export function UserTable({
   <Input
     id="edit-agentRate"
     type="number"
-    step="0.1"  // This allows decimal values
+    step="0.01" // <-- allow two decimal places
     min="0.2"
     max="3"
     placeholder="Enter agent rate (0.2 - 3.0)"
@@ -823,7 +823,7 @@ export function UserTable({
   <Input
     id="edit-buyexRate"
     type="number"
-    step="0.1"  // This allows decimal values
+    step="0.01" // <-- allow two decimal places
     min="0.2"
     max="3"
     placeholder="Enter buyex rate (0.2 - 3.0)"
