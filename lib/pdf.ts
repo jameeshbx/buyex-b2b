@@ -136,7 +136,7 @@ export async function generateA2Form(order: Order) {
   
   const data = {
     date: new Date(order.createdAt).toLocaleDateString(),
-    name: order.sender?.studentName || '',
+    name: order.payer === 'Self' ? order.sender?.studentName || '' : order.sender?.senderName || '',
     dob: order.sender?.dob || '',
     address: addressLines[0] || '',
     address2: addressLines[1] + ' ' + order.sender?.addressLine2 || '',
@@ -148,7 +148,7 @@ export async function generateA2Form(order: Order) {
     pan: order.sender?.pancardNumber || '',
     resStatus: 'Resident',
 
-    senderName: order.sender?.senderName || '',
+    senderName:  '',
     senderPassportNo: '',
     senderPAN: order.pancardNumber || '',
     relation: order.sender?.relationship || '',
@@ -205,8 +205,8 @@ export async function generateA2Form(order: Order) {
     drawText(data.beneficiaryName, 200, height - 320, 10, secondPage);
     drawText(data.beneficiaryAddress, 200, height - 345, 8, secondPage);
     drawText(data.bankAccount, 200, height - 370, 10, secondPage);
-    drawText(data.bankName, 250, height - 395, 10, secondPage);
-    drawText(data.bankAddress, 350, height - 395, 8, secondPage);
+    drawText(data.bankName, 250, height - 395, 8, secondPage);
+    drawText(data.bankAddress, 400, height - 395, 8, secondPage);
     drawText(data.swiftCode, 150, height - 430, 10, secondPage);
     drawText(data.abaCode, 250, height - 455, 10, secondPage);
     drawText(data.reference, 280, height - 510, 10, secondPage);
