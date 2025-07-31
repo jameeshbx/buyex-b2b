@@ -216,7 +216,7 @@ export async function generateA2Form(order: Order) {
 
     drawText(line1, 280, height - 516, 8, secondPage);
     if (line2) {
-      drawText(line2, 50, height - 540, 8, secondPage); // 15 units lower for the second line
+      drawText(line2, 280, height - 540, 8, secondPage); // 15 units lower for the second line
     }
   }
 
