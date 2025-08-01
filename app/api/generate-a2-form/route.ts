@@ -169,7 +169,7 @@ export async function POST() {
     drawText(data.beneficiaryName, 200, height - 320, 10, secondPage);
     drawText(data.beneficiaryAddress, 200, height - 345, 8, secondPage);
     drawText(data.bankAccount, 200, height - 370, 10, secondPage);
-    drawText(data.bankName, 220, height - 395, 10, secondPage);
+    drawText(data.bankName, 200, height - 395, 8, secondPage);
     drawText(data.bankAddress, 320, height - 395, 8, secondPage);
     drawText(data.swiftCode, 150, height - 430, 10, secondPage);
     drawText(data.abaCode, 250, height - 455, 10, secondPage);
