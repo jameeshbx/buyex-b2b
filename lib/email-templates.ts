@@ -70,7 +70,7 @@ export const orderReceivedTemplate = ({
             <tr><td style="padding:4px 0;">FCY Amount</td><td style="padding:4px 0;">${tentativeAmount}</td></tr>
             <tr><td style="padding:4px 0;">Forex Conversion Tax</td><td style="padding:4px 0;">${forexConversionTax}</td></tr>
             <tr><td style="padding:4px 0;">Bank fee</td><td style="padding:4px 0;">${bankFee}</td></tr>
-            <tr><td style="padding:4px 0;">TCS@5%</td><td style="padding:4px 0;">${tcs}</td></tr>
+            <tr><td style="padding:4px 0;">TCS</td><td style="padding:4px 0;">${tcs}</td></tr>
             <tr><td style="padding:4px 0;font-weight:600;">Total Payable Amount</td><td style="padding:4px 0;font-weight:600;">₹ ${totalPayableAmount}</td></tr>
           </table>
           <div style="font-size:12px;color:#888;margin-top:8px;">*Please confirm the final payable amount if TCS is applicable.</div>
@@ -88,17 +88,9 @@ export const orderReceivedTemplate = ({
       </div>
       <div style="background:#1a1a2e;padding:24px;text-align:center;">
         
-        <div style="color:#fff;font-size:13px;margin-bottom:8px;">
-          <span style="margin-right:12px;">#startupindia</span>
-          <span style="margin-right:12px;">Kerala Startup Mission</span>
-          <span>10,000 Startups</span>
-        </div>
-        <div style="color:#b2b2b2;font-size:12px;margin-bottom:8px;">
-          <a href="https://buyexchange.in/services" style="color:#b2b2b2;text-decoration:none;margin-right:16px;">BuyEx Services</a>
-          <a href="https://buyexchange.in/privacy-policy" style="color:#b2b2b2;text-decoration:none;">Privacy Policy</a>
-        </div>
+        
         <div style="color:#b2b2b2;font-size:12px;">
-          Buy Exchange Fintech.<br/>
+          Buy Exchange Fintech Solutions.<br/>
           First Floor, Integrated Startup Complex,<br/>
           Kerala Technology Innovation Zone HMT Colony, Kalamassery - Kochi, Kerala-683503
         </div>
@@ -183,13 +175,9 @@ export const swiftCopyTemplate = ({
       </div>
     </div>
     <div style="background:#18183a;padding:24px;text-align:center;">
-      <div style="color:#fff;font-size:15px;margin-bottom:8px;">
-        <span style="margin-right:12px;">#startupindia</span>
-        <span style="margin-right:12px;">Kerala Startup Mission</span>
-        <span>10,000 Startups</span>
-      </div>
+      
       <div style="color:#b2b2b2;font-size:12px;margin-bottom:8px;">
-        Buy Exchange Fintech.<br/>
+        Buy Exchange Fintech Solutions<br/>
         First Floor, Integrated Startup Complex,<br/>
         Kerala Technology Innovation Zone HMT Colony, Kalamassery - Kochi, Kerala-683503
       </div>
@@ -291,17 +279,9 @@ export const forexPartnerTemplate = ({
         </div>
       </div>
       <div style="background:#1a1a2e;padding:24px;text-align:center;">
-        <div style="color:#fff;font-size:13px;margin-bottom:8px;">
-          <span style="margin-right:12px;">#startupindia</span>
-          <span style="margin-right:12px;">Kerala Startup Mission</span>
-          <span>10,000 Startups</span>
-        </div>
-        <div style="color:#b2b2b2;font-size:12px;margin-bottom:8px;">
-          <a href="https://buyexchange.in/services" style="color:#b2b2b2;text-decoration:none;margin-right:16px;">BuyEx Services</a>
-          <a href="https://buyexchange.in/privacy-policy" style="color:#b2b2b2;text-decoration:none;">Privacy Policy</a>
-        </div>
+       
         <div style="color:#b2b2b2;font-size:12px;">
-          Buy Exchange Fintech.<br/>
+          Buy Exchange Fintech Solutions<br/>
           First Floor, Integrated Startup Complex,<br/>
           Kerala Technology Innovation Zone HMT Colony, Kalamassery - Kochi, Kerala-683503
         </div>

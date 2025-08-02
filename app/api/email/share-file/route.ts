@@ -30,7 +30,7 @@ const createFileShareEmailTemplate = ({
   <div style="background:linear-gradient(135deg,#1a1a2e 60%,#f7f8fa 100%);padding:0 0 40px 0;">
     <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
       <div style="background:#1a1a2e;padding:32px 24px 24px 24px;text-align:center;">
-        <img src="https://buyexchange.in/_next/image?url=%2Flogo.png&w=128&q=75" alt="Buy Exchange Logo" style="height:40px;margin-bottom:16px;" />
+        
         <h2 style="color:#fff;margin:0 0 8px 0;font-size:22px;font-weight:700;">File Shared</h2>
         <div style="color:#fff;font-size:18px;font-weight:500;">DOCUMENT UPLOAD</div>
         <div style="color:#b2b2b2;font-size:14px;margin-top:8px;">${uploadedAt}</div>
@@ -58,10 +58,6 @@ const createFileShareEmailTemplate = ({
           </p>
         </div>
 
-        <div style="text-align:center;margin-bottom:24px;">
-          <a href="https://buyexchange.in/dashboard" style="display:inline-block;padding:12px 32px;background:#f72585;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;font-size:16px;">Login to Dashboard</a>
-          <div style="font-size:12px;color:#888;margin-top:8px;">Access your account to view all shared files and documents.</div>
-        </div>
 
         <div style="font-size:13px;color:#1a1a2e;text-align:center;margin-bottom:16px;">
           If you did not expect this file, please contact our support team immediately.<br/>
@@ -75,16 +71,7 @@ const createFileShareEmailTemplate = ({
         </div>
       </div>
       <div style="background:#1a1a2e;padding:24px;text-align:center;">
-        <img src="https://buyexchange.in/_next/image?url=%2Flogo.png&w=128&q=75" alt="Buy Exchange Logo" style="height:32px;margin-bottom:8px;" />
-        <div style="color:#fff;font-size:13px;margin-bottom:8px;">
-          <span style="margin-right:12px;">#startupindia</span>
-          <span style="margin-right:12px;">Kerala Startup Mission</span>
-          <span>10,000 Startups</span>
-        </div>
-        <div style="color:#b2b2b2;font-size:12px;margin-bottom:8px;">
-          <a href="https://buyexchange.in/services" style="color:#b2b2b2;text-decoration:none;margin-right:16px;">BuyEx Services</a>
-          <a href="https://buyexchange.in/privacy-policy" style="color:#b2b2b2;text-decoration:none;">Privacy Policy</a>
-        </div>
+        
         <div style="color:#b2b2b2;font-size:12px;">
           Buy Exchange Fintech.<br/>
           First Floor, Integrated Startup Complex,<br/>
