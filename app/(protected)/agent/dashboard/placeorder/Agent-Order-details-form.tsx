@@ -98,7 +98,7 @@ async function generateQuotePDF(
   doc.setFont("helvetica", "bold");
   doc.text("Forex Partner Bank Account Details ", 14, lastY);
   doc.setTextColor(255, 0, 0);
-  doc.text("(Cash deposit not accepted)", 130, lastY);
+  doc.text("(Only Bank transfer is accepted)", 130, lastY);
 
   // Using default forex partner since we removed the selection
   const defaultForexPartner = forexPartnerData.find(
@@ -124,7 +124,7 @@ async function generateQuotePDF(
   doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
   doc.text(
-    "Thank you for choosing BuyExchange for your forex needs.",
+    "Please upload your documents below",
     14,
     lastY
   );
