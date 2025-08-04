@@ -1,27 +1,19 @@
-import { NextRequest, NextResponse } from "next/server";
+import {  NextResponse } from "next/server";
 import { sendEmailToForexPartner } from "@/lib/email-forex";
 
-export async function POST(request: NextRequest) {
-  try {
-    const { documents, to } = await request.json();
-    
-    if (!documents || !Array.isArray(documents)) {
-      return NextResponse.json(
-        { error: "Documents array is required" },
-        { status: 400 }
-      );
-    }
 
-    await sendEmailToForexPartner(documents, to);
+export async function POST(request: Request) {
+  try {
+    const { order, to, documents } = await request.json();
     
-    return NextResponse.json(
-      { message: "Email sent successfully to forex partner" },
-      { status: 200 }
-    );
+    // Call the updated function with order object
+    await sendEmailToForexPartner(order, documents, to);
+    
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error sending email to forex partner:", error);
+    console.error('Error in forex partner email route:', error);
     return NextResponse.json(
-      { error: "Failed to send email to forex partner" },
+      { error: 'Failed to send email' },
       { status: 500 }
     );
   }

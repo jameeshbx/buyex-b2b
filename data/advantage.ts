@@ -25,9 +25,9 @@ export const advantageItems = [
   },
   {
     imageSrc: "/images/Circle Layer.png",
-    title: "Subagent Management",
+    title: "Sub Agent Management",
     description:
-      "Easily onboard, monitor, and manage subagents with transparent commission tracking and performance reports to grow your B2B network efficiently.",
+      "Easily onboard, monitor, and manage sub agents with transparent commission tracking and performance reports to grow your B2B network efficiently.",
   },
   {
     imageSrc: "/images/Circle Layer.png",

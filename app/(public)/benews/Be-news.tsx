@@ -180,7 +180,7 @@ export default function Home() {
           height={20} 
           className="w-4 h-4 sm:w-5 sm:h-5" 
         />
-        <p className="text-sm sm:text-base md:text-lg text-dark-blue font-jakarta">+919072243243</p>
+        <p className="text-sm sm:text-base md:text-lg text-dark-blue font-jakarta">+918943243543</p>
       </div>
       <div className="flex items-center gap-3">
         <Image 
@@ -205,7 +205,7 @@ export default function Home() {
           height={20} 
           className="w-4 h-4 sm:w-5 sm:h-5" 
         />
-        <p className="text-sm sm:text-base md:text-lg text-dark-blue font-jakarta">+919072243243</p>
+        <p className="text-sm sm:text-base md:text-lg text-dark-blue font-jakarta">+919633886611</p>
       </div>
       <div className="flex items-center gap-3">
         <Image 

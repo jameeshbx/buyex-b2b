@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { forexPartnerData } from "@/data/forex-partner";
 
+
 // Types
 type Order = {
   id: string;
@@ -366,6 +367,7 @@ export default function Dashboard() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               orderId,
+              order: updatedOrder, // Pass the complete order object
               to: forexPartnerObject?.email || "buyexchange@buyexchange.in",
               documents: documents.map(
                 (doc: { imageUrl: string }) => doc.imageUrl
