@@ -1,4 +1,4 @@
-import DocumentUploadForm from "@/app/(protected)/staff/(components)/document-upload-form";
+import DocumentUploadForm from "../document-upload-form";
 import React from "react";
 
 interface PageProps {

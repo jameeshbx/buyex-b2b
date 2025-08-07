@@ -61,6 +61,6 @@ export const calculateTotalPayable = (amount: number, bankFee: number, education
   const tcs = parseFloat(calculateTcs(amount, educationLoan));
   const gst = parseFloat(calculateGst(amount));
   const total = amount + tcs + gst + bankFee;
-  console.log('calculateTotalPayable:', { amount, bankFee, educationLoan, tcs, gst, total });
+  //console.log('calculateTotalPayable:', { amount, bankFee, educationLoan, tcs, gst, total });
   return Math.ceil(total);
 };
