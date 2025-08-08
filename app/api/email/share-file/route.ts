@@ -6,7 +6,6 @@ const createFileShareEmailTemplate = ({
   studentName,
   fileName,
   fileComment,
-  uploadedBy,
   uploadedAt,
   supportEmail,
   supportPhone,
@@ -14,7 +13,6 @@ const createFileShareEmailTemplate = ({
   studentName: string;
   fileName: string;
   fileComment: string;
-  uploadedBy: string;
   uploadedAt: string;
   supportEmail: string;
   supportPhone: string;
@@ -46,7 +44,6 @@ const createFileShareEmailTemplate = ({
           <table style="width:100%;font-size:14px;color:#222;">
             <tr><td style="padding:4px 0;width:40%;">File Name</td><td style="padding:4px 0;">${fileName}</td></tr>
             <tr><td style="padding:4px 0;">Comment</td><td style="padding:4px 0;">${fileComment || 'No comment provided'}</td></tr>
-            <tr><td style="padding:4px 0;">Uploaded By</td><td style="padding:4px 0;">${uploadedBy}</td></tr>
             <tr><td style="padding:4px 0;">Uploaded At</td><td style="padding:4px 0;">${uploadedAt}</td></tr>
           </table>
         </div>
@@ -95,7 +92,6 @@ export async function POST(request: NextRequest) {
     const studentName = formData.get('studentName') as string;
     const fileName = formData.get('fileName') as string;
     const fileComment = formData.get('fileComment') as string;
-    const uploadedBy = formData.get('uploadedBy') as string;
     const uploadedAt = formData.get('uploadedAt') as string;
     const file = formData.get('file') as File;
 
@@ -114,7 +110,6 @@ export async function POST(request: NextRequest) {
       studentName: studentName || 'Student',
       fileName,
       fileComment: fileComment || '',
-      uploadedBy: uploadedBy || 'Staff Member',
       uploadedAt: uploadedAt || new Date().toLocaleString(),
       supportEmail: process.env.SUPPORT_EMAIL || 'support@buyexchange.in',
       supportPhone: process.env.SUPPORT_PHONE || '+91 90722 43243',

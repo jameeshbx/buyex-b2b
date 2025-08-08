@@ -72,7 +72,7 @@ export default function Component() {
                   Online From India
                 </h1>
                 <p className="text-gray-600 text-lg leading-relaxed">
-                  Open a student Blocked account online in Germany. Compare and choose from leading providers such as Coracle, Expatrio & Fintiba.
+                Open your German student blocked account online from India with ease. Compare leading providers like Coracle, Expatrio, and Fintiba to choose the right fit for you.
                 </p>
               </div>
             </div>
@@ -97,7 +97,7 @@ export default function Component() {
                 Online From India
               </h1>
               <p className="text-gray-600 text-lg leading-relaxed">
-                Open a student Blocked account online in Germany. Compare and choose from leading providers such as Coracle, Expatrio & Fintiba.
+              Open your German student blocked account online from India with ease. Compare leading providers like Coracle, Expatrio, and Fintiba to choose the right fit for you.
               </p>
             </div>
 
@@ -210,7 +210,7 @@ export default function Component() {
               </p>
               
               <p className="text-lg lg:text-xl text-gray-600 leading-relaxed max-w-3xl mx-auto">
-                Fast, secure Blocked Account service for students planning to study abroad in Germany.
+              Fast and secure blocked account opening service for students and job seekers planning to migrate to Germany
               </p>
             </div>
 
