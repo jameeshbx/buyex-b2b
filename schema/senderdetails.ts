@@ -65,7 +65,8 @@ export const formSchema = z
     phoneNumber: z
       .string()
       .min(10, "Phone number must be at least 10 digits")
-      .regex(/^\+?[\d\s\-$$$$]+$/, "Invalid phone number format"),
+      .max(10, "Phone number must be at most 10 digits")
+      .regex(/^\d{10}$/, "Invalid phone number format"),
     addressLine1: z.string().min(1, "Address is required"),
     addressLine2: z.string().optional(),
     state: z.string().min(1, "State is required"),

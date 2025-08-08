@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
 export async function POST() {
   try {
     // Load the existing PDF template
-    const formBytes = await fs.readFile('lib/A2Form-a2Form.pdf');
+    const formBytes = await fs.readFile('lib/A2Form-a2Form .pdf');
     const pdfDoc = await PDFDocument.load(formBytes);
 
     const pages = pdfDoc.getPages();
@@ -169,8 +169,8 @@ export async function POST() {
     drawText(data.beneficiaryName, 200, height - 320, 10, secondPage);
     drawText(data.beneficiaryAddress, 200, height - 345, 8, secondPage);
     drawText(data.bankAccount, 200, height - 370, 10, secondPage);
-    drawText(data.bankName, 200, height - 395, 8, secondPage);
-    drawText(data.bankAddress, 320, height - 395, 8, secondPage);
+    drawText(data.bankName, 200, height - 394, 8, secondPage);
+    drawText(data.bankAddress, 200, height - 404, 8, secondPage);
     drawText(data.swiftCode, 150, height - 430, 10, secondPage);
     drawText(data.abaCode, 250, height - 455, 10, secondPage);
    
@@ -180,7 +180,7 @@ export async function POST() {
 
     drawText(line1, 280, height - 516, 8, secondPage);
     if (line2) {
-      drawText(line2, 280, height - 540, 8, secondPage); // 15 units lower for the second line
+      drawText(line2, 280, height - 550, 8, secondPage); // 15 units lower for the second line
     }
   }
 
