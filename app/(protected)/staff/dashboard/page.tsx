@@ -127,12 +127,15 @@ export default function Dashboard() {
   const getCustomerRateColor = (rate: number, status: string) => {
     // Normalize status for comparison
     const normalizedStatus = status.replace(/\s+/g, "").toLowerCase();
-    
+
     // If status is QuoteDownloaded or DocumentsPlaced, return red color
-    if (normalizedStatus === "quotedownloaded" || normalizedStatus === "documentsplaced") {
+    if (
+      normalizedStatus === "quotedownloaded" ||
+      normalizedStatus === "documentsplaced"
+    ) {
       return "bg-red-100 text-red-800";
     }
-    
+
     // For all other statuses, return green color
     return "bg-green-100 text-green-800";
   };
@@ -298,7 +301,7 @@ export default function Dashboard() {
                           <ChevronRight className="h-4 w-4 text-gray-400" />
                         )}
                         <span className="font-semibold text-sm font-jakarta text-gray-900">
-                          #{order.id.slice(0, 8)}
+                          #{order.id.slice(0, 11)}
                         </span>
                       </div>
                       <div className="text-gray-600 text-sm font-jakarta">
@@ -477,21 +480,20 @@ export default function Dashboard() {
                                   : order.forexPartner?.accountName || "N/A"}
                               </p>
                             </div>
-                            
                           )}
-                          {order.consultancy &&(
-                           <div>
+                          {order.consultancy && (
+                            <div>
                               <h4 className="font-semibold text-sm sm:text-base font-jakarta text-gray-900 mb-1 sm:mb-2">
                                 Consultancy
                               </h4>
                               <p className="text-gray-600 text-sm sm:text-base font-jakarta bg-gray-50 p-2 sm:p-3 rounded-sm">
-                                 {typeof order.consultancy === "string"
+                                {typeof order.consultancy === "string"
                                   ? order.consultancy
                                   : order.consultancy}
                               </p>
                             </div>
                           )}
-                       </div>
+                        </div>
                       </div>
                     </div>
                   )}

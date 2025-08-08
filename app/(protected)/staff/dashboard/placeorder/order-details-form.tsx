@@ -431,7 +431,7 @@ export default function OrderDetailsForm() {
       try {
         const response = await axios.get("/api/users?role=AGENT");
         setAgents(response.data);
-        console.log("agents", response.data);
+        // console.log("agents", response.data);
       } catch (error) {
         console.error("Error fetching agents:", error);
       } finally {

@@ -296,6 +296,47 @@ export const forexPartnerTemplate = ({
 </html>
 `;
 
+export const blockedAccountRegistrationTemplate = ({
+  fullName,
+  email,
+  phone,
+  bank,
+}: {
+  fullName: string;
+  email: string;
+  phone: string;
+  bank: string;
+}) => `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Blocked Account Registration Request</title>
+</head>
+<body style="font-family: Arial, sans-serif; background: #f7f8fa; margin: 0; padding: 0;">
+  <div style="max-width: 600px; margin: 40px auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); overflow: hidden;">
+    <div style="background: #1a1a2e; color: #fff; padding: 24px; text-align: center;">
+      <h2 style="margin: 0 0 8px 0;">Blocked Account Registration Request</h2>
+    </div>
+    <div style="padding: 24px;">
+      <h3 style="margin: 0 0 12px 0; color: #1a1a2e;">User Details</h3>
+      <table style="width: 100%; font-size: 15px; color: #222;">
+        <tr><td style="padding: 6px 0; width: 40%;">Full Name</td><td style="padding: 6px 0;">${fullName}</td></tr>
+        <tr><td style="padding: 6px 0;">Email</td><td style="padding: 6px 0;">${email}</td></tr>
+        <tr><td style="padding: 6px 0;">Phone</td><td style="padding: 6px 0;">${phone}</td></tr>
+        <tr><td style="padding: 6px 0;">Selected Bank</td><td style="padding: 6px 0;">${bank}</td></tr>
+      </table>
+      <div style="margin-top: 24px; color: #888;">This request was submitted from the Blocked Account page.</div>
+    </div>
+    <div style="background: #1a1a2e; color: #b2b2b2; font-size: 12px; padding: 16px; text-align: center;">
+      Buy Exchange Fintech Solutions<br/>
+      <a href="https://buyexchange.in" style="color: #b2b2b2;">buyexchange.in</a>
+    </div>
+  </div>
+</body>
+</html>
+`;
+
 // Test block for the email template
 if (require.main === module) {
   const html = orderReceivedTemplate({
