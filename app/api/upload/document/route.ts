@@ -46,19 +46,49 @@ export async function POST(request: Request) {
       }
     }
 
-    const document = await db.document.create({
-      data: {
-        role: role as DocumentRole,
-        userId,
-        type: type as DocumentType,
-        imageUrl,
-        fileSize,
-        orderId: orderId || null, // Handle optional orderId
-        name,
-        uploadedBy,
-        comment,
-      },
-    });
+    // Check if document already exists with same orderId and type
+    let existingDocument = null;
+    if (orderId) {
+      existingDocument = await db.document.findFirst({
+        where: {
+          orderId: orderId,
+          type: type as DocumentType,
+        },
+      });
+    }
+
+    let document;
+    if (existingDocument) {
+      // Update existing document
+      document = await db.document.update({
+        where: { id: existingDocument.id },
+        data: {
+          role: role as DocumentRole,
+          userId,
+          type: type as DocumentType,
+          imageUrl,
+          fileSize,
+          name,
+          uploadedBy,
+          comment,
+        },
+      });
+    } else {
+      // Create new document
+      document = await db.document.create({
+        data: {
+          role: role as DocumentRole,
+          userId,
+          type: type as DocumentType,
+          imageUrl,
+          fileSize,
+          orderId: orderId || null, // Handle optional orderId
+          name,
+          uploadedBy,
+          comment,
+        },
+      });
+    }
 
     return NextResponse.json(document, { status: 200 });
   } catch (error) {
