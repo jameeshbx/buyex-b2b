@@ -219,7 +219,7 @@ export default function TransactionDetails({
         body: JSON.stringify({
           role: "SENDER",
           userId: order.sender?.id,
-          type: "OTHER",
+          type: "A2_FORM",
           imageUrl: presignedData.cloudFrontUrl,
           orderId: order.id,
         }),

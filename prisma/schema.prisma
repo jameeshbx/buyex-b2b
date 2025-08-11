@@ -246,6 +246,7 @@ enum DocumentType {
   INVOICE
   GIC_LETTER
   LOAN_SANCTION_LETTER
+  A2_FORM
   OTHER
 }
 
