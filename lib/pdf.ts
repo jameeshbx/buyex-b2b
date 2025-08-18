@@ -75,6 +75,16 @@ interface Order {
   };
 }
 
+const sanitizeText = (text: string): string => {
+  if (!text) return '';
+  
+  // Remove or replace problematic Unicode characters
+  return text
+    .replace(/[^\x00-\x7F]/g, '') // Remove non-ASCII characters
+    .replace(/[^\w\s\-.,()&@#$%]/g, '') // Keep only safe characters
+    .trim();
+};
+
 // Helper function to split address if longer than 100 characters
 const splitAddress = (address: string, maxLength: number = 150): string[] => {
   if (!address || address.length <= maxLength) {
@@ -122,7 +132,9 @@ export async function generateA2Form(order: Order) {
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
   const drawText = (text: string, x: number, y: number, size = 10, page = firstPage) => {
-    page.drawText(text, {
+    const sanitizedText = sanitizeText(text);
+    if (!sanitizedText) return; // Skip empty text
+    page.drawText(sanitizedText, {
       x,
       y,
       size,
