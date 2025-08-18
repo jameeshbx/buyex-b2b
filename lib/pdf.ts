@@ -176,7 +176,7 @@ export async function generateA2Form(order: Order) {
     bankName: order.beneficiary?.receiverBank || '',
     bankAddress: order.beneficiary?.receiverBankAddress || '',
     swiftCode: order.beneficiary?.receiverBankSwiftCode || '',
-    abaCode: order.beneficiary?.receiverBankSwiftCode || '',
+    abaCode: order.beneficiary?.sortCode || order.beneficiary?.transitNumber || order.beneficiary?.bsbCode || order.beneficiary?.routingNumber || '',
     reference:  '',
     additionalInfo: order.beneficiary?.field70 || '',
   };
