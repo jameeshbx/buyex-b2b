@@ -17,6 +17,7 @@ export async function POST(request: NextRequest) {
 
     await sendEmail({
       to: "admin@buyexchange.in",
+      cc: "forex@buyexchange.in",
       subject: "New Blocked Account Registration Request",
       html,
     });

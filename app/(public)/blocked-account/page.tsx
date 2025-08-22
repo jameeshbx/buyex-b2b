@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card"
 import Image from "next/image"
 import { useToast } from "@/components/ui/use-toast"
 import { Clock, Shield, Users, } from 'lucide-react'
+import Link from "next/link"
 
 export default function Component() {
   const [isClient, setIsClient] = useState(false)
@@ -84,9 +85,24 @@ export default function Component() {
 
   return (
     <div className="min-h-screen bg-white">
+      <div className="px-10 pt-4">
+            {/* Logo */}
+          <Link href="/" passHref>
+            <div className="flex items-center w-40">
+              <Image
+                src="/BE.svg"
+                alt="Buy Exchange Logo"
+                width={150}
+                height={100}
+                priority
+              />
+            </div>
+          </Link>
+          </div>
       {/* Main Hero Section */}
-      <div className="container mx-auto px-4 py-8 lg:py-16">
+      <div className="container mx-auto px-10 pb-4 lg:pb-8">
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+          
           {/* Left Side - Form */}
           <div className="space-y-8">
             {/* Header */}
