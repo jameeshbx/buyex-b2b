@@ -80,7 +80,7 @@ export default function Topbar() {
                   <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50">
                     <Link
                       href="/blocked-account"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+                      className="block pl-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200"
                       onClick={() => setDropdownOpen(false)}
                     >
                       Blocked Account Creation
