@@ -1,6 +1,6 @@
 // src/constants/hero.constants.ts
 export const HERO_CONTENT = {
-    description: "Let Us Handle The Forex Heavy Lifting, While You Deliver  Exceptional  Study Abroad Solutions.",
+    description: "Buy Exchange empowers study abroad consultants with fast, compliant student forex transfers—smarter and seamless every time.",
     partners: [
        {
         name: "Join in Campus",
