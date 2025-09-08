@@ -64,7 +64,7 @@ export default function ResetpasswordPage() {
                 {/* Left side - Blue section */}
                 <div className="w-full lg:w-1/2 bg-gradient-to-b from-dark-blue to-light-blue p-6 sm:p-8 lg:p-10 text-white relative">
                     <div className="mb-8">
-                        <Image src="/whitelogo.png" alt="Buy Exchange Logo" width={165} height={50} className="mb-6" />
+                        <Image src="/buyex-main-logo.png" alt="Buy Exchange Logo" width={185} height={60} className="mb-6" />
                         <h1 className="text-xl sm:text-2xl font-bold mb-2 font-jakarta">
                             Be the Change in
                             <br />

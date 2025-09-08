@@ -51,7 +51,7 @@ const createResetPasswordEmail = (resetUrl: string, userName: string) => `
         <div class="header">
             <img src="${
               process.env.NEXT_PUBLIC_APP_URL
-            }/whitelogo.png" alt="Buy Exchange Logo" class="logo">
+            }/buyex-main-logo.png" alt="Buy Exchange Logo" class="logo">
         </div>
         <h2>Password Reset Request</h2>
         <p>Hello ${userName},</p>
