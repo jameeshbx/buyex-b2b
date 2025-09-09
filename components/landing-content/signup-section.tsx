@@ -108,10 +108,10 @@ export default function SignupSection() {
           <Link href="/" passHref>
             <div className="cursor-pointer">
               <Image
-                src="/whitelogo.png"
+                src="/buyex-main-logo.png"
                 alt="Buy Exchange Logo"
-                width={165}
-                height={50}
+                width={185}
+                height={60}
                 className="mb-6"
               />
             </div>

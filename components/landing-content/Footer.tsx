@@ -17,7 +17,7 @@ export default function Footer() {
         {/* Logo */}
         <Link href="/" passHref>
           <div className="mb-10 flex justify-center md:justify-start cursor-pointer">
-            <Image src="/BE.svg" alt="Buy Exchange Logo" width={200} height={50} className="h-auto" />
+            <Image src="/buyex-main-logo.png" alt="Buy Exchange Logo" width={200} height={50} className="h-auto" />
           </div>
         </Link>
 

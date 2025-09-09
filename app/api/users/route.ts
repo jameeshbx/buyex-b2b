@@ -79,7 +79,7 @@ const createInvitationEmail = (name: string, email: string, password: string) =>
 <body>
     <div class="container">
         <div class="header">
-            <img src="${process.env.NEXT_PUBLIC_APP_URL}/whitelogo.png" alt="Buy Exchange Logo" class="logo">
+            <img src="${process.env.NEXT_PUBLIC_APP_URL}/buyex-main-logo.png" alt="Buy Exchange Logo" class="logo">
         </div>
         <h2>Welcome to Buy Exchange!</h2>
         <p>Hello ${name},</p>
