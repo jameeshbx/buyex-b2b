@@ -11,10 +11,10 @@ function Page() {
     <div>
       {/* Add Head component with meta tags */}
       <Head>
-        <title>Buy Exchange – Best International Money Transfer Partner for Study Abroad Consultancies</title>
+        <title>study abroad consultant money transfer – Buyex Forex trusted international payments partner </title>
         <meta 
           name="description" 
-          content="Discover why Buy Exchange is India's most trusted partner for study abroad consultancies. Offer students the fastest, cheapest, and most transparent way to send money abroad." 
+          content="Looking for the best study abroad consultant money transfer solution? Buyex Forex offers fast, RBI-compliant, and transparent international payments for students and consultancies." 
         />
       </Head>
       

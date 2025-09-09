@@ -21,7 +21,7 @@ export default function LogoUpdatePopup({ isOpen, onClose }: LogoUpdatePopupProp
         </button>
 
         <div className="flex flex-col items-center">
-          <h3 className="text-lg font-medium mb-4">We&apos;ve Updated Our Logo!</h3>
+          <h3 className="text-lg font-medium mb-4">Same vision different look</h3>
           <div className="flex items-center justify-center gap-4 text-gray-700">
             <div className="flex flex-col items-center">
               <img src="/BE.svg" alt="Previous Logo" className="h-20 w-20 object-contain" />
