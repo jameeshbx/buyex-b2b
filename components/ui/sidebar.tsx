@@ -78,7 +78,7 @@ export function Sidebar() {
               <div className="hidden md:flex items-center">
                 <div className="relative h-[60px] w-[116px]">
                   <Image
-                    src="/header-logo.png"
+                    src="/buyex-main-logo.png"
                     alt="Buy exchange logo"
                     width={116}
                     height={60}

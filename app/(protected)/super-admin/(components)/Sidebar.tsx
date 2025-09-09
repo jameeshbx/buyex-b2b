@@ -199,10 +199,10 @@ export function Sidebar({
             ) : (
               <div className="relative h-[60px] w-[116px] ml-8 cursor-pointer">
                 <Image
-                  src="/header-logo.png"
+                  src="/buyex-main-logo.png"
                   alt="Logo"
-                  width={116}
-                  height={60}
+                  width={196}
+                  height={70}
                   className="h-full w-full object-contain"
                 />
               </div>

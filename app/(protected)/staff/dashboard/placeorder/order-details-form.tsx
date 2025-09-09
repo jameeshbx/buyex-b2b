@@ -72,7 +72,7 @@ async function generateQuotePDF(
   const doc = new jsPDF() as JsPDFWithAutoTable;
   let lastY = 30;
 
-  // const logo = "/header-logo.png";
+  // const logo = "/buyex-main-logo.png";
   // doc.addImage(logo, "PNG", 14, 10, 50, 20);
 
   doc.setFontSize(18);
