@@ -448,7 +448,7 @@ export default function Dashboard() {
     "Flywire registered payment",
     "Blocked account transfer",
     "Application fee",
-    "Accomodation fee",
+    "Accommodation fee",
     "GIC Canada fee deposite",
   ];
 
@@ -708,7 +708,7 @@ export default function Dashboard() {
                               className="bg-dark-blue hover:bg-blue-700 text-white px-2 py-2 text-xs h-7"
                             >
                               <Upload className="h-2 w-2" />
-                              Uploads
+                              View Documents
                             </Button>
                           </Link>
                         </div>
@@ -781,7 +781,7 @@ export default function Dashboard() {
                                 className="bg-dark-blue hover:bg-blue-700 text-white px-2 py-2 text-xs h-7"
                               >
                                 <Upload className="h-2 w-2" />
-                                Uploads
+                                View Documents
                               </Button>
                             </Link>
                           </div>
@@ -1109,8 +1109,8 @@ export default function Dashboard() {
                                           <SelectItem value="Application fee">
                                             Application fee
                                           </SelectItem>
-                                          <SelectItem value="Accomodation fee">
-                                            Accomodation fee
+                                          <SelectItem value="Accommodation fee">
+                                          Accommodation fee
                                           </SelectItem>
                                           <SelectItem value="GIC Canada fee deposite">
                                             GIC Canada fee deposite
@@ -1310,6 +1310,9 @@ export default function Dashboard() {
                                           Submit
                                         </Button>
                                       </div>
+                                    </div>
+                                    <div>
+                                      <p className="text-red-600 text-xs sm:text-sm font-jakarta ">Field 70 -{beneficiary?.field70 || "-"}</p>
                                     </div>
                                   </div>
                                   {/* Authorize Button - Changes color based on status */}
