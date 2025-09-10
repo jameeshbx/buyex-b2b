@@ -22,10 +22,20 @@ export default function Home() {
   // Filter articles based on search query
   const filteredArticles = newsArticles.filter((article) => {
     const searchText = searchQuery.toLowerCase()
-    const contentText = article.content.join(" ").toLowerCase()
+    
+    // Flatten all content from sections and subsections into a single string
+    const allContent = article.sections.flatMap(section => [
+      section.heading,
+      ...(section.content || []),
+      ...(section.subsections?.flatMap(subsection => [
+        subsection.heading,
+        ...(subsection.content || [])
+      ]) || [])
+    ]).join(' ').toLowerCase()
+    
     return (
       article.title.toLowerCase().includes(searchText) ||
-      contentText.includes(searchText) ||
+      allContent.includes(searchText) ||
       article.date.toLowerCase().includes(searchText) ||
       article.author.toLowerCase().includes(searchText)
     )
@@ -59,13 +69,13 @@ export default function Home() {
       <div className="flex flex-col md:flex-row justify-between items-start gap-8">
         {/* Left sidebar for blog topics */}
         <div className="w-full md:w-1/4">
-          <h2 className="text-xl  font-jakarta text-dark-blue mb-4">Blog Topics</h2>
+          <h2 className="text-xl font-jakarta text-dark-blue mb-4">Blog Topics</h2>
           <ul className="space-y-2">
-            <li className="hover:text-gray-600 font-jakarta ">Remittance</li>
-            <li className="hover:text-gray-600 font-jakarta ">Forex</li>
-            <li className="hover:text-gray-600 font-jakarta ">Currency Exchange</li>
-            <li className="hover:text-gray-600 font-jakarta ">Crypto</li>
-            <li className="hover:text-gray-600 font-jakarta ">Artificial Intelligence</li>
+            <li className="hover:text-gray-600 font-jakarta">Remittance</li>
+            <li className="hover:text-gray-600 font-jakarta">Forex</li>
+            <li className="hover:text-gray-600 font-jakarta">Currency Exchange</li>
+            <li className="hover:text-gray-600 font-jakarta">Crypto</li>
+            <li className="hover:text-gray-600 font-jakarta">Artificial Intelligence</li>
             <li className="hover:text-gray-600 font-jakarta">Work</li>
           </ul>
         </div>
@@ -75,7 +85,7 @@ export default function Home() {
           <div className="flex flex-col h-[600px] overflow-y-auto pr-2">
             {/* Trending topics */}
             <div className="mb-8">
-              <h2 className="text-xl  font-jakarta text-dark-blue mb-4">Trending Topics</h2>
+              <h2 className="text-xl font-jakarta text-dark-blue mb-4">Trending Topics</h2>
               <div className="flex flex-wrap gap-2">
                 <span className="px-4 py-1 bg-gray-100 font-jakarta rounded-full text-sm">Remittance</span>
                 <span className="px-4 py-1 bg-gray-100 font-jakarta rounded-full text-sm">Forex</span>
@@ -106,16 +116,36 @@ export default function Home() {
                     <div className="flex flex-col md:flex-row gap-6">
                       <div className="w-full md:w-2/3">
                         <p className="text-dark-blue font-jakarta mb-2">{article.date}</p>
-                        <h3 className="text-2xl font-bold font-jakarta mb-3">{article.title}</h3>
+                        <h1 className="text-2xl font-bold font-jakarta mb-3">{article.title}</h1>
                         <div className="text-dark-gray font-jakarta space-y-3">
                           {expandedStates[article.id] ? (
-                            // Show all paragraphs when expanded
-                            article.content.map((paragraph, i) => (
-                              <p key={i}>{paragraph}</p>
-                            ))
+                            // Show all content when expanded
+                            <div>
+                              {article.sections.map((section, i) => (
+                                <div key={i} className="mb-4">
+                                  <h2 className="text-xl font-semibold mb-2">{section.heading}</h2>
+                                  {section.content && section.content.map((paragraph, j) => (
+                                    <p key={j} className="mb-3">{paragraph}</p>
+                                  ))}
+                                  {section.subsections && section.subsections.map((subsection, k) => (
+                                    <div key={k} className="ml-4 mb-3">
+                                      <h3 className="text-lg font-medium mb-1">{subsection.heading}</h3>
+                                      {subsection.content && subsection.content.map((paragraph, l) => (
+                                        <p key={l} className="mb-2">{paragraph}</p>
+                                      ))}
+                                    </div>
+                                  ))}
+                                </div>
+                              ))}
+                            </div>
                           ) : (
-                            // Show only first paragraph when collapsed
-                            <p>{article.content[0]}</p>
+                            // Show only first section when collapsed
+                            <div>
+                              <h2 className="text-xl font-semibold mb-2">{article.sections[0].heading}</h2>
+                              {article.sections[0].content && article.sections[0].content.slice(0, 2).map((paragraph, i) => (
+                                <p key={i} className="mb-3">{paragraph}</p>
+                              ))}
+                            </div>
                           )}
                         </div>
                         <div className="flex items-center mt-4 text-sm">
@@ -151,79 +181,79 @@ export default function Home() {
       </div>
 
       <div className="relative bg-medium-gray py-10 sm:py-6 lg:py-8 mt-10 px-4 sm:px-6 lg:px-8 rounded-xl">
-      {/* Background image - hidden on small screens, visible on lg and above */}
-      <div className="absolute inset-0 z-0 overflow-hidden hidden lg:block">
-        <Image
-          src="/blue.svg"
-          alt="Background"
-          className="object-cover object-center w-full"
-          priority
-          width={1250}
-          height={100}
-        />
-      </div>
+        {/* Background image - hidden on small screens, visible on lg and above */}
+        <div className="absolute inset-0 z-0 overflow-hidden hidden lg:block">
+          <Image
+            src="/blue.svg"
+            alt="Background"
+            className="object-cover object-center w-full"
+            priority
+            width={1250}
+            height={100}
+          />
+        </div>
 
-     <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-  <h2 className="text-3xl sm:text-4xl font-bold mb-6 sm:mb-8 text-dark-blue font-playfair text-center sm:text-left">
-    Get in touch
-  </h2>
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl sm:text-4xl font-bold mb-6 sm:mb-8 text-dark-blue font-playfair text-center sm:text-left">
+            Get in touch
+          </h2>
 
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-    {/* Sales Enquiries */}
-    <div className="bg-white p-4 sm:p-0 sm:bg-transparent rounded-lg sm:rounded-none shadow-sm sm:shadow-none">
-      <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-dark-blue font-jakarta">Sales Enquiries</h3>
-      <div className="flex items-center gap-3 mb-2">
-        <Image 
-          src="/phone.png" 
-          alt="Phone icon" 
-          width={20} 
-          height={20} 
-          className="w-4 h-4 sm:w-5 sm:h-5" 
-        />
-        <p className="text-sm sm:text-base md:text-lg text-dark-blue font-jakarta">+918943243543</p>
-      </div>
-      <div className="flex items-center gap-3">
-        <Image 
-          src="/email.png" 
-          alt="Email icon" 
-          width={20} 
-          height={20} 
-          className="w-4 h-4 sm:w-5 sm:h-5" 
-        />
-        <p className="text-sm sm:text-base md:text-lg text-dark-blue font-jakarta">sales@buyexchange.in</p>
-      </div>
-    </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            {/* Sales Enquiries */}
+            <div className="bg-white p-4 sm:p-0 sm:bg-transparent rounded-lg sm:rounded-none shadow-sm sm:shadow-none">
+              <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-dark-blue font-jakarta">Sales Enquiries</h3>
+              <div className="flex items-center gap-3 mb-2">
+                <Image 
+                  src="/phone.png" 
+                  alt="Phone icon" 
+                  width={20} 
+                  height={20} 
+                  className="w-4 h-4 sm:w-5 sm:h-5" 
+                />
+                <p className="text-sm sm:text-base md:text-lg text-dark-blue font-jakarta">+918943243543</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <Image 
+                  src="/email.png" 
+                  alt="Email icon" 
+                  width={20} 
+                  height={20} 
+                  className="w-4 h-4 sm:w-5 sm:h-5" 
+                />
+                <p className="text-sm sm:text-base md:text-lg text-dark-blue font-jakarta">sales@buyexchange.in</p>
+              </div>
+            </div>
 
-    {/* Forex Consultation */}
-    <div className="bg-white p-4 sm:p-0 sm:bg-transparent rounded-lg sm:rounded-none shadow-sm sm:shadow-none">
-      <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-dark-blue font-jakarta">Forex Consultation</h3>
-      <div className="flex items-center gap-3 mb-2">
-        <Image 
-          src="/phone.png" 
-          alt="Phone icon" 
-          width={20} 
-          height={20} 
-          className="w-4 h-4 sm:w-5 sm:h-5" 
-        />
-        <p className="text-sm sm:text-base md:text-lg text-dark-blue font-jakarta">+919633886611</p>
+            {/* Forex Consultation */}
+            <div className="bg-white p-4 sm:p-0 sm:bg-transparent rounded-lg sm:rounded-none shadow-sm sm:shadow-none">
+              <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-dark-blue font-jakarta">Forex Consultation</h3>
+              <div className="flex items-center gap-3 mb-2">
+                <Image 
+                  src="/phone.png" 
+                  alt="Phone icon" 
+                  width={20} 
+                  height={20} 
+                  className="w-4 h-4 sm:w-5 sm:h-5" 
+                />
+                <p className="text-sm sm:text-base md:text-lg text-dark-blue font-jakarta">+919633886611</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <Image 
+                  src="/email.png" 
+                  alt="Email icon" 
+                  width={20} 
+                  height={20} 
+                  className="w-4 h-4 sm:w-5 sm:h-5" 
+                />
+                <p className="text-sm sm:text-base md:text-lg text-dark-blue font-jakarta">forex@buyexchange.in</p>
+              </div>
+            </div>
+            
+            {/* Empty div preserved for layout */}
+            <div className="hidden lg:block"></div>
+          </div>
+        </div>
       </div>
-      <div className="flex items-center gap-3">
-        <Image 
-          src="/email.png" 
-          alt="Email icon" 
-          width={20} 
-          height={20} 
-          className="w-4 h-4 sm:w-5 sm:h-5" 
-        />
-        <p className="text-sm sm:text-base md:text-lg text-dark-blue font-jakarta">forex@buyexchange.in</p>
-      </div>
-    </div>
-    
-    {/* Empty div preserved for layout */}
-    <div className="hidden lg:block"></div>
-  </div>
-</div>
-    </div>
     </div>
   )
 }

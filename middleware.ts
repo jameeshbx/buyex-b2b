@@ -10,10 +10,6 @@ export default withAuth(
 
     const role = token?.role;
 
-    if(pathname.startsWith("/home")) {
-      return NextResponse.redirect(new URL("/", req.url));
-    }
-
     // If user is signed in and tries to access auth pages, redirect to staff dashboard
     if (token && pathname.startsWith("/(auth)")) {
       return NextResponse.redirect(new URL("/staff/dashboard", req.url));
