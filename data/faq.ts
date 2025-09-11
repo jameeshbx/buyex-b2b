@@ -4,7 +4,7 @@ export const faqData = [
     id: 1,
     question: "Can I do a fund transfer abroad on a Bank Holiday?",
     number:1,
-    answer: "Yes, Buy Exchange allows you to place orders 24/7 online. Fund transfers will be processed on the next banking working day at the given exchange rate when you book an order."
+    answer: "Yes, Buyex Forex allows you to place orders 24/7 online. Fund transfers will be processed on the next banking working day at the given exchange rate when you book an order."
   },
   {
     id: 2,
@@ -16,7 +16,7 @@ export const faqData = [
     id: 3,
     question: "Is it mandatory to complete sign up to place an order?",
     number:3,
-    answer: "No, it's not mandatory. At Buy Exchange, we offer a hassle-free process. First-time users can place an order by verifying their mobile number through OTP. For subsequent transactions, login with your registered email ID and password is required."
+    answer: "No, it's not mandatory. At Buyex Forex, we offer a hassle-free process. First-time users can place an order by verifying their mobile number through OTP. For subsequent transactions, login with your registered email ID and password is required."
   },
   {
     id: 4,
@@ -74,7 +74,7 @@ export const faqData = [
   },
   {
     id: 13,
-    question: "I have taken an educational loan. Can I still use Buy Exchange?",
+    question: "I have taken an educational loan. Can I still use Buyex Forex?",
     number:13,
     answer: "Yes. Submit your education loan sanction letter. Education loans attract only 0.5% TCS over the threshold limit of ₹10 Lakhs per financial year."
   },
@@ -86,9 +86,9 @@ export const faqData = [
   },
   {
     id: 15,
-    question: "Can I trust Buy Exchange?",
+    question: "Can I trust Buyex Forex?",
     number:15,
-    answer: "Buy Exchange is approved by Startup India, Kerala Startup Mission, and Nasscom. We work with RBI-authorized dealers and banks, having successfully completed 2000+ transactions since our 2020 incorporation."
+    answer: "Buyex Forex is approved by Startup India, Kerala Startup Mission, and Nasscom. We work with RBI-authorized dealers and banks, having successfully completed 2000+ transactions since our 2020 incorporation."
   },
   {
     id: 16,
@@ -169,7 +169,7 @@ export const faqData = [
   },
   {
     id: 28,
-    question: "Can I use Buy Exchange with an education loan?",
+    question: "Can I use Buyex Forex with an education loan?",
     number:28,
     answer: "Yes, submit your loan sanction letter. Education loans attract only 0.5% TCS above ₹10 lakhs threshold."
   },
@@ -231,7 +231,7 @@ export const faqData = [
   // COMPANY INFORMATION
   {
     id: 37,
-    question: "Why trust Buy Exchange?",
+    question: "Why trust Buyex Forex?",
     number:37,
     answer: "RBI-compliant platform approved by Startup India, Kerala Startup Mission & Nasscom. Partnered with authorized dealers, we've successfully processed 2000+ transactions since 2020 incorporation."
   },

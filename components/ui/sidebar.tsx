@@ -78,8 +78,8 @@ export function Sidebar() {
               <div className="hidden md:flex items-center">
                 <div className="relative h-[60px] w-[116px]">
                   <Image
-                    src="/header-logo.png"
-                    alt="Buy exchange logo"
+                    src="/buyex-main-logo.png"
+                    alt="Buyex Forex logo"
                     width={116}
                     height={60}
                     className="h-full w-full object-contain"
@@ -93,7 +93,7 @@ export function Sidebar() {
               <div className="relative h-10 w-10">
                 <Image
                   src="/Top.png"
-                  alt="Buy exchange logo"
+                  alt="Buyex Forex logo"
                   width={40}
                   height={40}
                   className="h-full w-auto object-contain"

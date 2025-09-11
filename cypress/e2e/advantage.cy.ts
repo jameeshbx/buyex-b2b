@@ -13,7 +13,7 @@ describe('Advantage Section', () => {
   
     it('should display the main heading with correct styling', () => {
       cy.get('section h2')
-        .should('contain', 'The Buy Exchange Advantage')
+        .should('contain', 'The Buyex Forex Advantage')
         .should('be.visible')
         .should('have.class', 'text-4xl')
         .should('have.class', 'md:text-5xl')
@@ -25,7 +25,7 @@ describe('Advantage Section', () => {
   
     it('should display the description paragraph with correct styling', () => {
       cy.get('section p')
-        .should('contain', 'Buy Exchange B2B Services covers a wide range')
+        .should('contain', 'Buyex Forex B2B Services covers a wide range')
         .should('be.visible')
         .should('have.class', 'text-light-gray')
         .should('have.class', 'max-w-3xl')

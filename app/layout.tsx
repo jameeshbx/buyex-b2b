@@ -16,17 +16,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Buy Exchange",
+  title: "Buyex Forex",
   description: "Forex platform for banks and customers",
   icons: {
-    icon: [
-      {
-        url: "/favicon.ico?v=2", // Add version parameter
-        sizes: "32x32",
-        type: "image/x-icon",
-      },
-      // ... other icons
-    ],
+    icon: "/favicon.ico",
   },
 };
 

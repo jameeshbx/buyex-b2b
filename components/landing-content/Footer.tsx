@@ -17,7 +17,7 @@ export default function Footer() {
         {/* Logo */}
         <Link href="/" passHref>
           <div className="mb-10 flex justify-center md:justify-start cursor-pointer">
-            <Image src="/BE.svg" alt="Buy Exchange Logo" width={200} height={50} className="h-auto" />
+            <Image src="/buyex-main-logo.png" alt="Buyex Forex Logo" width={200} height={50} className="h-auto" />
           </div>
         </Link>
 
@@ -125,8 +125,8 @@ export default function Footer() {
           </p>
 
           <p className="text-xs text-gray-500 max-w-4xl mx-auto font-jakarta">
-            &quot;Buyexchange.in is a digital platform &quot;- it is not an Authorised Dealer and does not hold or claim to hold an
-            AD licence by RBI. The forex services offered on the Buy Exchange portal are powered by our Partner Banks &
+            &quot;buyexforex.com is a digital platform &quot;- it is not an Authorised Dealer and does not hold or claim to hold an
+            AD licence by RBI. The forex services offered on the Buyex Forex portal are powered by our Partner Banks &
             RBI Authorised Dealers, following all security standards and FEMA regulations as per RBI norms.
           </p>
         </div>

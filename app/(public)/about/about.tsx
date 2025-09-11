@@ -8,7 +8,7 @@ export default function AboutUs() {
       {/* Hero Section */}
       <div className="text-center mb-16">
         <h1 className="text-4xl md:text-5xl font-bold text-dark-blue font-playfair mb-4">
-          About Buy Exchange
+          About Buyex Forex
         </h1>
         <p className="text-xl text-gray-600 max-w-3xl mx-auto font-jakarta">
           Simplifying global education finance with transparent forex solutions
@@ -20,7 +20,7 @@ export default function AboutUs() {
         <div className="lg:w-1/2">
           <Image
             src="/unnameds.png?height=200&width=300" // Replace with your actual image path
-            alt="Buy Exchange Team"
+            alt="Buyex Forex Team"
             width={600}
             height={400}
             className="rounded-xl shadow-lg w-full h-auto"
@@ -31,7 +31,7 @@ export default function AboutUs() {
             Our Mission
           </h2>
           <p className="text-lg text-gray-700 mb-6 font-jakarta">
-           At Buy Exchange, we’re transforming how forex operates in the study abroad ecosystem making it smarter, more streamlined, and thoughtfully designed for education consultants.
+           At Buyex Forex, we’re transforming how forex operates in the study abroad ecosystem making it smarter, more streamlined, and thoughtfully designed for education consultants.
            Established in 2019 by ex-bankers with deep expertise in retail and trade forex, we set out to build a nimble Fintech platform that not only solves the payment challenges faced by international students and their families—but also empowers consultants with the tools they have long needed.
           </p>
           <p className="text-lg text-gray-700 font-jakarta mb-6">
@@ -39,7 +39,7 @@ export default function AboutUs() {
            Our B2B white-labelled portal makes it easy for consultants to track transactions, lock in exchange rates, and generate revenue—all through an interface that’s sleek, intuitive, and regulation-ready. With features like downloadable quotes, API integration, and smart dashboards, we bring clarity and control to a historically opaque space.
           </p>
           <p className="text-lg text-gray-700 font-jakarta">
-          Whether guiding a student’s journey abroad or handling large-scale forex volumes, Buy Exchange ensures every transaction is fast, compliant, and rewarding—for students and consultants alike.
+          Whether guiding a student’s journey abroad or handling large-scale forex volumes, Buyex Forex ensures every transaction is fast, compliant, and rewarding—for students and consultants alike.
          And we are just getting started. More innovations are on the way to make cross-border education payments even safer, simpler, and more consultant-centric.
           </p>
         </div>

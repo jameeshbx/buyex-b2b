@@ -62,7 +62,7 @@ const filteredTestimonials = activeCountry
             Voices From Around the World
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Hear what our global community says about their BuyExchange experience
+            Hear what our global community says about their BuyEx Forex experience
           </p>
           <div className="flex justify-center items-center mt-6 gap-4 -ml-[95px]">
             <Image 
