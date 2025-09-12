@@ -358,10 +358,21 @@ export default function DocumentUploadForm({
         toast.success(`${uploadedCount} documents uploaded successfully!`);
         router.push(`/staff/dashboard/order-preview?orderId=${orderId}`);
       } else {
-        // All other roles: Only show success popup, no redirect
-        toast.success("Documents uploaded successfully!");
         // Reset the form for non-manager users to allow new uploads
         handleReset(false);
+        
+        // Try to close the tab after a short delay to allow the user to see the success message
+        setTimeout(() => {
+          if (typeof window !== 'undefined') {
+            window.close();
+            // If window.close() is blocked by the browser, redirect to success page
+            setTimeout(() => {
+              if (!window.closed) {
+                router.push(`/document-uploads/success${orderId ? `?orderId=${orderId}` : ''}`);
+              }
+            }, 100);
+          }
+        }, 1000);
       }
     } catch (error) {
       console.error("Submission error:", error);
@@ -833,7 +844,7 @@ const CHECKLIST_FIELDS: Record<string, { label: string; type: string }[]> = {
     { label: "Student Passport", type: "PASSPORT_FRONT" },
     { label: "Invoice", type: "INVOICE" },
   ],
-  "Accomodation fee": [
+  "Accommodation fee": [
     { label: "Offer Letter", type: "UNIVERSITY_OFFER_LETTER" },
     { label: "Student Passport", type: "PASSPORT_FRONT" },
     { label: "Invoice", type: "INVOICE" },
