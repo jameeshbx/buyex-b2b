@@ -1,3 +1,4 @@
+
 "use client"
 
 import Image from "next/image"
@@ -47,7 +48,7 @@ export default function Home() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <div>
           <h1 className="text-4xl font-bold font-jakarta mb-1">Insights from our team</h1>
-          <p className="font-jakarta text-light-gray">Buy Exchange Forex News</p>
+          <p className="font-jakarta text-light-gray">Buyex Forex Forex News</p>
         </div>
         <div className="relative mt-4 md:mt-0">
           <div className="flex items-center border rounded-full px-4 py-2 bg-white">

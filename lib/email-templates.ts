@@ -82,15 +82,15 @@ export const orderReceivedTemplate = ({
         </div>
         <div style="font-size:13px;color:#1a1a2e;text-align:center;margin-bottom:24px;">
           Our support team is available to assist you with any queries or clarifications you may need.<br/>
-          Thank you for choosing Buy Exchange.<br/>
-          <span style="color:#888;">— Team Buy Exchange</span>
+          Thank you for choosing Buyex Forex.<br/>
+          <span style="color:#888;">— Team Buyex Forex</span>
         </div>
       </div>
       <div style="background:#1a1a2e;padding:24px;text-align:center;">
         
         
         <div style="color:#b2b2b2;font-size:12px;">
-          Buy Exchange Fintech Solutions.<br/>
+          Buyex Forex Fintech Solutions.<br/>
           First Floor, Integrated Startup Complex,<br/>
           Kerala Technology Innovation Zone HMT Colony, Kalamassery - Kochi, Kerala-683503
         </div>
@@ -133,7 +133,7 @@ export const swiftCopyTemplate = ({
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SWIFT Copy - Buy Exchange</title>
+  <title>SWIFT Copy - Buyex Forex</title>
 </head>
 <body style="margin:0;padding:0;font-family: 'Inter', Arial, sans-serif;background:#f7f8fa;">
   <div style="background:#fff;max-width:700px;margin:40px auto;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
@@ -170,14 +170,14 @@ export const swiftCopyTemplate = ({
       </div>
       <div style="font-size:13px;color:#1a1a2e;text-align:center;margin-bottom:24px;">
         Our support team is available to assist you with any queries or clarifications you may need.<br/>
-        Thank you for choosing Buy Exchange.<br/>
-        <span style="color:#888;">— Team Buy Exchange</span>
+        Thank you for choosing Buyex Forex.<br/>
+        <span style="color:#888;">— Team Buyex Forex</span>
       </div>
     </div>
     <div style="background:#18183a;padding:24px;text-align:center;">
       
       <div style="color:#b2b2b2;font-size:12px;margin-bottom:8px;">
-        Buy Exchange Fintech Solutions<br/>
+        Buyex Forex Fintech Solutions<br/>
         First Floor, Integrated Startup Complex,<br/>
         Kerala Technology Innovation Zone HMT Colony, Kalamassery - Kochi, Kerala-683503
       </div>
@@ -234,7 +234,7 @@ export const forexPartnerTemplate = ({
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>New Order - Buy Exchange</title>
+  <title>New Order - Buyex Forex</title>
 </head>
 <body style="margin:0;padding:0;font-family: 'Inter', Arial, sans-serif;background:#f7f8fa;">
   <div style="background:linear-gradient(135deg,#1a1a2e 60%,#f7f8fa 100%);padding:0 0 40px 0;">
@@ -274,14 +274,14 @@ export const forexPartnerTemplate = ({
           <b>Email :</b> <a href="mailto:${supportEmail}" style="color:#f72585;text-decoration:none;">${supportEmail}</a> &nbsp; | &nbsp; <b>Phone :</b> <a href="tel:${supportPhone}" style="color:#f72585;text-decoration:none;">${supportPhone}</a>
         </div>
         <div style="font-size:13px;color:#1a1a2e;text-align:center;margin-bottom:24px;">
-          Thank you for your partnership with Buy Exchange.<br/>
-          <span style="color:#888;">— Team Buy Exchange</span>
+          Thank you for your partnership with Buyex Forex.<br/>
+          <span style="color:#888;">— Team Buyex Forex</span>
         </div>
       </div>
       <div style="background:#1a1a2e;padding:24px;text-align:center;">
        
         <div style="color:#b2b2b2;font-size:12px;">
-          Buy Exchange Fintech Solutions<br/>
+          Buyex Forex Fintech Solutions<br/>
           First Floor, Integrated Startup Complex,<br/>
           Kerala Technology Innovation Zone HMT Colony, Kalamassery - Kochi, Kerala-683503
         </div>
@@ -329,7 +329,7 @@ export const blockedAccountRegistrationTemplate = ({
       <div style="margin-top: 24px; color: #888;">This request was submitted from the Blocked Account page.</div>
     </div>
     <div style="background: #1a1a2e; color: #b2b2b2; font-size: 12px; padding: 16px; text-align: center;">
-      Buy Exchange Fintech Solutions<br/>
+      Buyex Forex Fintech Solutions<br/>
       <a href="https://buyexchange.in" style="color: #b2b2b2;">buyexchange.in</a>
     </div>
   </div>

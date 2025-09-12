@@ -20,7 +20,7 @@ export const testimonials: Testimonial[] = [
     position: { x: 55, y: 88 },
     flagPosition: { top: "mt-[380px]", right: "mr-[25px]" },
     image: "/renil.png",
-    quote: "BuyExchange provides exceptional service with quick and efficient transactions, making them a top choice for all your exchange needs.",
+    quote: "BuyEx Forex provides exceptional service with quick and efficient transactions, making them a top choice for all your exchange needs.",
     company: "Germany Resident"
   },
   {
@@ -79,7 +79,7 @@ export const testimonials: Testimonial[] = [
     position: { x: 80, y: 25 },
     flagPosition: { top: "mt-[360px]", right: "mr-[20px]" },
     image: "/revathy.png",
-    quote: "I had a good experience with buy exchange. Mr.Mukthadir guided me through out my journey.",
+    quote: "I had a good experience with Buyex Forex. Mr.Mukthadir guided me through out my journey.",
     company: "Student UK"
   },
   {
@@ -90,7 +90,7 @@ export const testimonials: Testimonial[] = [
     position: { x: 50, y: 27 },
     flagPosition: { top: "mt-[539px]", right: "mr-[25px]" },
     image: "/Sibla Nizam.jpeg",
-    quote: "Buy exchange dealt with my tuition fees which was much faster than a reputed nationalised bank.",
+    quote: "Buyex Forex dealt with my tuition fees which was much faster than a reputed nationalised bank.",
     company: "Student UK"
   },
 
@@ -162,7 +162,7 @@ export const testimonials: Testimonial[] = [
     position: { x: 85, y: 60 },
     flagPosition: { top: "mt-[650px]", right: "mr-[-90px]" },
     image: "/Ambil.jpeg",
-    quote: "Team Buy exchange supported me at the right time to do my first ever outward remittance of paying my tuition fee.",
+    quote: "Team Buyex Forex supported me at the right time to do my first ever outward remittance of paying my tuition fee.",
     company: "Student Australia"
   },
 

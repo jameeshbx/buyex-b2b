@@ -1,3 +1,4 @@
+// Updated newsArticles data structure
 export const newsArticles = [
   {
     id: 1,

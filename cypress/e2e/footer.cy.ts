@@ -4,7 +4,7 @@ describe('Footer Component', () => {
     })
   
     it('should display the logo', () => {
-      cy.get('img[alt="Buy Exchange Logo"]').should('be.visible')
+      cy.get('img[alt="Buyex Forex Logo"]').should('be.visible')
     })
   
     it('should display Quick Links section', () => {
@@ -38,7 +38,7 @@ describe('Footer Component', () => {
   
     it('should display Office Location details', () => {
       cy.contains('Office Location').should('be.visible')
-      cy.contains('Buy Exchange Fintech').should('be.visible')
+      cy.contains('Buyex Forex Fintech').should('be.visible')
       cy.contains('Kalamassery').should('be.visible')
       cy.contains('+91 9072 243 243').should('be.visible')
       cy.contains('admin@buyexchange.in').should('be.visible')
@@ -57,11 +57,11 @@ describe('Footer Component', () => {
     })
   
     it('should display the copyright notice', () => {
-      cy.contains('© 2025 Buy Exchange. All Rights Reserved.').should('be.visible')
+      cy.contains('© 2025 Buyex Forex. All Rights Reserved.').should('be.visible')
     })
   
     it('should display the disclaimer text', () => {
-      cy.contains('Buyexchange.in is a digital platform').should('be.visible')
+      cy.contains('buyexforex.com is a digital platform').should('be.visible')
     })
   })
   

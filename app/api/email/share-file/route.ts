@@ -22,7 +22,7 @@ const createFileShareEmailTemplate = ({
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>File Shared - Buy Exchange</title>
+  <title>File Shared - Buyex Forex</title>
 </head>
 <body style="margin:0;padding:0;font-family: 'Inter', Arial, sans-serif;background:#f7f8fa;">
   <div style="background:linear-gradient(135deg,#1a1a2e 60%,#f7f8fa 100%);padding:0 0 40px 0;">
@@ -63,14 +63,14 @@ const createFileShareEmailTemplate = ({
         
         <div style="font-size:13px;color:#1a1a2e;text-align:center;margin-bottom:24px;">
           Our support team is available to assist you with any queries or clarifications you may need.<br/>
-          Thank you for choosing Buy Exchange.<br/>
-          <span style="color:#888;">— Team Buy Exchange</span>
+          Thank you for choosing Buyex Forex.<br/>
+          <span style="color:#888;">— Team Buyex Forex</span>
         </div>
       </div>
       <div style="background:#1a1a2e;padding:24px;text-align:center;">
         
         <div style="color:#b2b2b2;font-size:12px;">
-          Buy Exchange Fintech.<br/>
+          Buyex Forex Fintech.<br/>
           First Floor, Integrated Startup Complex,<br/>
           Kerala Technology Innovation Zone HMT Colony, Kalamassery - Kochi, Kerala-683503
         </div>
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
     // Send email with attachment
     await sendEmailWithAttachment({
       to: studentEmail,
-      subject: `File Shared: ${fileName} - Buy Exchange`,
+      subject: `File Shared: ${fileName} - Buyex Forex`,
       html: emailHtml,
       attachments: [{
         filename: fileName,

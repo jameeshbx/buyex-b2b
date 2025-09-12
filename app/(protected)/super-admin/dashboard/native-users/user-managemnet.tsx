@@ -242,7 +242,7 @@ export default function UserManagement() {
         setSearchQuery={setSearchQuery}
       />
       <div className="text-xs text-gray-500 text-center pt-4">
-        © 2025, Made by BuyExchange.
+        © 2025, Made by BuyEx Forex.
       </div>
     </div>
   );

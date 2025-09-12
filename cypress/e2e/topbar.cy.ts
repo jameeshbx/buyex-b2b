@@ -13,7 +13,7 @@ describe('Topbar Component', () => {
       })
   
       it('should display the logo', () => {
-        cy.get('header img[alt="Buy Exchange"]').should('be.visible')
+        cy.get('header img[alt="Buyex Forex"]').should('be.visible')
       })
   
       it('should display navigation links', () => {
@@ -62,7 +62,7 @@ describe('Topbar Component', () => {
       })
   
       it('should display the logo', () => {
-        cy.get('header img[alt="Buy Exchange"]').should('be.visible')
+        cy.get('header img[alt="Buyex Forex"]').should('be.visible')
       })
   
       it('should display mobile menu button', () => {

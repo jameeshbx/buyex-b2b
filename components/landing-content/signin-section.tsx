@@ -184,7 +184,7 @@ export default function LoginPage() {
   <div className="cursor-pointer">
     <Image 
       src="/buyex-main-logo.png" 
-      alt="Buy Exchange Logo" 
+      alt="Buyex Forex Logo" 
       width={185} 
       height={60} 
       className="mb-6"
