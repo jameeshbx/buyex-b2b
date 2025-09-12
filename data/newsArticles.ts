@@ -128,5 +128,166 @@ export const newsArticles = [
     readTime: "10 min read",
     image: "/blog-image.jpeg?height=200&width=300",
     imageAlt: "Study abroad money transfer consultation",
+  },
+  {
+    id: 2,
+    date: "Sep 10",
+    title: "How to Pay University Fees Abroad from India: A Complete Guide",
+    sections: [
+      {
+        heading: "Why Paying Tuition Fees Abroad Needs Care",
+        content: [
+          "For thousands of Indian students moving abroad every year, paying tuition fees on time is one of the most important steps after receiving an admission offer. Unlike a local transfer, an international fee payment involves RBI regulations, exchange rate fluctuations, hidden bank charges, and strict university deadlines.",
+          "This guide simplifies the process by covering the best ways to pay tuition fees abroad, key costs, required documents, and country-specific tips with a focus on how Buyex Forex, a student-focused payment partner, ensures fast and transparent fee transfers.",
+          "International tuition payments are not just about sending money. You need to ensure:",
+          "Compliance with RBI's Liberalised Remittance Scheme (LRS).",
+          "Use of the correct education purpose code.",
+          "Awareness of exchange rate markups, transfer fees, and TCS (Tax Collected at Source).",
+          "Accurate beneficiary details so the university receives the exact fee without delay.",
+          "Even a small error, such as leaving out a student reference number, can lead to late payment penalties or rejected transactions."
+        ]
+      },
+      {
+        heading: "Best Ways to Pay Tuition Fees Abroad",
+        content: [],
+        subsections: [
+          {
+            heading: "1. University Payment Portals",
+            content: [
+              "Some universities provide online payment platforms where students can pay fees in Indian Rupees. The portal then converts funds and settles them abroad.",
+              "Pros: Simple to use, linked with the university system.",
+              "Cons: Often comes with higher charges compared to specialist forex providers."
+            ]
+          },
+          {
+            heading: "2. Direct Bank/SWIFT Transfer (Recommended with Buyex Forex)",
+            content: [
+              "This is the most reliable and widely accepted method for tuition fee payments worldwide.",
+              "With Buyex Forex, you can initiate a secure SWIFT transfer directly to your university's bank account, ensuring compliance, speed, and transparency.",
+              "Why Choose Buyex Forex for SWIFT Transfers?",
+              "Fast completion in 12-48 hours.",
+              "100% digital process, no physical paperwork.",
+              "Transparent pricing, no hidden fees.",
+              "Real-time tracking and receipts for proof of payment."
+            ]
+          },
+          {
+            heading: "3. Forex Card",
+            content: [
+              "A forex card is excellent for daily expenses abroad but is rarely accepted for paying tuition fees.",
+              "Best use: Living costs such as food, travel, and shopping.",
+              "Not suitable: For tuition fee payments."
+            ]
+          },
+          {
+            heading: "4. Foreign Currency Demand Draft (DD)",
+            content: [
+              "This is one of the oldest methods but is now rarely requested by universities.",
+              "Best use: Only when specifically required by the institution.",
+              "Limitations: Slow (7-14 days) and expensive due to courier and processing charges."
+            ]
+          }
+        ]
+      },
+      {
+        heading: "Costs You Should Expect",
+        content: [
+          "Exchange Rate Markup -- Difference between market rates and provider rates.",
+          "Transfer Fee -- Flat service charges by banks or portals.",
+          "Intermediary Bank Fee -- Deducted during the transfer process.",
+          "TCS (Tax Collected at Source):",
+          "0% up to ₹10 lakh annually.",
+          "5% above ₹10 lakh if not funded by loan.",
+          "0% if payment is made using an education loan."
+        ]
+      },
+      {
+        heading: "Documents Required",
+        content: [
+          "University invoice or admission letter",
+          "Beneficiary bank details (IBAN, SWIFT code, account details)",
+          "Passport and PAN card",
+          "A2 Form (digitally processed with Buyex Forex)",
+          "Loan sanction letter (if applicable)"
+        ]
+      },
+      {
+        heading: "Step-by-Step: Paying Through Buyex Forex",
+        content: [
+          "1. Register & Verify -- Complete KYC with passport and PAN.",
+          "2. Add University Details -- Enter IBAN, SWIFT, and bank account details.",
+          "3. Upload Invoice -- Provide the official university fee statement.",
+          "4. Get Live Rates -- See exchange rates and charges upfront.",
+          "5. Pay in INR -- Fund the transfer from your bank account.",
+          "6. Track Online -- Monitor progress until your university receives funds.",
+          "7. Download Receipt -- For visa applications and tax compliance."
+        ]
+      },
+      {
+        heading: "Country-Specific Guidance",
+        content: [
+          "Germany: Tuition fees require SWIFT transfers using IBAN + SWIFT. Blocked accounts are separate and only for living expenses.",
+          "USA: Universities often allow both direct bank transfers and online platforms. Double-check intermediary bank requirements.",
+          "UK & Europe: Always include your student reference number. IBAN and SWIFT codes are mandatory.",
+          "Canada & Australia: Direct SWIFT transfers are widely supported for tuition payments."
+        ]
+      },
+      {
+        heading: "Quick Comparison of Methods",
+        content: [
+          "Method | Speed | Cost | Best For",
+          "-------|-------|------|----------",
+          "Forex Card | Instant | High fees | Living expenses",
+          "Buyex Forex SWIFT | 12-48 hrs | Transparent, low | Most tuition transfers",
+          "Demand Draft | 7-14 days | Slow & costly | Rare requests",
+          "University Portal | 1-3 days | Higher fees | When required by the university"
+        ]
+      },
+      {
+        heading: "FAQs",
+        content: [],
+        subsections: [
+          {
+            heading: "What is the safest way to pay tuition fees abroad?",
+            content: [
+              "✔ SWIFT transfer through Buyex Forex."
+            ]
+          },
+          {
+            heading: "How long does it take for fees to reach a university abroad?",
+            content: [
+              "✔ Normally 1-3 business days. With Buyex Forex, 12-48 hours."
+            ]
+          },
+          {
+            heading: "Can tuition be paid using a forex card?",
+            content: [
+              "✔ Rarely accepted. Forex cards are meant for personal expenses."
+            ]
+          },
+          {
+            heading: "Is TCS applicable to all transfers?",
+            content: [
+              "✔ Applicable above ₹10 lakh annually, unless paid via education loan."
+            ]
+          }
+        ]
+      },
+      {
+        heading: "Why Students Trust Buyex Forex",
+        content: [
+          "RBI-authorised and fully compliant.",
+          "Built for education fee transfers, not just general forex.",
+          "Transparent charges with upfront cost visibility.",
+          "Fast, paperless, and reliable process.",
+          "12-48 hour settlement to avoid late payment stress.",
+          "With Buyex Forex, paying tuition fees abroad is no longer complicated. It becomes secure, affordable, and worry-free."
+        ]
+      }
+    ],
+    author: "Research Desk",
+    readTime: "8 min read",
+    image: "/images/buyex forex.png?height=200&width=300",
+    imageAlt: "Guide to paying university fees abroad from India",
   }
 ];

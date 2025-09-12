@@ -135,7 +135,7 @@ async function generateQuotePDF(
     lastY + 6
   );
   doc.setTextColor(0, 0, 255);
-  doc.textWithLink("www.buyexchange.in/document-uploads", 14, lastY + 12, {
+  doc.textWithLink("www.buyexforex.com/document-uploads", 14, lastY + 12, {
     url: `${process.env.NEXT_PUBLIC_APP_URL}/document-uploads/${
       orderId || "pending"
     }`,

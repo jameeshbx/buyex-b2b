@@ -143,15 +143,21 @@ export async function generateA2Form(order: Order) {
     });
   };
 
-  // Sample data to be filled
-  const addressLines = splitAddress(order.sender?.addressLine1 || '');
+  // Get the appropriate address based on payer type
+  const addressToUse = order.payer === 'Self' 
+    ?  order.sender?.addressLine1 || ''
+    : order.sender?.senderAddressLine1 || '';
+
+  const addressLines = splitAddress(addressToUse);
   
   const data = {
     date: new Date(order.createdAt).toLocaleDateString(),
     name: order.payer === 'Self' ? order.sender?.studentName || '' : order.sender?.senderName || '',
     dob: order.sender?.dob || '',
     address: addressLines[0] || '',
-    address2: addressLines[1] + ' ' + order.sender?.addressLine2 || '',
+    address2: order.payer === 'Self' 
+      ? (addressLines[1] || '') + (order.sender?.addressLine2 ? ' ' + order.sender.addressLine2 : '')
+      : order.sender?.senderAddressLine2 || '',
     state: order.sender?.state || '',
     postalCode: order.sender?.postalCode || '',
     mobile: order.sender?.phoneNumber || '',
@@ -160,7 +166,7 @@ export async function generateA2Form(order: Order) {
     pan: order.sender?.pancardNumber || '',
     resStatus: 'Resident',
 
-    senderName:  '',
+    senderName: order.payer === 'Self' ? order.sender?.studentName || '' : order.sender?.senderName || '',
     senderPassportNo: '',
     senderPAN: order.pancardNumber || '',
     relation: order.sender?.relationship || '',
