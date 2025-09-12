@@ -11,8 +11,8 @@ export default function PrivacyPolicy() {
 
           <div className="prose max-w-none text-gray-500 font-jakarta">
             <p>
-              Buy Exchange has developed this Privacy Statement to explain how we may collect, retain, process, share
-              and transfer your Personal Data when you visit or make a purchase from www.buyexchange.in/site. This
+              Buyex Forex has developed this Privacy Statement to explain how we may collect, retain, process, share
+              and transfer your Personal Data when you visit or make a purchase from www.buyexforex.com/site. This
               Privacy Statement applies to your Personal Data when you visit or use our services, applications, or
               websites, or shop in our stores, or otherwise interact with us over the internet or through other Buy
               Exchange stores.
@@ -23,8 +23,8 @@ export default function PrivacyPolicy() {
               you understand your privacy choices when you use our Sites and Services. Please note that our Service
               offerings may vary by region. This Privacy Policy may change at any time without prior notification. To
               make sure that you are aware of any changes, please review this policy periodically. This Privacy Policy
-              shall apply uniformly to Buy Exchange&apos;s desktop/mobile website, web/desktop plugins and mobile
-              applications hosted at www.buyexchange.in
+              shall apply uniformly to Buyex Forex&apos;s desktop/mobile website, web/desktop plugins and mobile
+              applications hosted at www.buyexforex.com
             </p>
 
             <p>

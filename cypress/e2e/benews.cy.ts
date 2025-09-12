@@ -8,7 +8,7 @@ describe('BE News Page', () => {
     describe('Header Section', () => {
       it('should display the main heading and subtitle', () => {
         cy.get('h1').should('contain', 'Insights from our team')
-        cy.contains('p', 'Buy Exchange Forex News').should('be.visible')
+        cy.contains('p', 'Buyex Forex Forex News').should('be.visible')
       })
   
       it('should have a functional search bar', () => {

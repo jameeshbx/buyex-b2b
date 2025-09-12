@@ -48,7 +48,7 @@ export default function Home() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <div>
           <h1 className="text-4xl font-bold font-jakarta mb-1">Insights from our team</h1>
-          <p className="font-jakarta text-light-gray">Buy Exchange Forex News</p>
+          <p className="font-jakarta text-light-gray">Buyex Forex Forex News</p>
         </div>
         <div className="relative mt-4 md:mt-0">
           <div className="flex items-center border rounded-full px-4 py-2 bg-white">
@@ -125,13 +125,13 @@ export default function Home() {
                               {article.sections.map((section, i) => (
                                 <div key={i} className="mb-4">
                                   <h2 className="text-xl font-semibold mb-2">{section.heading}</h2>
-                                  {section.content.map((paragraph, j) => (
+                                  {section.content && section.content.map((paragraph, j) => (
                                     <p key={j} className="mb-3">{paragraph}</p>
                                   ))}
                                   {section.subsections && section.subsections.map((subsection, k) => (
                                     <div key={k} className="ml-4 mb-3">
                                       <h3 className="text-lg font-medium mb-1">{subsection.heading}</h3>
-                                      {subsection.content.map((paragraph, l) => (
+                                      {subsection.content && subsection.content.map((paragraph, l) => (
                                         <p key={l} className="mb-2">{paragraph}</p>
                                       ))}
                                     </div>
@@ -143,7 +143,7 @@ export default function Home() {
                             // Show only first section when collapsed
                             <div>
                               <h2 className="text-xl font-semibold mb-2">{article.sections[0].heading}</h2>
-                              {article.sections[0].content.slice(0, 2).map((paragraph, i) => (
+                              {article.sections[0].content && article.sections[0].content.slice(0, 2).map((paragraph, i) => (
                                 <p key={i} className="mb-3">{paragraph}</p>
                               ))}
                             </div>

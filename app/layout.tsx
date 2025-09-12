@@ -19,14 +19,7 @@ export const metadata: Metadata = {
   title: "Buyex Forex",
   description: "Forex platform for banks and customers",
   icons: {
-    icon: [
-      {
-        url: "/buyex-header-icon.jpg", // Add version parameter
-        sizes: "32x32",
-        type: "image/x-icon",
-      },
-      // ... other icons
-    ],
+    icon: "/favicon.ico",
   },
 };
 

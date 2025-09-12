@@ -1099,7 +1099,7 @@ export default function UploadsPage({
         </Dialog>
 
         <div className="mt-4 text-center text-xs text-gray-500">
-          © {new Date().getFullYear()}, Made by BuyExchange.
+          © {new Date().getFullYear()}, Made by BuyEx Forex.
         </div>
       </div>
     </div>

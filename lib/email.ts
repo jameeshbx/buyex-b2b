@@ -51,11 +51,11 @@ const createResetPasswordEmail = (resetUrl: string, userName: string) => `
         <div class="header">
             <img src="${
               process.env.NEXT_PUBLIC_APP_URL
-            }/buyex-main-logo.png" alt="Buy Exchange Logo" class="logo">
+            }/buyex-main-logo.png" alt="Buyex Forex Logo" class="logo">
         </div>
         <h2>Password Reset Request</h2>
         <p>Hello ${userName},</p>
-        <p>We received a request to reset your password for your Buy Exchange account. Click the button below to reset your password:</p>
+        <p>We received a request to reset your password for your Buyex Forex account. Click the button below to reset your password:</p>
         <div style="text-align: center;">
             <a href="${resetUrl}" class="button">Reset Password</a>
         </div>
@@ -63,7 +63,7 @@ const createResetPasswordEmail = (resetUrl: string, userName: string) => `
         <p>If you didn't request this password reset, please ignore this email or contact support if you have concerns.</p>
         <div class="footer">
             <p>This is an automated message, please do not reply to this email.</p>
-            <p>&copy; ${new Date().getFullYear()} Buy Exchange. All rights reserved.</p>
+            <p>&copy; ${new Date().getFullYear()} Buyex Forex. All rights reserved.</p>
         </div>
     </div>
 </body>
@@ -86,7 +86,7 @@ export async function sendEmail({ to, cc, subject, html }: EmailOptions) {
 
     // Send the email
     const info = await transporter.sendMail({
-      from: `"Buy Exchange" <${process.env.SMTP_FROM}>`,
+      from: `"Buyex Forex" <${process.env.SMTP_FROM}>`,
       to,
       cc,
       subject,
@@ -123,7 +123,7 @@ export async function sendEmailWithAttachment({
 
     // Send the email with attachments
     const info = await transporter.sendMail({
-      from: `"Buy Exchange" <${process.env.SMTP_FROM}>`,
+      from: `"Buyex Forex" <${process.env.SMTP_FROM}>`,
       to,
       cc,
       subject,

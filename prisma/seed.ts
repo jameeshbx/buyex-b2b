@@ -8,7 +8,7 @@ async function main() {
     // Create main organisation for system users
     const mainOrg = await prisma.organisation.create({
       data: {
-        name: "Buy Exchange",
+        name: "Buyex Forex",
         slug: "buy-exchange",
         email: "admin@buyex.com",
         phoneNumber: "+1234567890",

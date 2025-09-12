@@ -42,7 +42,7 @@ export default function WhyUs() {
             Why Us?
           </h2>
           <p className="text-gray-600 mb-6 sm:mb-8 font-manrope text-sm sm:text-base md:text-lg leading-relaxed">
-  At Buy Exchange, our core mission is to empower study abroad education consultants by simplifying international payment solutions for their students. We specialize in delivering reliable,
+  At Buyex Forex, our core mission is to empower study abroad education consultants by simplifying international payment solutions for their students. We specialize in delivering reliable,
   transparent, and hassle-free forex services that align with your business needs.
   With competitive exchange rates, zero hidden fees, and flexible payment modes, we enable consultants to provide seamless forex guidance to students pursuing education overseas. Whether it&apos;s Tuition Fee Remittance, Living Expense Transfers, Blocked Account Deposits or Visa Fee Payments, our streamlined processes and dedicated support help you build trust and add value to your student services.
   Together, let&apos;s turn study abroad fee payments and foreign exchange into a frictionless step in every student&apos;s journey abroad.

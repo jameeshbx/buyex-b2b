@@ -91,7 +91,7 @@ export default function Component() {
             <div className="flex items-center w-40">
               <Image
                 src="/buyex-main-logo.png"
-                alt="Buy Exchange Logo"
+                alt="Buyex Forex Logo"
                 width={170}
                 height={100}
                 priority
