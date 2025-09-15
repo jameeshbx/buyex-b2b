@@ -272,10 +272,10 @@ export function Sidebar({
             <Link href="/" className="flex items-center">
               <div className="relative h-[60px] w-[116px] ml-8 cursor-pointer">
                 <Image
-                  src="/header-logo.png"
+                  src="/buyex-main-logo.png"
                   alt="Logo"
-                  width={116}
-                  height={60}
+                  width={196}
+                  height={70}
                   className="h-full w-full object-contain"
                 />
               </div>
@@ -338,9 +338,15 @@ export function Sidebar({
           )}
         >
           <div className="flex items-center min-w-0">
-            <div className="h-10 w-10 rounded-full overflow-hidden bg-gradient-to-br from-yellow-400 to-orange-500 flex-shrink-0 flex items-center justify-center">
-              <span className="text-white font-bold text-lg">A</span>
-            </div>
+            <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                          <Image
+                            src="/amrutha.jpg"
+                            alt="User avatar"
+                            width={40}
+                            height={40}
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
             {!collapsed && (
               <div className="ml-3 min-w-0 flex-1 overflow-hidden">
                 <div className="text-sm font-medium text-gray-700 truncate">

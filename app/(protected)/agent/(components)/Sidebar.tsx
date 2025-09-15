@@ -191,10 +191,10 @@ export function Sidebar({
             ) : (
               <div className="relative h-[60px] w-[116px] ml-8">
                 <Image
-                  src="/header-logo.png"
+                  src="/buyex-main-logo.png"
                   alt="Logo"
-                  width={116}
-                  height={60}
+                  width={196}
+                  height={70}
                   className="h-full w-full object-contain"
                 />
               </div>
@@ -255,21 +255,13 @@ export function Sidebar({
           )}
         >
           <div className="flex items-center min-w-0">
-            <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
-              <Image
-                src="/boy.jpg"
-                alt="User avatar"
-                width={40}
-                height={40}
-                className="h-full w-full object-cover"
-              />
-            </div>
+            
             {!collapsed && (
               <div className="ml-3 min-w-0 flex-1 overflow-hidden">
                 <div className="text-sm font-medium text-gray-700 truncate">
                   Welcome back 👋
                 </div>
-                <div className="text-xs text-gray-500 truncate">Staff</div>
+                <div className="text-xs text-gray-500 truncate">Agent</div>
               </div>
             )}
           </div>

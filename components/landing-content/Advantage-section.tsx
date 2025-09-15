@@ -20,10 +20,10 @@ export default function AdvantageSection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-3xl lg:text-4xl font-bold font-serif text-deep-blue mb-4">
-            The Buy Exchange Advantage
+            The Buyex Forex Advantage
           </h2>
           <p className="text-gray-600 max-w-3xl mx-auto text-lg">
-            Buy Exchange B2B Services covers a wide range of Study Abroad and Forex solutions, including
+            Buyex Forex B2B Services covers a wide range of Study Abroad and Forex solutions, including
           </p>
         </div>
 

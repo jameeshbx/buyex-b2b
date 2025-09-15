@@ -40,7 +40,7 @@ export default function Hero() {
               <p className="text-base text-gray-600 leading-relaxed mb-6">
                 Successfully empowering <span className="font-semibold">100+ oversease education consultants</span>
                 {' '}across <span className="font-semibold">5 states</span>,
-                <br/>Buy Exchange delivers seamless student forex—now expanding nationwide.
+                <br/>Buyex Forex delivers seamless student forex—now expanding nationwide.
               </p>
 
               {/* Partner logos */}

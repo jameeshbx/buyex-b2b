@@ -51,7 +51,7 @@ const createInvitationEmail = (name: string, email: string, password: string) =>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to Buy Exchange</title>
+    <title>Welcome to Buyex Forex</title>
     <style>
         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
@@ -79,11 +79,11 @@ const createInvitationEmail = (name: string, email: string, password: string) =>
 <body>
     <div class="container">
         <div class="header">
-            <img src="${process.env.NEXT_PUBLIC_APP_URL}/whitelogo.png" alt="Buy Exchange Logo" class="logo">
+            <img src="${process.env.NEXT_PUBLIC_APP_URL}/buyex-main-logo.png" alt="Buyex Forex Logo" class="logo">
         </div>
-        <h2>Welcome to Buy Exchange!</h2>
+        <h2>Welcome to Buyex Forex!</h2>
         <p>Hello ${name},</p>
-        <p>You have been invited to join Buy Exchange. Here are your login credentials:</p>
+        <p>You have been invited to join Buyex Forex. Here are your login credentials:</p>
         <p><strong>Email:</strong> ${email}</p>
         <p><strong>Temporary Password:</strong> ${password}</p>
         <div style="text-align: center;">
@@ -92,7 +92,7 @@ const createInvitationEmail = (name: string, email: string, password: string) =>
         <p>For security reasons, please change your password after your first login.</p>
         <div class="footer">
             <p>This is an automated message, please do not reply to this email.</p>
-            <p>&copy; ${new Date().getFullYear()} Buy Exchange. All rights reserved.</p>
+            <p>&copy; ${new Date().getFullYear()} Buyex Forex. All rights reserved.</p>
         </div>
     </div>
 </body>
@@ -139,7 +139,7 @@ export async function POST(req: Request) {
     try {
       await sendEmail({
         to: validatedData.email,
-        subject: "Welcome to Buy Exchange",
+        subject: "Welcome to Buyex Forex",
         html: createInvitationEmail(
           validatedData.name,
           validatedData.email,

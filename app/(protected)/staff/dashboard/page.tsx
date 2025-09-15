@@ -344,7 +344,7 @@ export default function Dashboard() {
                             className="bg-dark-blue hover:bg-blue-700 text-white px-2 py-2 text-xs h-7"
                           >
                             <Upload className="h-2 w-2" />
-                            Uploads
+                            View Documents
                           </Button>
                         </Link>
                       </div>
@@ -420,7 +420,7 @@ export default function Dashboard() {
                               className="bg-dark-blue hover:bg-blue-700 text-white"
                             >
                               <Upload className="h-4 w-4 mr-1" />
-                              Uploads
+                              View Documents
                             </Button>
                           </Link>
                         </div>

@@ -58,15 +58,15 @@ export default function terms() {
               USER ACCOUNT
             </h2>
            <p className="mb-4 text-gray-700">
-  You agree that by clicking &quot;Sign Up&quot; or similar, registering, accessing or using our services (described below), you are agreeing to enter into a legally binding User Agreement with Buy Exchange. If you do not agree to this User Agreement (&quot;User Agreement&quot; or &quot;Agreement&quot;), do not click &quot;Sign Up&quot; or similar and do not access or otherwise use any of our Services. If you wish to terminate this User Agreement, at any time you can do so by giving a written notice prior 30 days and no longer accessing or using our Services.
+  You agree that by clicking &quot;Sign Up&quot; or similar, registering, accessing or using our services (described below), you are agreeing to enter into a legally binding User Agreement with Buyex Forex. If you do not agree to this User Agreement (&quot;User Agreement&quot; or &quot;Agreement&quot;), do not click &quot;Sign Up&quot; or similar and do not access or otherwise use any of our Services. If you wish to terminate this User Agreement, at any time you can do so by giving a written notice prior 30 days and no longer accessing or using our Services.
 </p>
 
 <h2 id="services" className="text-xl font-semibold mt-8 mb-4 text-gray-900">
   SERVICES
 </h2>
 <ol className="list-decimal pl-6 space-y-2">
-  <li>This User Agreement applies to Buy Exchange and other services that state that they are offered under this User Agreement.</li>
-  <li>You are entering into this User Agreement with Buy Exchange (also referred to as &quot;we&quot; and &quot;us&quot;).</li>
+  <li>This User Agreement applies to Buyex Forex and other services that state that they are offered under this User Agreement.</li>
+  <li>You are entering into this User Agreement with Buyex Forex (also referred to as &quot;we&quot; and &quot;us&quot;).</li>
   <li>This User Agreement applies to Agents and Direct Customers.</li>
   <li>As a Visitor or Agent of our Services, the collection, use and sharing of your personal data is subject to the Privacy Policy and updates.</li>
 </ol>
@@ -75,7 +75,7 @@ export default function terms() {
   AGENTS AND VISITORS
 </h2>
 <ol start={5} className="list-decimal pl-6 space-y-2">
-  <li>When you register and join the Buy Exchange Forex Agent Services, you become a Member. If you have chosen not to register for our Services, you may access certain features as a &quot;Visitor.&quot;</li>
+  <li>When you register and join the Buyex Forex Forex Agent Services, you become a Member. If you have chosen not to register for our Services, you may access certain features as a &quot;Visitor.&quot;</li>
 </ol>
 
 <h2 id="change" className="text-xl font-semibold mt-8 mb-4 text-gray-900">
@@ -161,14 +161,14 @@ export default function terms() {
 <ol start={19} className="list-decimal pl-6 space-y-2">
   <li>You agree that you will not:
     <ul className="list-disc pl-6 mt-2 space-y-1">
-      <li>Create a false identity on Buy Exchange, misrepresent your identity, create an Agent profile for anyone other than yourself (a real person), or use or attempt to use another&#39;s account;</li>
+      <li>Create a false identity on Buyex Forex, misrepresent your identity, create an Agent profile for anyone other than yourself (a real person), or use or attempt to use another&#39;s account;</li>
       <li>Develop, support or use software, devices, scripts, robots or any other means or processes (including crawlers, browser plugins and add-ons or any other technology) to scrape the Services or otherwise copy profiles and other data from the Services;</li>
       <li>Override any security feature or bypass or circumvent any access controls or use limits of the Service (such as caps on keyword searches or profile views);</li>
-      <li>Copy, use, disclose or distribute any information obtained from the Services, whether directly or through third parties (such as search engines), without the consent of Buy Exchange;</li>
+      <li>Copy, use, disclose or distribute any information obtained from the Services, whether directly or through third parties (such as search engines), without the consent of Buyex Forex;</li>
       <li>Disclose information that you do not have the consent to disclose (such as confidential information of others (including your employees));</li>
       <li>Upload anything that contains software viruses, worms, or any other harmful code; Reverse engineer, decompile, disassemble, decipher or otherwise attempt to derive the source code for the Services or any related technology that is not open-source;</li>
-      <li>Rent, lease, loan, trade, sell/re-sell or otherwise monetize the Services or related data or access to the same, without Buy Exchange&#39;s consent;</li>
-      <li>Deep-link to our Services for any purpose other than to promote your profile or a Group on our Services, without Buy Exchange&#39;s consent;</li>
+      <li>Rent, lease, loan, trade, sell/re-sell or otherwise monetize the Services or related data or access to the same, without Buyex Forex&#39;s consent;</li>
+      <li>Deep-link to our Services for any purpose other than to promote your profile or a Group on our Services, without Buyex Forex&#39;s consent;</li>
       <li>Use bots or other automated methods to access the Services;</li>
       <li>Interfere with the operation of, or place an unreasonable load on, the Services (e.g., spam, denial of service attack, viruses, gaming algorithms);</li>
     </ul>
@@ -180,7 +180,7 @@ export default function terms() {
               REFUND AND CANCELLATION
             </h2>
             <p>
-              At Buy Exchange we strive to provide our customers with the best possible service and experience when it comes to foreign exchange transactions. We understand that there may be situations where you need to cancel or modify your transaction, and we have created this refund policy to outline our process and guidelines for refunds. Cancellation and Modification Policy Once you have completed a transaction, you may not be able to cancel or modify it, as foreign exchange transactions are time-sensitive and volatile. However, if you contact our customer service team within 30 minutes of placing the order, we will try our best to accommodate your request.
+              At Buyex Forex we strive to provide our customers with the best possible service and experience when it comes to foreign exchange transactions. We understand that there may be situations where you need to cancel or modify your transaction, and we have created this refund policy to outline our process and guidelines for refunds. Cancellation and Modification Policy Once you have completed a transaction, you may not be able to cancel or modify it, as foreign exchange transactions are time-sensitive and volatile. However, if you contact our customer service team within 30 minutes of placing the order, we will try our best to accommodate your request.
             </p>
 
             <h2 id="refund-eligibility" className="text-xl font-semibold mt-8 mb-4 text-gray-900">

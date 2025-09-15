@@ -503,7 +503,7 @@ function Senderdetails() {
                           render={({ field }) => (
                             <FormItem className="space-y-1 sm:space-y-2">
                               <FormLabel className="font-jakarta text-sm sm:text-base text-gray-500">
-                                Student Email ID (Fake)
+                              Alternative email id
                               </FormLabel>
                               <FormControl>
                                 <Input
@@ -1249,7 +1249,7 @@ function Senderdetails() {
       </div>
       <div className="text-xs text-white-500 mt-8">
         © 2025, Made by{" "}
-        <span className="text-bold text-dark-blue">Buy Exchange</span>.
+        <span className="text-bold text-dark-blue">Buyex Forex</span>.
       </div>
     </div>
   );

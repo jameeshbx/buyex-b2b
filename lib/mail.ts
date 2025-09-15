@@ -22,7 +22,7 @@ export async function sendVerificationEmail(email: string, token: string) {
       to: email,
       subject: "Verify your email address",
       html: `
-        <h1>Welcome to Buy Exchange!</h1>
+        <h1>Welcome to Buyex Forex!</h1>
         <p>Please click the link below to verify your email address:</p>
         <a href="${confirmLink}">${confirmLink}</a>
         <p>This link will expire in 24 hours.</p>

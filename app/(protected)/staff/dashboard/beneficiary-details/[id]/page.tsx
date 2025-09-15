@@ -318,7 +318,7 @@ export default function BeneficiaryDetailsPage({ params }: PageProps) {
         </div>
       </div>
       <div className="text-xs text-gray-500 mt-8 pb-4 text-center">
-        © 2025, Made by <span className="text-dark-blue font-bold">BuyExchange</span>.
+        © 2025, Made by <span className="text-dark-blue font-bold">BuyEx Forex</span>.
       </div>
     </div>
   )

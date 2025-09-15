@@ -80,7 +80,7 @@ function ResetPasswordContent() {
       <div className="min-h-screen bg-gradient-to-b from-dark-blue to-light-blue flex items-center justify-center p-4">
         <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-xl">
           <div className="text-center">
-            <Image src="/whitelogo.png" alt="Buy Exchange Logo" width={165} height={50} className="mx-auto mb-6" />
+            <Image src="/buyex-main-logo.png" alt="Buyex Forex Logo" width={185} height={60} className="mx-auto mb-6" />
             <h1 className="text-2xl font-bold text-gray-800 mb-4">Invalid Reset Link</h1>
             <p className="text-gray-600 mb-6">This password reset link is invalid or has expired.</p>
             <a
@@ -99,7 +99,7 @@ function ResetPasswordContent() {
     <div className="min-h-screen bg-gradient-to-b from-dark-blue to-light-blue flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-xl">
         <div className="text-center mb-8">
-          <Image src="/whitelogo.png" alt="Buy Exchange Logo" width={165} height={50} className="mx-auto mb-6" />
+          <Image src="/buyex-main-logo.png" alt="Buyex Forex Logo" width={185} height={60} className="mx-auto mb-6" />
           <h1 className="text-2xl font-bold text-gray-800">Reset Your Password</h1>
           <p className="text-gray-600 mt-2">Please enter your new password below.</p>
         </div>
@@ -191,7 +191,7 @@ export default function ResetPassword() {
       <div className="min-h-screen bg-gradient-to-b from-dark-blue to-light-blue flex items-center justify-center p-4">
         <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-xl">
           <div className="text-center">
-            <Image src="/whitelogo.png" alt="Buy Exchange Logo" width={165} height={50} className="mx-auto mb-6" />
+            <Image src="/buyex-main-logo.png" alt="Buyex Forex Logo" width={185} height={60} className="mx-auto mb-6" />
             <div className="h-5 w-5 border-2 border-dark-blue border-t-transparent rounded-full animate-spin mx-auto"></div>
             <p className="text-gray-600 mt-4">Loading...</p>
           </div>

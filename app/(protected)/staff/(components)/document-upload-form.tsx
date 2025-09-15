@@ -944,7 +944,7 @@ const CHECKLIST_FIELDS: Record<string, { label: string; type: string }[]> = {
     { label: "Student Passport", type: "PASSPORT_FRONT" },
     { label: "Invoice", type: "INVOICE" },
   ],
-  "Accomodation fee": [
+  "Accommodation fee": [
     { label: "Offer Letter", type: "UNIVERSITY_OFFER_LETTER" },
     { label: "Student Passport", type: "PASSPORT_FRONT" },
     { label: "Invoice", type: "INVOICE" },

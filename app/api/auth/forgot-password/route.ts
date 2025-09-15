@@ -72,7 +72,7 @@ export async function POST(req: Request) {
 
     await sendEmail({
       to: user.email,
-      subject: "Reset Your Buy Exchange Password",
+      subject: "Reset Your Buyex Forex Password",
       html: createResetPasswordEmail(resetUrl, user.name || "there"),
     });
 

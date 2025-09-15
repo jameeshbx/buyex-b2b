@@ -65,7 +65,7 @@ async function generateQuotePDF(
   const doc = new jsPDF() as JsPDFWithAutoTable;
   let lastY = 30;
 
-  // const logo = "/header-logo.png";
+  // const logo = "/buyex-main-logo.png";
   // doc.addImage(logo, "PNG", 14, 10, 50, 20);
 
   doc.setFontSize(18);
@@ -135,7 +135,7 @@ async function generateQuotePDF(
     lastY + 6
   );
   doc.setTextColor(0, 0, 255);
-  doc.textWithLink("www.buyexchange.in/document-uploads", 14, lastY + 12, {
+  doc.textWithLink("www.buyexforex.com/document-uploads", 14, lastY + 12, {
     url: `${process.env.NEXT_PUBLIC_APP_URL}/document-uploads/${
       orderId || "pending"
     }`,
@@ -208,6 +208,17 @@ export default function OrderDetailsForm() {
     Germany: "EUR",
     UAE: "AED",
     Australia: "AUD",
+    Portugal: "EUR",
+    Italy: "EUR",
+    Greece: "EUR",
+    Netherlands: "EUR",
+    Spain: "EUR",
+    Poland: "EUR",
+    Belgium: "EUR",
+    Malta: "EUR",
+    Austria: "EUR",
+    Albania: "EUR",
+    Malaysia: "USD",
     Canada: "CAD",
     Switzerland: "CHF",
     France: "EUR",
@@ -768,15 +779,26 @@ export default function OrderDetailsForm() {
                         avoidCollisions={false}
                       >
                         <SelectItem value="Australia">Australia</SelectItem>
+                        <SelectItem value="Albania">Albania</SelectItem>
+                        <SelectItem value="Austria">Austria</SelectItem>
+                        <SelectItem value="Belgium">Belgium</SelectItem>
                         <SelectItem value="Bulgaria">Bulgaria</SelectItem>
                         <SelectItem value="Canada">Canada</SelectItem>
                         <SelectItem value="France">France</SelectItem>
                         <SelectItem value="Georgia">Georgia</SelectItem>
                         <SelectItem value="Germany">Germany</SelectItem>
+                        <SelectItem value="Greece">Greece</SelectItem>
                         <SelectItem value="Ireland">Ireland</SelectItem>
+                        <SelectItem value="Italy">Italy</SelectItem>
                         <SelectItem value="Latvia">Latvia</SelectItem>
                         <SelectItem value="Lithuania">Lithuania</SelectItem>
+                        <SelectItem value="Malaysia">Malaysia</SelectItem>
+                        <SelectItem value="Malta">Malta</SelectItem>
+                        <SelectItem value="Netherlands">Netherlands</SelectItem>
                         <SelectItem value="New Zealand">New Zealand</SelectItem>
+                        <SelectItem value="Poland">Poland</SelectItem>
+                        <SelectItem value="Portugal">Portugal</SelectItem>
+                        <SelectItem value="Spain">Spain</SelectItem>
                         <SelectItem value="Sweden">Sweden</SelectItem>
                         <SelectItem value="Switzerland">Switzerland</SelectItem>
                         <SelectItem value="UAE">UAE</SelectItem>
