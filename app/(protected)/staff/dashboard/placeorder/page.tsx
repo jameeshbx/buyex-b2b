@@ -1,13 +1,14 @@
-"use client";
+'use client';
 
-import React from "react";
-import OrderDetailsForm from "./order-details-form";
+import { Suspense } from 'react';
 import { Topbar } from "../../(components)/Topbar";
 import { pagesData } from "@/data/navigation";
 import BreadcrumbMenubar from "../../(components)/Menubar";
 import { SessionProvider } from "next-auth/react";
+import OrderDetailsForm from "./order-details-form";
 
-function page() {
+// Client component that contains the search params hook
+function OrderDetailsContent() {
   return (
     <div>
       <Topbar pageData={pagesData.orderDetails} />
@@ -21,4 +22,18 @@ function page() {
   );
 }
 
-export default page;
+// Main page component with Suspense boundary
+export default function Page() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <div>Loading order details...</div>
+      </div>
+    }>
+      <OrderDetailsContent />
+    </Suspense>
+  );
+}
+
+// Ensure this page is not statically generated
+export const dynamic = 'force-dynamic';

@@ -1,20 +1,43 @@
 "use client"
 
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
-import { type MenuItem, getActiveMenuItem } from "@/data/menubar"
+import { menuItems } from "@/data/menubar"
+
+interface MenuItem {
+  id: string
+  label: string
+  url: string
+  active?: boolean
+  onClick?: (e: React.MouseEvent) => void
+}
 
 export default function BreadcrumbMenubar() {
   const router = useRouter()
   const pathname = usePathname()
-  const [activeItems, setActiveItems] = useState<MenuItem[]>([])
+  const searchParams = useSearchParams()
+  const [menuItemsList, setMenuItems] = useState<MenuItem[]>([])
+  const orderId = searchParams.get('orderId') || ''
 
   useEffect(() => {
-    setActiveItems(getActiveMenuItem(pathname))
-  }, [pathname])
+    // Get menu items with orderId if available
+    const items = menuItems(orderId)
+    
+    // Mark active item based on current path
+    const activeItems = items.map(item => ({
+      ...item,
+      active: pathname.includes(item.url.split('?')[0])
+    }))
+    
+    setMenuItems(activeItems)
+  }, [pathname, orderId])
 
-  const handleMenuItemClick = (url: string) => {
-    router.push(url)
+  const handleMenuItemClick = (item: MenuItem) => (e: React.MouseEvent) => {
+    if (item.id === 'order-details' && item.onClick) {
+      item.onClick(e)
+      return
+    }
+    router.push(item.url)
   }
 
   return (
@@ -22,10 +45,10 @@ export default function BreadcrumbMenubar() {
       <div className="flex justify-center">
         <div className="flex max-w-screen-lg w-full md:ml-[60px] overflow-x-auto hide-scrollbar">
           <div className="flex">
-            {activeItems.map((item) => (
+            {menuItemsList.map((item) => (
               <button
                 key={item.id}
-                onClick={() => handleMenuItemClick(item.url)}
+                onClick={handleMenuItemClick(item)}
                 className={`flex-shrink-0 py-3 md:py-4 px-4 md:px-14 text-center transition-colors font-medium text-sm md:text-base whitespace-nowrap ${
                   item.active ? "bg-dark-blue text-white" : "bg-white text-black hover:bg-dark-blue"
                 } ${item.id === "order-details" || item.id === "beneficiary-details" ? "rounded-tl-md rounded-tr-md"  : ""} ${

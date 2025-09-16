@@ -19,7 +19,7 @@ export default function AboutUs() {
       <div className="flex flex-col lg:flex-row gap-12 items-center mb-20">
         <div className="lg:w-1/2">
           <Image
-            src="/unnameds.png?height=200&width=300" // Replace with your actual image path
+            src="/About us.png?height=200&width=300" // Replace with your actual image path
             alt="Buyex Forex Team"
             width={600}
             height={400}
@@ -69,12 +69,12 @@ export default function AboutUs() {
             }
           ].map((value, index) => (
             <div key={index} className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow">
-              <div className="bg-blue-50 w-16 h-16 rounded-full flex items-center justify-center mb-6">
+              <div className=" w-16 h-16 rounded-full flex items-center justify-center mb-6">
                 <Image
                   src={value.icon}
                   alt={value.title}
-                  width={52}
-                  height={52}
+                  width={66}
+                  height={66}
                 />
               </div>
               <h3 className="text-xl font-bold text-dark-blue mb-3 font-jakarta">{value.title}</h3>
