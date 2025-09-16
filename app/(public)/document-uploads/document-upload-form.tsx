@@ -173,11 +173,14 @@ export default function DocumentUploadForm({
     // Validate checklist documents
     if (purpose && CHECKLIST_FIELDS[purpose]) {
       for (const item of CHECKLIST_FIELDS[purpose]) {
-        const file = formState.checklist?.[item.type];
-        const fileUrl = formState.checklist?.[`${item.type}Url`];
-        if (!file && !fileUrl) {
-          errors[`checklist.${item.type}`] = `${item.label} is required`;
-          isValid = false;
+        // Only validate required fields
+        if (item.required !== false) { // Default to true if not specified
+          const file = formState.checklist?.[item.type];
+          const fileUrl = formState.checklist?.[`${item.type}Url`];
+          if (!file && !fileUrl) {
+            errors[`checklist.${item.type}`] = `${item.label} is required`;
+            isValid = false;
+          }
         }
       }
     }
@@ -810,48 +813,49 @@ function validateFile(
   return undefined;
 }
 
-const CHECKLIST_FIELDS: Record<string, { label: string; type: string }[]> = {
+// Make checklist fields optional by adding a required flag
+const CHECKLIST_FIELDS: Record<string, { label: string; type: string; required?: boolean }[]> = {
   "University fee transfer": [
-    { label: "Offer Letter", type: "UNIVERSITY_OFFER_LETTER" },
-    { label: "Student Passport", type: "PASSPORT_FRONT" },
+    { label: "Offer Letter", type: "UNIVERSITY_OFFER_LETTER", required: false },
+    { label: "Student Passport", type: "PASSPORT_FRONT", required: false },
   ],
   "Convera registered payment": [
-    { label: "Offer Letter", type: "UNIVERSITY_OFFER_LETTER" },
-    { label: "Student Passport", type: "PASSPORT_FRONT" },
+    { label: "Offer Letter", type: "UNIVERSITY_OFFER_LETTER", required: false },
+    { label: "Student Passport", type: "PASSPORT_FRONT", required: false },
   ],
   "Student Living expenses transfer": [
-    { label: "Offer Letter", type: "UNIVERSITY_OFFER_LETTER" },
-    { label: "Student Passport", type: "PASSPORT_FRONT" },
-    { label: "Visa/PRP", type: "VISA_PRP" },
+    { label: "Offer Letter", type: "UNIVERSITY_OFFER_LETTER", required: false },
+    { label: "Student Passport", type: "PASSPORT_FRONT", required: false },
+    { label: "Visa/PRP", type: "VISA_PRP", required: false },
   ],
   "Student Visa fee payment": [
-    { label: "Offer Letter", type: "UNIVERSITY_OFFER_LETTER" },
-    { label: "Student Passport", type: "PASSPORT_FRONT" },
-    { label: "Visa Invoice", type: "VISA_INVOICE" },
+    { label: "Offer Letter", type: "UNIVERSITY_OFFER_LETTER", required: false },
+    { label: "Student Passport", type: "PASSPORT_FRONT", required: false },
+    { label: "Visa Invoice", type: "VISA_INVOICE", required: false },
   ],
   "Flywire registered payment": [
-    { label: "Offer Letter", type: "UNIVERSITY_OFFER_LETTER" },
-    { label: "Student Passport", type: "PASSPORT_FRONT" },
-    { label: "Flywire Instruction", type: "FLYWIRE_INSTRUCTION" },
+    { label: "Offer Letter", type: "UNIVERSITY_OFFER_LETTER", required: false },
+    { label: "Student Passport", type: "PASSPORT_FRONT", required: false },
+    { label: "Flywire Instruction", type: "FLYWIRE_INSTRUCTION", required: false },
   ],
   "Blocked account transfer": [
-    { label: "Offer Letter", type: "UNIVERSITY_OFFER_LETTER" },
-    { label: "Student Passport", type: "PASSPORT_FRONT" },
-    { label: "Blocked Account Letter", type: "BLOCKED_ACCOUNT_LETTER" },
+    { label: "Offer Letter", type: "UNIVERSITY_OFFER_LETTER", required: false },
+    { label: "Student Passport", type: "PASSPORT_FRONT", required: false },
+    { label: "Blocked Account Letter", type: "BLOCKED_ACCOUNT_LETTER", required: false },
   ],
   "Application fee": [
-    { label: "Offer Letter", type: "UNIVERSITY_OFFER_LETTER" },
-    { label: "Student Passport", type: "PASSPORT_FRONT" },
-    { label: "Invoice", type: "INVOICE" },
+    { label: "Offer Letter", type: "UNIVERSITY_OFFER_LETTER", required: false },
+    { label: "Student Passport", type: "PASSPORT_FRONT", required: false },
+    { label: "Invoice", type: "INVOICE", required: false },
   ],
   "Accommodation fee": [
-    { label: "Offer Letter", type: "UNIVERSITY_OFFER_LETTER" },
-    { label: "Student Passport", type: "PASSPORT_FRONT" },
-    { label: "Invoice", type: "INVOICE" },
+    { label: "Offer Letter", type: "UNIVERSITY_OFFER_LETTER", required: false },
+    { label: "Student Passport", type: "PASSPORT_FRONT", required: false },
+    { label: "Invoice", type: "INVOICE", required: false },
   ],
   "GIC Canada fee deposite": [
-    { label: "Offer Letter", type: "UNIVERSITY_OFFER_LETTER" },
-    { label: "Student Passport", type: "PASSPORT_FRONT" },
-    { label: "GIC Letter", type: "GIC_LETTER" },
+    { label: "Offer Letter", type: "UNIVERSITY_OFFER_LETTER", required: false },
+    { label: "Student Passport", type: "PASSPORT_FRONT", required: false },
+    { label: "GIC Letter", type: "GIC_LETTER", required: false },
   ],
 };

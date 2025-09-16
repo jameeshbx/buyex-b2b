@@ -545,11 +545,11 @@ export default function OrderDetailsForm() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent
-                        className="w-full min-w-[var(--radix-select-trigger-width)] max-w-[95vw] max-h-[min(400px,60vh)] overflow-y-auto"
-                        sideOffset={5}
+                        className="w-[var(--radix-select-trigger-width)] max-h-[300px] overflow-y-auto"
+                        position="popper"
+                        sideOffset={4}
                         align="start"
-                        avoidCollisions={true}
-                        collisionPadding={10}
+                        avoidCollisions={false}
                       >
                         <SelectItem
                           value="University fee transfer"
