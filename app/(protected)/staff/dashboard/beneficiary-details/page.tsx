@@ -41,6 +41,7 @@ function BeneficiaryDetailsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const editId = searchParams.get("edit")
+  const [, setShowForm] = useState(false)
   const beneficiaryId = searchParams.get("beneficiaryId")
   const [orderId, setOrderId] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
@@ -87,7 +88,7 @@ function BeneficiaryDetailsContent() {
   const receiverCountry = watch("receiverCountry")
   const receiverBankCountry = watch("receiverBankCountry")
   const anyIntermediaryBank = watch("anyIntermediaryBank")
-  const [lastSelectedBeneficiary, setLastSelectedBeneficiary] = useState<Beneficiary | null>(null)
+  
 
   // Fetch beneficiaries from API
   useEffect(() => {
@@ -111,11 +112,9 @@ function BeneficiaryDetailsContent() {
       if (orderId) {
         try {
           setLoading(true)
-          
 
           // Fetch order data
           const orderResponse = await axios.get(`/api/orders/${orderId}`)
-          
 
           // Pre-populate receiver country and receiver bank country from order data
           if (orderResponse.data.receiverBankCountry) {
@@ -124,11 +123,8 @@ function BeneficiaryDetailsContent() {
           }
 
           if (orderResponse.data.beneficiaryId) {
-          
-
             // Fetch existing beneficiary data
             const beneficiaryResponse = await axios.get(`/api/beneficiaries/${orderResponse.data.beneficiaryId}`)
-           
 
             if (beneficiaryResponse.data) {
               setExistingBeneficiaryData(beneficiaryResponse.data)
@@ -137,11 +133,13 @@ function BeneficiaryDetailsContent() {
               reset({
                 existingReceiver: "NO", // Set to NO to show the form
                 receiverFullName: beneficiaryResponse.data.receiverFullName || "",
-                receiverCountry: beneficiaryResponse.data.receiverCountry || orderResponse.data.receiverBankCountry || "",
+                receiverCountry:
+                  beneficiaryResponse.data.receiverCountry || orderResponse.data.receiverBankCountry || "",
                 address: beneficiaryResponse.data.address || "",
                 receiverBank: beneficiaryResponse.data.receiverBank || "",
                 receiverBankAddress: beneficiaryResponse.data.receiverBankAddress || "",
-                receiverBankCountry: beneficiaryResponse.data.receiverBankCountry || orderResponse.data.receiverBankCountry || "",
+                receiverBankCountry:
+                  beneficiaryResponse.data.receiverBankCountry || orderResponse.data.receiverBankCountry || "",
                 receiverAccount: beneficiaryResponse.data.receiverAccount || "",
                 receiverBankSwiftCode: beneficiaryResponse.data.receiverBankSwiftCode || "",
                 iban: beneficiaryResponse.data.iban || "",
@@ -160,7 +158,6 @@ function BeneficiaryDetailsContent() {
               })
             }
           } else {
-           
             // Reset to default if no beneficiary exists, but pre-populate with order data
             const defaultValues = {
               ...defaultFormValues,
@@ -195,29 +192,12 @@ function BeneficiaryDetailsContent() {
           const beneficiary = response.data
           if (beneficiary && Object.keys(beneficiary).length > 0) {
             setExistingBeneficiaryData(beneficiary)
-            // Set form to "NO" mode (new beneficiary form) and pre-fill with existing data
-            setValue("existingReceiver", "NO")
-            setValue("receiverFullName", beneficiary.receiverFullName || "")
-            setValue("receiverCountry", beneficiary.receiverCountry || "")
-            setValue("address", beneficiary.address || "")
-            setValue("receiverBank", beneficiary.receiverBank || "")
-            setValue("receiverBankAddress", beneficiary.receiverBankAddress || "")
-            setValue("receiverBankCountry", beneficiary.receiverBankCountry || "")
-            setValue("receiverAccount", beneficiary.receiverAccount || "")
-            setValue("receiverBankSwiftCode", beneficiary.receiverBankSwiftCode || "")
-            setValue("iban", beneficiary.iban || "")
-            setValue("sortCode", beneficiary.sortCode || "")
-            setValue("transitNumber", beneficiary.transitNumber || "")
-            setValue("bsbCode", beneficiary.bsbCode || "")
-            setValue("routingNumber", beneficiary.routingNumber || "")
-            setValue("anyIntermediaryBank", (beneficiary.anyIntermediaryBank as "YES" | "NO") || "NO")
-            setValue("intermediaryBankName", beneficiary.intermediaryBankName || "")
-            setValue("intermediaryBankAccountNo", beneficiary.intermediaryBankAccountNo || "")
-            setValue("intermediaryBankIBAN", beneficiary.intermediaryBankIBAN || "")
-            setValue("intermediaryBankSwiftCode", beneficiary.intermediaryBankSwiftCode || "")
-            setValue("totalRemittance", beneficiary.totalRemittance || "")
-            setValue("field70", beneficiary.field70 || "")
-            setValue("selectedReceiverId", beneficiary.id || "")
+            const selectReceiver = (beneficiary: Beneficiary) => {
+              setSelectedBeneficiary(beneficiary)
+              // Just select the receiver, don't switch to form view yet
+              setValue("selectedReceiverId", beneficiary.id || "")
+            }
+            selectReceiver(beneficiary)
           }
         } catch (error) {
           console.error("Failed to fetch beneficiary for pre-fill:", error)
@@ -279,12 +259,6 @@ function BeneficiaryDetailsContent() {
   const onSubmit = async (data: BeneficiaryFormValues) => {
     setSubmitError(null)
     try {
-      if (existingReceiver === "YES" && selectedBeneficiary) {
-        // Redirect to beneficiary details page with the selected ID
-        router.push(`/staff/dashboard/beneficiary-details/${selectedBeneficiary.id}`)
-        return
-      }
-
       console.log("orderId", orderId)
       // For new beneficiaries or editing existing ones
       const submissionData = {
@@ -335,41 +309,42 @@ function BeneficiaryDetailsContent() {
     setExistingBeneficiaryData(null)
   }
 
+
   const selectReceiver = (beneficiary: Beneficiary) => {
     setSelectedBeneficiary(beneficiary)
-    setLastSelectedBeneficiary(beneficiary)
-    setValue("selectedReceiverId", beneficiary.id)
-  }
-
-  // When "existingReceiver" changes to "NO", pre-fill the form if a receiver was selected
-  useEffect(() => {
-    if (existingReceiver === "NO" && lastSelectedBeneficiary) {
-      reset({
-        receiverFullName: lastSelectedBeneficiary.receiverFullName || "",
-        receiverCountry: lastSelectedBeneficiary.receiverCountry || "",
-        address: lastSelectedBeneficiary.address || "",
-        receiverBank: lastSelectedBeneficiary.receiverBank || "",
-        receiverBankAddress: lastSelectedBeneficiary.receiverBankAddress || "",
-        receiverBankCountry: lastSelectedBeneficiary.receiverBankCountry || "",
-        receiverAccount: lastSelectedBeneficiary.receiverAccount || "",
-        receiverBankSwiftCode: lastSelectedBeneficiary.receiverBankSwiftCode || "",
-        iban: lastSelectedBeneficiary.iban || "",
-        sortCode: lastSelectedBeneficiary.sortCode || "",
-        transitNumber: lastSelectedBeneficiary.transitNumber || "",
-        bsbCode: lastSelectedBeneficiary.bsbCode || "",
-        routingNumber: lastSelectedBeneficiary.routingNumber || "",
-        anyIntermediaryBank: (lastSelectedBeneficiary.anyIntermediaryBank as "YES" | "NO") || "NO",
-        intermediaryBankName: lastSelectedBeneficiary.intermediaryBankName || "",
-        intermediaryBankAccountNo: lastSelectedBeneficiary.intermediaryBankAccountNo || "",
-        intermediaryBankIBAN: lastSelectedBeneficiary.intermediaryBankIBAN || "",
-        intermediaryBankSwiftCode: lastSelectedBeneficiary.intermediaryBankSwiftCode || "",
-        totalRemittance: "",
-        field70: "",
-        existingReceiver: "NO",
-        selectedReceiverId: lastSelectedBeneficiary.id || "",
-      })
+    setValue("selectedReceiverId", beneficiary.id || "")
+    
+    // Create a new object with only the fields we want to include
+    const formData: Partial<BeneficiaryFormValues> = {
+      receiverFullName: beneficiary.receiverFullName || "",
+      receiverCountry: beneficiary.receiverCountry || "",
+      address: beneficiary.address || "",
+      receiverBank: beneficiary.receiverBank || "",
+      receiverBankAddress: beneficiary.receiverBankAddress || "",
+      receiverBankCountry: beneficiary.receiverBankCountry || "",
+      receiverAccount: beneficiary.receiverAccount || "",
+      receiverBankSwiftCode: beneficiary.receiverBankSwiftCode || "",
+      iban: beneficiary.iban || "",
+      sortCode: beneficiary.sortCode || "",
+      transitNumber: beneficiary.transitNumber || "",
+      bsbCode: beneficiary.bsbCode || "",
+      routingNumber: beneficiary.routingNumber || "",
+      anyIntermediaryBank: (beneficiary.anyIntermediaryBank as "YES" | "NO") || "NO",
+      intermediaryBankName: beneficiary.intermediaryBankName || "",
+      intermediaryBankAccountNo: beneficiary.intermediaryBankAccountNo || "",
+      intermediaryBankIBAN: beneficiary.intermediaryBankIBAN || "",
+      intermediaryBankSwiftCode: beneficiary.intermediaryBankSwiftCode || "",
+      // Don't pre-fill these fields
+      totalRemittance: "",
+      field70: "",
+      existingReceiver: "NO" as const,
+      selectedReceiverId: beneficiary.id || "",
     }
-  }, [existingReceiver, lastSelectedBeneficiary, reset])
+    
+    // Reset the form with the prepared data
+    reset(formData as BeneficiaryFormValues)
+    setShowForm(true)
+  }
 
   const toggleStatus = async (beneficiaryId: string) => {
     try {
@@ -493,14 +468,10 @@ function BeneficiaryDetailsContent() {
             )}
 
             {/* Show pre-fill indicator when coming back from document upload */}
-            {(beneficiaryId || existingBeneficiaryData) && !editId && (
-              <div >
-               
-              </div>
-            )}
+            {(beneficiaryId || existingBeneficiaryData) && !editId && <div></div>}
 
-            {/* Existing receiver selection - hide in edit mode and when pre-filling */}
-            {!editId && !beneficiaryId && !existingBeneficiaryData && (
+            {/* Existing receiver selection - only hide in edit mode */}
+            {!editId && (
               <div className="mb-6">
                 <p className="text-gray-600 mb-2 font-jakarta">Existing receiver?</p>
                 <div className="flex items-center space-x-4 sm:space-x-6">
@@ -576,7 +547,7 @@ function BeneficiaryDetailsContent() {
               </div>
             )}
 
-            {existingReceiver === "YES" && !editId && !beneficiaryId && !existingBeneficiaryData && (
+            {existingReceiver === "YES" && !editId && (
               <>
                 {/* Existing receivers table/list */}
                 <div className="mb-6">
@@ -1414,70 +1385,57 @@ function BeneficiaryDetailsContent() {
 
             {/* Form buttons */}
             {submitError && <div className="text-red-500 mb-4 p-2 bg-red-50 rounded-md text-center">{submitError}</div>}
-            <div className="flex flex-col sm:flex-row justify-center mt-8 space-y-4 sm:space-y-0 sm:space-x-4">
-              <button
-                type="submit"
-                disabled={
-                  isSubmitting ||
-                  (existingReceiver === "YES" &&
-                    !selectedBeneficiary &&
-                    !editId &&
-                    !beneficiaryId &&
-                    !existingBeneficiaryData)
-                }
-                className={`bg-dark-blue text-white font-jakarta px-6 sm:px-8 py-3 rounded-md flex items-center justify-center text-sm sm:text-base ${
-                  isSubmitting ||
-                  (
-                    existingReceiver === "YES" &&
-                      !selectedBeneficiary &&
-                      !editId &&
-                      !beneficiaryId &&
-                      !existingBeneficiaryData
-                  )
-                    ? "opacity-70 cursor-not-allowed"
-                    : ""
-                }`}
-              >
-                {isSubmitting ? (
-                  <span className="flex items-center">
-                    <svg
-                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    Processing...
-                  </span>
-                ) : (
-                  <>
-                    <Image src="/continue.png" alt="Continue" className="mr-2 h-3 w-3" width={20} height={20} />
-                    {editId ? "UPDATE" : beneficiaryId || existingBeneficiaryData ? "UPDATE" : "CONTINUE"}
-                  </>
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={handleReset}
-                className="border border-gray-300 text-gray-700 font-jakarta px-6 sm:px-8 py-3 rounded-md flex items-center justify-center text-sm sm:text-base"
-              >
-                <Image src="/reset.png" alt="Reset" className="mr-2 h-3 w-3" width={20} height={20} />
-                RESET
-              </button>
-            </div>
+            {/* Only show buttons if not in "Existing receiver: YES" mode or if in edit mode */}
+            {(existingReceiver !== "YES" || editId) && (
+              <div className="flex flex-col sm:flex-row justify-center mt-8 space-y-4 sm:space-y-0 sm:space-x-4">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className={`bg-dark-blue text-white font-jakarta px-6 sm:px-8 py-3 rounded-md flex items-center justify-center text-sm sm:text-base ${
+                    isSubmitting ? "opacity-70 cursor-not-allowed" : ""
+                  }`}
+                >
+                  {isSubmitting ? (
+                    <span className="flex items-center">
+                      <svg
+                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Processing...
+                    </span>
+                  ) : (
+                    <>
+                      <Image src="/continue.png" alt="Continue" className="mr-2 h-3 w-3" width={20} height={20} />
+                      {editId ? "UPDATE" : "CONTINUE"}
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="border border-gray-300 text-gray-700 font-jakarta px-6 sm:px-8 py-3 rounded-md flex items-center justify-center text-sm sm:text-base"
+                >
+                  <Image src="/reset.png" alt="Reset" className="mr-2 h-3 w-3" width={20} height={20} />
+                  RESET
+                </button>
+              </div>
+            )}
           </form>
         </div>
       </div>
