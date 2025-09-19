@@ -2,8 +2,12 @@
 
 import { HERO_CONTENT } from "@/data/hero";
 import Image from 'next/image';
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { ConsultancyModal } from "@/components/consultancy/ConsultancyModal"
 
 export default function Hero() {
+  const [showModal, setShowModal] = useState(false)
   const { description, partners, heroImage } = HERO_CONTENT
 
   return (
@@ -30,9 +34,13 @@ export default function Hero() {
 
             {/* CTA Button */}
             <div className="mb-8">
-              <a href="#" className="inline-block rounded-md bg-dark-rose px-8 py-3 text-base font-medium text-white transition hover:bg-dark-rose hover:shadow-lg">
+              <Button 
+                onClick={() => setShowModal(true)}
+                className="inline-flex items-center justify-center rounded-md bg-dark-rose px-8 py-3 text-base font-medium text-white transition hover:bg-dark-rose/90 hover:shadow-lg"
+              >
                 Register as consultant
-              </a>
+              </Button>
+              <ConsultancyModal isOpen={showModal} onClose={() => setShowModal(false)} />
             </div>
 
             {/* Stats */}
