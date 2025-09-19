@@ -1,11 +1,10 @@
 "use client"
-import Topbar from '@/components/landing-content/Topbar'
-import React from 'react'
 
+import Topbar from '@/components/landing-content/Topbar'
 import Footer from '@/components/landing-content/Footer'
 import AboutUs from './about'
 
-function page() {
+export default function AboutPage() {
   return (
     <div>
         <Topbar/>
@@ -14,5 +13,3 @@ function page() {
     </div>
   )
 }
-
-export default page
