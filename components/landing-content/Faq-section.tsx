@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { X, Plus } from "lucide-react"
-import { faqData } from "@/data/faq"
+import { faqData } from "@/data/faq_new"
 
 export default function FaqSection() {
   const [openQuestion, setOpenQuestion] = useState<number | null>(1)

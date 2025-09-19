@@ -41,6 +41,8 @@ interface Receiver {
   intermediaryBankAccountNo?: string
   intermediaryBankIBAN?: string
   intermediaryBankSwiftCode?: string
+  totalRemittance?: string
+  field70?: string
   status: boolean
   createdAt: string
   updatedAt: string
@@ -75,20 +77,44 @@ export default function ReceiversTable() {
   })
   const itemsPerPage = 10
 
+  // Function to filter out duplicate receivers (same details except totalRemittance and field70)
+  const filterUniqueReceivers = (receivers: Receiver[]) => {
+    const uniqueReceivers = new Map<string, Receiver>();
+
+    // Sort by createdAt in descending order to keep the latest version
+    const sortedReceivers = [...receivers].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+
+    sortedReceivers.forEach(receiver => {
+      // Create a key from all fields except totalRemittance and field70
+      const { ...rest } = receiver;
+      const key = JSON.stringify(rest);
+
+      // Only add if we haven't seen this combination of fields before
+      if (!uniqueReceivers.has(key)) {
+        uniqueReceivers.set(key, receiver);
+      }
+    });
+
+    return Array.from(uniqueReceivers.values());
+  };
+
   // Fetch receivers from API
   useEffect(() => {
     const fetchReceivers = async () => {
       try {
-        setLoading(true)
-        const response = await axios.get("/api/beneficiaries")
-        setReceivers(response.data)
-        setError(null)
+        setLoading(true);
+        const response = await axios.get("/api/beneficiaries");
+        const filteredReceivers = filterUniqueReceivers(response.data);
+        setReceivers(filteredReceivers);
+        setError(null);
       } catch (err) {
-        setError("Failed to fetch receivers")
-        console.error("Error fetching receivers:", err)
-        toast.error("Failed to fetch receivers")
+        setError("Failed to fetch receivers");
+        console.error("Error fetching receivers:", err);
+        toast.error("Failed to fetch receivers");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
 
@@ -126,9 +152,9 @@ export default function ReceiversTable() {
     const { receiverId, currentStatus } = statusToggleDialog
     try {
       const newStatus = !currentStatus
-      
+
       // Updated API call with proper data structure
-     await axios.patch(`/api/beneficiaries/${receiverId}`, {
+      await axios.patch(`/api/beneficiaries/${receiverId}`, {
         status: newStatus
       })
 
@@ -138,11 +164,11 @@ export default function ReceiversTable() {
           receiver.id === receiverId ? { ...receiver, status: newStatus } : receiver
         )
       )
-      
+
       toast.success(`Receiver ${newStatus ? "activated" : "deactivated"} successfully`)
     } catch (error) {
       console.error("Failed to update receiver status:", error)
-      
+
       // More detailed error handling
       if (axios.isAxiosError(error)) {
         const errorMessage = error.response?.data?.message || error.response?.data?.error || "Failed to update receiver status"
@@ -443,9 +469,8 @@ export default function ReceiversTable() {
           {paginatedData.map(receiver => (
             <div
               key={receiver.id}
-              className={`bg-white rounded-lg p-4 border shadow-sm ${
-                selectedRows.has(receiver.id) ? "border-blue-500 bg-blue-50" : "border-gray-200"
-              }`}
+              className={`bg-white rounded-lg p-4 border shadow-sm ${selectedRows.has(receiver.id) ? "border-blue-500 bg-blue-50" : "border-gray-200"
+                }`}
             >
               <div className="flex items-start justify-between mb-3">
                 <label className="flex items-center">
@@ -754,11 +779,10 @@ export default function ReceiversTable() {
                 variant={currentPage === page ? "default" : "outline"}
                 size="sm"
                 onClick={() => typeof page === "number" && setCurrentPage(page)}
-                className={`px-3 py-1 text-sm ${
-                  currentPage === page
+                className={`px-3 py-1 text-sm ${currentPage === page
                     ? "bg-[#004d7f] hover:bg-[#003b61] text-white border-[#004d7f]"
                     : "border-gray-300 hover:bg-gray-50"
-                }`}
+                  }`}
               >
                 {page}
               </Button>
