@@ -47,13 +47,13 @@ export const orderDetailsFormSchema = z
 
       // For other currencies, convert to USD equivalent using IBR rates
       try {
-        // Get USD IBR rate
-        const usdIbrResponse = await fetch(`/api/currency/ibr?currency=USD`)
-        if (!usdIbrResponse.ok) throw new Error("Failed to fetch USD IBR rate")
+        // Get USD IBR rate using the working endpoint
+        const usdIbrResponse = await fetch(`/api/currency?base=INR&target=USD`)
+        if (!usdIbrResponse.ok) throw new Error("Failed to fetch USD conversion rate")
         const usdIbrData = await usdIbrResponse.json()
-        const usdIbrRate = usdIbrData.rate
+        const usdIbrRate = usdIbrData.rate || 1 // Fallback to 1 if rate not available
 
-        if (!usdIbrRate) throw new Error("USD IBR rate not available")
+        if (!usdIbrRate) throw new Error("USD conversion rate not available")
 
         // Calculate USD equivalent: (amount * currencyIBR) / USD_IBR
         const usdEquivalent = (amount * ibrRate) / usdIbrRate

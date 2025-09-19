@@ -87,8 +87,20 @@ export default function ReceiversTable() {
     );
 
     sortedReceivers.forEach(receiver => {
-      // Create a key from all fields except totalRemittance and field70
-      const { ...rest } = receiver;
+      // Create a key from all fields except specific ones we want to exclude
+      // Omit the fields we don't need in the key
+      const { 
+        totalRemittance: _totalRemittance,
+        field70: _field70,
+        createdAt: _createdAt,
+        updatedAt: _updatedAt,
+        status: _status,
+        id: _id,
+        ...rest 
+      } = receiver;
+      
+      // Explicitly mark variables as unused to satisfy linter
+      void [_totalRemittance, _field70, _createdAt, _updatedAt, _status, _id];
       const key = JSON.stringify(rest);
 
       // Only add if we haven't seen this combination of fields before
