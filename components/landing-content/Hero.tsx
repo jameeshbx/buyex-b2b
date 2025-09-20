@@ -1,6 +1,7 @@
 "use client";
 
 import { HERO_CONTENT } from "@/data/hero";
+import Image from 'next/image';
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { ConsultancyModal } from "@/components/consultancy/ConsultancyModal"
@@ -69,6 +70,24 @@ export default function Hero() {
           </div>
         </div>
       </div>
+
+      {/* WhatsApp Chat Badge */}
+      <a 
+        href="https://wa.me/9633886611" // Replace with your WhatsApp number
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-8 right-8 bg-[#25D366] hover:bg-[#128C7E] text-white p-4 rounded-full shadow-lg z-50 flex items-center justify-center transition-all hover:scale-110"
+        aria-label="Chat with us on WhatsApp"
+      >
+        <Image 
+          src="/WhatsApp.svg.webp" 
+          alt="WhatsApp"
+          width={32} 
+          height={32}
+          className="w-8 h-8"
+        />
+        <span className="ml-2 font-medium hidden sm:inline">Chat with us</span>
+      </a>
     </section>
   )
 }

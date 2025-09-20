@@ -90,15 +90,51 @@ function BeneficiaryDetailsContent() {
   const anyIntermediaryBank = watch("anyIntermediaryBank")
   
 
+  // Function to filter out duplicate beneficiaries (same details except totalRemittance and field70)
+  const filterUniqueBeneficiaries = (beneficiaries: Beneficiary[]) => {
+    const uniqueBeneficiaries = new Map<string, Beneficiary>();
+
+    // Sort by createdAt in descending order to keep the latest version
+    const sortedBeneficiaries = [...beneficiaries].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+
+    sortedBeneficiaries.forEach(beneficiary => {
+      // Create a key from all fields except specific ones we want to exclude
+      // Omit the fields we don't need in the key
+      const { 
+        totalRemittance: _totalRemittance,
+        field70: _field70,
+        createdAt: _createdAt,
+        updatedAt: _updatedAt,
+        status: _status,
+        id: _id,
+        ...rest 
+      } = beneficiary;
+      
+      // Explicitly mark variables as unused to satisfy linter
+      void [_totalRemittance, _field70, _createdAt, _updatedAt, _status, _id];
+      const key = JSON.stringify(rest);
+
+      // Only add if we haven't seen this combination of fields before
+      if (!uniqueBeneficiaries.has(key)) {
+        uniqueBeneficiaries.set(key, beneficiary);
+      }
+    });
+
+    return Array.from(uniqueBeneficiaries.values());
+  };
+
   // Fetch beneficiaries from API
   useEffect(() => {
     const fetchBeneficiaries = async () => {
       try {
-        setLoading(true)
-        const response = await axios.get("/api/beneficiaries")
-        setBeneficiaries(response.data)
+        setLoading(true);
+        const response = await axios.get("/api/beneficiaries");
+        const filteredBeneficiaries = filterUniqueBeneficiaries(response.data);
+        setBeneficiaries(filteredBeneficiaries);
       } catch (error) {
-        console.error("Failed to fetch beneficiaries:", error)
+        console.error("Failed to fetch beneficiaries:", error);
       } finally {
         setLoading(false)
       }
@@ -113,8 +149,10 @@ function BeneficiaryDetailsContent() {
         try {
           setLoading(true)
 
+
           // Fetch order data
           const orderResponse = await axios.get(`/api/orders/${orderId}`)
+
 
           // Pre-populate receiver country and receiver bank country from order data
           if (orderResponse.data.receiverBankCountry) {
@@ -123,8 +161,11 @@ function BeneficiaryDetailsContent() {
           }
 
           if (orderResponse.data.beneficiaryId) {
+
+
             // Fetch existing beneficiary data
             const beneficiaryResponse = await axios.get(`/api/beneficiaries/${orderResponse.data.beneficiaryId}`)
+
 
             if (beneficiaryResponse.data) {
               setExistingBeneficiaryData(beneficiaryResponse.data)
@@ -468,7 +509,11 @@ function BeneficiaryDetailsContent() {
             )}
 
             {/* Show pre-fill indicator when coming back from document upload */}
-            {(beneficiaryId || existingBeneficiaryData) && !editId && <div></div>}
+            {(beneficiaryId || existingBeneficiaryData) && !editId && (
+              <div >
+
+              </div>
+            )}
 
             {/* Existing receiver selection - only hide in edit mode */}
             {!editId && (
@@ -502,9 +547,8 @@ function BeneficiaryDetailsContent() {
                       )}
                     </span>
                     <span
-                      className={`ml-3 font-Inter text-base font-medium ${
-                        watch("existingReceiver") === "YES" ? "text-black" : "text-light-gray"
-                      }`}
+                      className={`ml-3 font-Inter text-base font-medium ${watch("existingReceiver") === "YES" ? "text-black" : "text-light-gray"
+                        }`}
                     >
                       YES
                     </span>
@@ -536,9 +580,8 @@ function BeneficiaryDetailsContent() {
                       )}
                     </span>
                     <span
-                      className={`ml-3 font-Inter text-base font-medium ${
-                        watch("existingReceiver") === "NO" ? "text-black" : "text-light-gray"
-                      }`}
+                      className={`ml-3 font-Inter text-base font-medium ${watch("existingReceiver") === "NO" ? "text-black" : "text-light-gray"
+                        }`}
                     >
                       NO
                     </span>
@@ -629,11 +672,10 @@ function BeneficiaryDetailsContent() {
                         {getSortedReceivers().map((beneficiary) => (
                           <div
                             key={beneficiary.id}
-                            className={`bg-light-blue rounded-lg p-4 border ${
-                              beneficiary.id === selectedBeneficiary?.id
+                            className={`bg-light-blue rounded-lg p-4 border ${beneficiary.id === selectedBeneficiary?.id
                                 ? "border-blue-500 bg-blue-50"
                                 : "border-gray-200"
-                            }`}
+                              }`}
                           >
                             <div className="flex items-start justify-between mb-3">
                               <label className="flex items-center">
@@ -676,14 +718,12 @@ function BeneficiaryDetailsContent() {
                                       toggleStatus(beneficiary.id)
                                     }
                                   }}
-                                  className={`h-5 w-10 rounded-full flex items-center transition-colors ${
-                                    beneficiary.status ? "bg-blue-100 justify-end" : "bg-gray-200 justify-start"
-                                  }`}
+                                  className={`h-5 w-10 rounded-full flex items-center transition-colors ${beneficiary.status ? "bg-blue-100 justify-end" : "bg-gray-200 justify-start"
+                                    }`}
                                 >
                                   <div
-                                    className={`h-4 w-4 rounded-full transition-all ${
-                                      beneficiary.status ? "bg-blue-600 mr-0.5" : "bg-gray-400 ml-0.5"
-                                    }`}
+                                    className={`h-4 w-4 rounded-full transition-all ${beneficiary.status ? "bg-blue-600 mr-0.5" : "bg-gray-400 ml-0.5"
+                                      }`}
                                   ></div>
                                 </button>
                                 <button
@@ -869,14 +909,12 @@ function BeneficiaryDetailsContent() {
                                         toggleStatus(beneficiary.id)
                                       }
                                     }}
-                                    className={`h-6 w-12 rounded-full flex items-center transition-colors ${
-                                      beneficiary.status ? "bg-blue-100 justify-end" : "bg-gray-200 justify-start"
-                                    }`}
+                                    className={`h-6 w-12 rounded-full flex items-center transition-colors ${beneficiary.status ? "bg-blue-100 justify-end" : "bg-gray-200 justify-start"
+                                      }`}
                                   >
                                     <div
-                                      className={`h-5 w-5 rounded-full transition-all ${
-                                        beneficiary.status ? "bg-blue-600 mr-0.5" : "bg-gray-400 ml-0.5"
-                                      }`}
+                                      className={`h-5 w-5 rounded-full transition-all ${beneficiary.status ? "bg-blue-600 mr-0.5" : "bg-gray-400 ml-0.5"
+                                        }`}
                                     ></div>
                                   </button>
                                 </td>
@@ -972,9 +1010,8 @@ function BeneficiaryDetailsContent() {
                     type="text"
                     placeholder="Beneficiary's name"
                     {...register("receiverFullName")}
-                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${
-                      errors.receiverFullName ? "border border-red-500" : ""
-                    }`}
+                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${errors.receiverFullName ? "border border-red-500" : ""
+                      }`}
                   />
                   {errors.receiverFullName && (
                     <p className="text-red-500 text-sm mt-1">{errors.receiverFullName.message}</p>
@@ -989,9 +1026,8 @@ function BeneficiaryDetailsContent() {
                   <div className="relative">
                     <select
                       {...register("receiverCountry")}
-                      className={`w-full p-3 bg-blue-50 rounded-md appearance-none pr-10 text-sm sm:text-base ${
-                        errors.receiverCountry ? "border border-red-500" : ""
-                      }`}
+                      className={`w-full p-3 bg-blue-50 rounded-md appearance-none pr-10 text-sm sm:text-base ${errors.receiverCountry ? "border border-red-500" : ""
+                        }`}
                       onChange={(e) => {
                         setValue("receiverCountry", e.target.value)
                         // Auto-sync receiver bank country with receiver country if they're the same
@@ -1025,9 +1061,8 @@ function BeneficiaryDetailsContent() {
                     type="text"
                     placeholder="Address"
                     {...register("address")}
-                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${
-                      errors.address ? "border border-red-500" : ""
-                    }`}
+                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${errors.address ? "border border-red-500" : ""
+                      }`}
                   />
                   {errors.address && <p className="text-red-500 text-sm mt-1">{errors.address.message}</p>}
                 </div>
@@ -1041,9 +1076,8 @@ function BeneficiaryDetailsContent() {
                     type="text"
                     placeholder="Beneficiary's bank"
                     {...register("receiverBank")}
-                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${
-                      errors.receiverBank ? "border border-red-500" : ""
-                    }`}
+                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${errors.receiverBank ? "border border-red-500" : ""
+                      }`}
                   />
                   {errors.receiverBank && <p className="text-red-500 text-sm mt-1">{errors.receiverBank.message}</p>}
                 </div>
@@ -1057,9 +1091,8 @@ function BeneficiaryDetailsContent() {
                     type="text"
                     placeholder="Beneficiary's bank address"
                     {...register("receiverBankAddress")}
-                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${
-                      errors.receiverBankAddress ? "border border-red-500" : ""
-                    }`}
+                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${errors.receiverBankAddress ? "border border-red-500" : ""
+                      }`}
                   />
                   {errors.receiverBankAddress && (
                     <p className="text-red-500 text-sm mt-1">{errors.receiverBankAddress.message}</p>
@@ -1074,9 +1107,8 @@ function BeneficiaryDetailsContent() {
                   <div className="relative">
                     <select
                       {...register("receiverBankCountry")}
-                      className={`w-full p-3 bg-blue-50 rounded-md appearance-none pr-10 text-sm sm:text-base ${
-                        errors.receiverBankCountry ? "border border-red-500" : ""
-                      }`}
+                      className={`w-full p-3 bg-blue-50 rounded-md appearance-none pr-10 text-sm sm:text-base ${errors.receiverBankCountry ? "border border-red-500" : ""
+                        }`}
                     >
                       {countries.map((country) => (
                         <option key={country.value} value={country.value}>
@@ -1104,9 +1136,8 @@ function BeneficiaryDetailsContent() {
                     type="text"
                     placeholder="Beneficiary's account"
                     {...register("receiverAccount")}
-                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${
-                      errors.receiverAccount ? "border border-red-500" : ""
-                    }`}
+                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${errors.receiverAccount ? "border border-red-500" : ""
+                      }`}
                   />
                   {errors.receiverAccount && (
                     <p className="text-red-500 text-sm mt-1">{errors.receiverAccount.message}</p>
@@ -1122,9 +1153,8 @@ function BeneficiaryDetailsContent() {
                     type="text"
                     placeholder="Beneficiary's bank Swift/BIC code"
                     {...register("receiverBankSwiftCode")}
-                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${
-                      errors.receiverBankSwiftCode ? "border border-red-500" : ""
-                    }`}
+                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${errors.receiverBankSwiftCode ? "border border-red-500" : ""
+                      }`}
                   />
                   {errors.receiverBankSwiftCode && (
                     <p className="text-red-500 text-sm mt-1">{errors.receiverBankSwiftCode.message}</p>
@@ -1139,9 +1169,8 @@ function BeneficiaryDetailsContent() {
                       type="text"
                       placeholder="IBAN"
                       {...register("iban")}
-                      className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${
-                        errors.iban ? "border border-red-500" : ""
-                      }`}
+                      className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${errors.iban ? "border border-red-500" : ""
+                        }`}
                     />
                     {errors.iban && <p className="text-red-500 text-sm mt-1">{errors.iban.message}</p>}
                   </div>
@@ -1155,9 +1184,8 @@ function BeneficiaryDetailsContent() {
                       type="text"
                       placeholder="Sort code"
                       {...register("sortCode")}
-                      className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${
-                        errors.sortCode ? "border border-red-500" : ""
-                      }`}
+                      className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${errors.sortCode ? "border border-red-500" : ""
+                        }`}
                     />
                     {errors.sortCode && <p className="text-red-500 text-sm mt-1">{errors.sortCode.message}</p>}
                   </div>
@@ -1171,9 +1199,8 @@ function BeneficiaryDetailsContent() {
                       type="text"
                       placeholder="Transit number"
                       {...register("transitNumber")}
-                      className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${
-                        errors.transitNumber ? "border border-red-500" : ""
-                      }`}
+                      className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${errors.transitNumber ? "border border-red-500" : ""
+                        }`}
                     />
                     {errors.transitNumber && (
                       <p className="text-red-500 text-sm mt-1">{errors.transitNumber.message}</p>
@@ -1189,9 +1216,8 @@ function BeneficiaryDetailsContent() {
                       type="text"
                       placeholder="BSB code"
                       {...register("bsbCode")}
-                      className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${
-                        errors.bsbCode ? "border border-red-500" : ""
-                      }`}
+                      className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${errors.bsbCode ? "border border-red-500" : ""
+                        }`}
                     />
                     {errors.bsbCode && <p className="text-red-500 text-sm mt-1">{errors.bsbCode.message}</p>}
                   </div>
@@ -1205,9 +1231,8 @@ function BeneficiaryDetailsContent() {
                       type="text"
                       placeholder="Routing number"
                       {...register("routingNumber")}
-                      className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${
-                        errors.routingNumber ? "border border-red-500" : ""
-                      }`}
+                      className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${errors.routingNumber ? "border border-red-500" : ""
+                        }`}
                     />
                     {errors.routingNumber && (
                       <p className="text-red-500 text-sm mt-1">{errors.routingNumber.message}</p>
@@ -1246,9 +1271,8 @@ function BeneficiaryDetailsContent() {
                         )}
                       </span>
                       <span
-                        className={`ml-3 font-Inter text-base font-medium ${
-                          watch("anyIntermediaryBank") === "YES" ? "text-black" : "text-light-gray"
-                        }`}
+                        className={`ml-3 font-Inter text-base font-medium ${watch("anyIntermediaryBank") === "YES" ? "text-black" : "text-light-gray"
+                          }`}
                       >
                         YES
                       </span>
@@ -1280,9 +1304,8 @@ function BeneficiaryDetailsContent() {
                         )}
                       </span>
                       <span
-                        className={`ml-3 font-Inter text-base font-medium ${
-                          watch("anyIntermediaryBank") === "NO" ? "text-black" : "text-light-gray"
-                        }`}
+                        className={`ml-3 font-Inter text-base font-medium ${watch("anyIntermediaryBank") === "NO" ? "text-black" : "text-light-gray"
+                          }`}
                       >
                         NO
                       </span>
@@ -1357,9 +1380,8 @@ function BeneficiaryDetailsContent() {
                     type="text"
                     placeholder="Current Financial year"
                     {...register("totalRemittance")}
-                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${
-                      errors.totalRemittance ? "border border-red-500" : ""
-                    } ${editId ? "border-blue-300 bg-blue-50" : ""}`}
+                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${errors.totalRemittance ? "border border-red-500" : ""
+                      } ${editId ? "border-blue-300 bg-blue-50" : ""}`}
                   />
                   {errors.totalRemittance && (
                     <p className="text-red-500 text-sm mt-1">{errors.totalRemittance.message}</p>
@@ -1375,9 +1397,8 @@ function BeneficiaryDetailsContent() {
                   <textarea
                     placeholder="Type here"
                     {...register("field70")}
-                    className={`w-full p-3 bg-blue-50 rounded-md h-24 text-sm sm:text-base ${
-                      editId ? "border-blue-300 bg-blue-50" : ""
-                    }`}
+                    className={`w-full p-3 bg-blue-50 rounded-md h-24 text-sm sm:text-base ${editId ? "border-blue-300 bg-blue-50" : ""
+                      }`}
                   ></textarea>
                 </div>
               </div>

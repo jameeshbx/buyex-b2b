@@ -27,6 +27,8 @@ import { Label } from "@/components/ui/label";
 import {
   orderDetailsFormSchema,
   type OrderDetailsFormValues,
+  validateTransactionLimit,
+  MAX_USD_EQUIVALENT,
 } from "@/schema/orderdetails";
 import { useRouter } from "next/navigation";
 import {
@@ -185,6 +187,9 @@ export default function OrderDetailsForm() {
     totalPayable: "0",
     customerRate: "0",
   });
+
+  const [usdEquivalentError, setUsdEquivalentError] = useState<string>("");
+  const [usdEquivalent, setUsdEquivalent] = useState<number | null>(null);
 
   const form = useForm<OrderDetailsFormValues>({
     resolver: zodResolver(orderDetailsFormSchema),
@@ -353,11 +358,62 @@ export default function OrderDetailsForm() {
     }
   }, [form.watch("receiverBankCountry")]);
 
+  useEffect(() => {
+    const validateUSDEquivalent = async () => {
+      const currentAmount = Number.parseFloat(amount || "0");
+      const currentCurrency = currency;
+      const currentIbrRate = Number.parseFloat(ibrRate || "0");
+      const currentMargin = margin || "0";
+
+      if (currentAmount > 0 && currentCurrency) {
+        try {
+          const { isValid, message, usdEquivalent } = await validateTransactionLimit(
+            currentAmount,
+            currentCurrency,
+            currentIbrRate,
+            currentMargin
+          );
+          // console.log("isValid", isValid);
+          // console.log("message", message);
+          // console.log("usdEquivalent", usdEquivalent);
+          if (usdEquivalent !== undefined) {
+            setUsdEquivalent(usdEquivalent);
+          }
+
+          if (!isValid) {
+            setUsdEquivalentError(
+              message || `Amount exceeds maximum limit of ${MAX_USD_EQUIVALENT.toLocaleString()} USD equivalent`,
+            );
+          } else {
+            setUsdEquivalentError("");
+          }
+        } catch (error) {
+          console.error("Error validating USD equivalent:", error);
+          setUsdEquivalentError("");
+        }
+      } else {
+        setUsdEquivalentError("");
+      }
+    };
+
+    // Debounce the validation to avoid too many API calls
+    const timeoutId = setTimeout(validateUSDEquivalent, 500);
+    return () => clearTimeout(timeoutId);
+  }, [amount, currency, ibrRate, margin]);
+
   const handleDownloadQuote = async (
     formData: OrderDetailsFormValues,
     calculatedValues: CalculatedValues
   ) => {
     setIsSubmitting(true);
+    // Show error if there's a validation error
+    if (usdEquivalentError) {
+      toast.error("Validation Error", {
+        description: usdEquivalentError,
+      });
+      setIsSubmitting(false);
+      return;
+    }
     if (!session?.user?.name) {
       console.error("User session not available");
       setIsSubmitting(false);
@@ -366,9 +422,9 @@ export default function OrderDetailsForm() {
 
     try {
       // Using default forex partner since we removed the selection
-  const defaultForexPartner = forexPartnerData.find(
-    (partner) => partner.accountName === user?.forexPartner
-  );
+      const defaultForexPartner = forexPartnerData.find(
+        (partner) => partner.accountName === user?.forexPartner
+      );
 
       const order = await axios.post("/api/orders", {
         purpose: formData.purpose,
@@ -851,11 +907,25 @@ export default function OrderDetailsForm() {
                           FCY Amount
                         </FormLabel>
                         <FormControl>
-                          <Input
-                            {...field}
-                            className="bg-blue-50/50 border-blue-200 shadow-lg h-12"
-                            placeholder="Enter amount"
-                          />
+                          <div className="relative">
+                            <Input
+                              type="number"
+                              placeholder="Enter amount"
+                              {...field}
+                            />
+                            {usdEquivalent !== null && !usdEquivalentError && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                ≈ ${usdEquivalent.toLocaleString(undefined, {
+                                  maximumFractionDigits: 2,
+                                })} USD
+                              </p>
+                            )}
+                            {usdEquivalentError && (
+                              <p className="text-xs text-red-500 mt-1">
+                                {usdEquivalentError}
+                              </p>
+                            )}
+                          </div>
                         </FormControl>
                       </FormItem>
                     )}

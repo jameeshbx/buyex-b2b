@@ -1,83 +1,69 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { Download, ArrowRight, RotateCcw, Play, Loader2 } from "lucide-react";
-import { useSession } from "next-auth/react";
-import axios from "axios";
-import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
+import { useEffect, useState } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { Download, ArrowRight, RotateCcw, Play, Loader2 } from "lucide-react"
+import { useSession } from "next-auth/react"
+import axios from "axios"
+import { Button } from "@/components/ui/button"
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Label } from "@/components/ui/label"
 import {
   orderDetailsFormSchema,
   type OrderDetailsFormValues,
-} from "@/schema/orderdetails";
-import { useRouter } from "next/navigation";
-import {
-  calculateGst,
-  calculateTcs,
-  calculateTotalPayable,
-  getLiveRate,
-} from "@/lib/financial";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
-import { ForexPartner, forexPartnerData } from "@/data/forex-partner";
+  validateTransactionLimit,
+  MAX_USD_EQUIVALENT,
+} from "@/schema/orderdetails"
+import { useRouter } from "next/navigation"
+import { calculateGst, calculateTcs, calculateTotalPayable, getLiveRate } from "@/lib/financial"
+import jsPDF from "jspdf"
+import autoTable from "jspdf-autotable"
+import { type ForexPartner, forexPartnerData } from "@/data/forex-partner"
+import { toast } from "@/components/ui/use-toast"
 
 interface CalculatedValues {
-  inrAmount: string;
-  bankFee: string;
-  gst: string;
-  tcsApplicable: string;
-  totalPayable: string;
-  customerRate: string;
+  inrAmount: string
+  bankFee: string
+  gst: string
+  tcsApplicable: string
+  totalPayable: string
+  customerRate: string
 }
 
 interface JsPDFWithAutoTable extends jsPDF {
   lastAutoTable: {
-    finalY: number;
-  };
+    finalY: number
+  }
 }
 
 interface Agent {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  agentRate?: number;
-  buyexRate?: number;
+  id: string
+  name: string
+  email: string
+  role: string
+  agentRate?: number
+  buyexRate?: number
 }
 
 async function generateQuotePDF(
   formData: OrderDetailsFormValues,
   calculatedValues: CalculatedValues,
   forexPartner: ForexPartner,
-  orderId?: string
+  orderId?: string,
 ) {
-  const doc = new jsPDF() as JsPDFWithAutoTable;
-  let lastY = 30;
+  const doc = new jsPDF() as JsPDFWithAutoTable
+  let lastY = 30
 
   // const logo = "/buyex-main-logo.png";
   // doc.addImage(logo, "PNG", 14, 10, 50, 20);
 
-  doc.setFontSize(18);
-  doc.setFont("helvetica", "bold");
-  doc.text("Send Money Abroad Quote", 105, 20, { align: "center" });
+  doc.setFontSize(18)
+  doc.setFont("helvetica", "bold")
+  doc.text("Send Money Abroad Quote", 105, 20, { align: "center" })
 
   autoTable(doc, {
     startY: lastY,
@@ -97,16 +83,16 @@ async function generateQuotePDF(
       ["Processing Charges", calculatedValues.bankFee],
       ["Total Payable Amount in INR", calculatedValues.totalPayable],
     ],
-  });
+  })
 
-  lastY = doc.lastAutoTable.finalY + 10;
+  lastY = doc.lastAutoTable.finalY + 10
 
-  doc.setFontSize(12);
-  doc.setTextColor(0);
-  doc.setFont("helvetica", "bold");
-  doc.text("Forex Partner Bank Account Details ", 14, lastY);
-  doc.setTextColor(255, 0, 0);
-  doc.text("(Only Bank transfer is accepted)", 130, lastY);
+  doc.setFontSize(12)
+  doc.setTextColor(0)
+  doc.setFont("helvetica", "bold")
+  doc.text("Forex Partner Bank Account Details ", 14, lastY)
+  doc.setTextColor(255, 0, 0)
+  doc.text("(Only Bank transfer is accepted)", 130, lastY)
 
   autoTable(doc, {
     startY: lastY + 15,
@@ -119,37 +105,31 @@ async function generateQuotePDF(
       ["IFSC Code", forexPartner.ifscCode],
       ["Branch", forexPartner.branch],
     ],
-  });
+  })
 
-  lastY = doc.lastAutoTable.finalY + 10;
+  lastY = doc.lastAutoTable.finalY + 10
 
-  doc.setTextColor(0);
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "bold");
-  doc.text(
-    "Please upload your documents below",
-    14,
-    lastY
-  );
-  doc.setFont("helvetica", "normal");
+  doc.setTextColor(0)
+  doc.setFontSize(10)
+  doc.setFont("helvetica", "bold")
+  doc.text("Please upload your documents below", 14, lastY)
+  doc.setFont("helvetica", "normal")
   doc.text(
     "To proceed with your transaction, please upload the required documents using the secure link below:",
     14,
-    lastY + 6
-  );
-  doc.setTextColor(0, 0, 255);
+    lastY + 6,
+  )
+  doc.setTextColor(0, 0, 255)
   doc.textWithLink("www.buyexforex.com/document-uploads", 14, lastY + 12, {
-    url: `${process.env.NEXT_PUBLIC_APP_URL}/document-uploads/${
-      orderId || "pending"
-    }`,
-  });
+    url: `${process.env.NEXT_PUBLIC_APP_URL}/document-uploads/${orderId || "pending"}`,
+  })
 
-  doc.setTextColor(0);
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "bold");
-  doc.text("Terms & Conditions", 14, lastY + 25);
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "normal");
+  doc.setTextColor(0)
+  doc.setFontSize(12)
+  doc.setFont("helvetica", "bold")
+  doc.text("Terms & Conditions", 14, lastY + 25)
+  doc.setFontSize(9)
+  doc.setFont("helvetica", "normal")
 
   const terms = [
     "• The above quote is generated for one time use only and must not be shared or used by any other remitter to make payments",
@@ -158,28 +138,28 @@ async function generateQuotePDF(
     "• The payment must be made in full for the amount reflected in this quote and any part payments / multiple payments may get rejected or returned",
     "• The given exchange rate is subject to market fluctuations and valid between 10.00 AM to 2.45 PM on a bank working day.",
     "• The given rate is valid for 30 minutes.",
-  ];
+  ]
 
-  let y = lastY + 32;
+  let y = lastY + 32
   terms.forEach((term) => {
-    doc.text(term, 14, y);
-    y += 6;
-  });
+    doc.text(term, 14, y)
+    y += 6
+  })
 
-  const pdfUrl = `Send_Money_Abroad_Quote-${Date.now()}.pdf`;
-  doc.save(pdfUrl);
-  return pdfUrl;
+  const pdfUrl = `Send_Money_Abroad_Quote-${Date.now()}.pdf`
+  doc.save(pdfUrl)
+  return pdfUrl
 }
 
 export default function OrderDetailsForm() {
-  const [showCalculation, setShowCalculation] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isQuoteDownloaded, setIsQuoteDownloaded] = useState(false);
-  const { data: session, status } = useSession();
-  const [orderId, setOrderId] = useState<string | null>(null);
-  const [agents, setAgents] = useState<Agent[]>([]);
-  const [isLoadingAgents, setIsLoadingAgents] = useState(false);
-  const router = useRouter();
+  const [showCalculation, setShowCalculation] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isQuoteDownloaded, setIsQuoteDownloaded] = useState(false)
+  const { data: session, status } = useSession()
+  const [orderId, setOrderId] = useState<string | null>(null)
+  const [agents, setAgents] = useState<Agent[]>([])
+  const [isLoadingAgents, setIsLoadingAgents] = useState(false)
+  const router = useRouter()
 
   const [calculatedValues, setCalculatedValues] = useState<CalculatedValues>({
     inrAmount: "0",
@@ -188,7 +168,10 @@ export default function OrderDetailsForm() {
     tcsApplicable: "0",
     totalPayable: "0",
     customerRate: "0",
-  });
+  })
+
+  const [usdEquivalentError, setUsdEquivalentError] = useState<string>("")
+  const [, setUsdEquivalent] = useState<number | null>(null)
 
   const form = useForm<OrderDetailsFormValues>({
     resolver: zodResolver(orderDetailsFormSchema),
@@ -208,7 +191,7 @@ export default function OrderDetailsForm() {
       customerRate: "",
       educationLoan: "no",
     },
-  });
+  })
 
   const COUNTRY_CURRENCY_MAP = {
     Germany: "EUR",
@@ -238,127 +221,160 @@ export default function OrderDetailsForm() {
     Latvia: "EUR",
     Lithuania: "EUR",
     Uzbekistan: "USD",
-  };
+  }
 
   // Modified onSubmit to show popup first
-  function onSubmit() {
-    // ...any validation you want...
+  const onSubmit = async () => {
+    if (usdEquivalentError) {
+      toast({
+        title: "Validation Error",
+        description: usdEquivalentError,
+        variant: "destructive",
+      })
+      return
+    }
+
     if (!isQuoteDownloaded) {
-      alert("Please download the quote first before proceeding.");
-      return;
+      alert("Please download the quote first before proceeding.")
+      return
     }
     // Redirect to sender details page with orderId
     if (orderId) {
-      router.push(`/staff/dashboard/sender-details?orderId=${orderId}`);
+      router.push(`/staff/dashboard/sender-details?orderId=${orderId}`)
     } else {
-      alert("Order ID not found. Please try again.");
+      alert("Order ID not found. Please try again.")
     }
   }
 
   function resetForm() {
-    form.reset();
-    setShowCalculation(false);
-    setIsQuoteDownloaded(false);
-    setOrderId(null);
+    form.reset()
+    setShowCalculation(false)
+    setIsQuoteDownloaded(false)
+    setOrderId(null)
+    setUsdEquivalentError("")
   }
 
   function handleShowCalculation() {
-    setShowCalculation(true);
+    setShowCalculation(true)
   }
 
-  const amount = form.watch("amount");
-  const currency = form.watch("currency");
-  const foreignBankCharges = form.watch("foreignBankCharges");
-  const margin = form.watch("margin");
-  const ibrRate = form.watch("ibrRate");
-  const educationLoan = form.watch("educationLoan");
+  const amount = form.watch("amount")
+  const currency = form.watch("currency")
+  const foreignBankCharges = form.watch("foreignBankCharges")
+  const margin = form.watch("margin")
+  const ibrRate = form.watch("ibrRate")
+  const educationLoan = form.watch("educationLoan")
 
   useEffect(() => {
     if (currency) {
       getLiveRate(currency, "INR").then((rate: number) => {
-        form.setValue("ibrRate", rate.toFixed(2).toString());
-      });
+        form.setValue("ibrRate", rate.toFixed(2).toString())
+      })
     }
-  }, [currency, form]);
+  }, [currency, form])
 
   useEffect(() => {
-    const bankFee = foreignBankCharges === "OUR" ? 1500 : 300;
+    const bankFee = foreignBankCharges === "OUR" ? 1500 : 300
     setCalculatedValues((prev) => ({
       ...prev,
       bankFee: bankFee.toString(),
-    }));
-  }, [foreignBankCharges]);
+    }))
+  }, [foreignBankCharges])
 
   useEffect(() => {
-    const currentAmount = Number.parseFloat(amount || "0");
+    const currentAmount = Number.parseFloat(amount || "0")
 
-    const currentMargin = Number.parseFloat(margin || "0");
+    const currentMargin = Number.parseFloat(margin || "0")
 
-    const currentIbrRate = Number.parseFloat(ibrRate || "0");
+    const currentIbrRate = Number.parseFloat(ibrRate || "0")
 
-    const bankFee = foreignBankCharges === "OUR" ? 1500 : 300;
+    const bankFee = foreignBankCharges === "OUR" ? 1500 : 300
 
     if (currentAmount && currentMargin) {
-      const totalAmount = (currentIbrRate + currentMargin) * currentAmount;
-      const roundedTotalAmount = Math.round(totalAmount); // 101680
+      const totalAmount = (currentIbrRate + currentMargin) * currentAmount
+      const roundedTotalAmount = Math.round(totalAmount) // 101680
 
-      form.setValue(
-        "customerRate",
-        (currentIbrRate + currentMargin).toFixed(2).toString()
-      );
+      form.setValue("customerRate", (currentIbrRate + currentMargin).toFixed(2).toString())
       setCalculatedValues((prev) => ({
         ...prev,
         inrAmount: roundedTotalAmount.toString(),
         gst: calculateGst(roundedTotalAmount).toString(),
-        tcsApplicable: calculateTcs(
-          roundedTotalAmount,
-          educationLoan === "yes"
-        ),
-        totalPayable: calculateTotalPayable(
-          roundedTotalAmount,
-          bankFee,
-          educationLoan === "yes"
-        ).toString(),
-      }));
+        tcsApplicable: calculateTcs(roundedTotalAmount, educationLoan === "yes"),
+        totalPayable: calculateTotalPayable(roundedTotalAmount, bankFee, educationLoan === "yes").toString(),
+      }))
     }
-  }, [amount, margin, ibrRate, foreignBankCharges, educationLoan, form]);
+  }, [amount, margin, ibrRate, foreignBankCharges, educationLoan, form])
 
   useEffect(() => {
-    form.setValue("totalAmount", calculatedValues.totalPayable.toString());
-  }, [calculatedValues.totalPayable, form]);
+    form.setValue("totalAmount", calculatedValues.totalPayable.toString())
+  }, [calculatedValues.totalPayable, form])
 
   useEffect(() => {
-    const selectedCountry = form.watch("receiverBankCountry");
-    const currencyValue = form.watch("currency");
+    const selectedCountry = form.watch("receiverBankCountry")
+    const currencyValue = form.watch("currency")
     const countryCurrency = selectedCountry
-      ? COUNTRY_CURRENCY_MAP[
-          selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP
-        ]
-      : "USD";
+      ? COUNTRY_CURRENCY_MAP[selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP]
+      : "USD"
 
     if (selectedCountry && currencyValue !== "USD") {
-      form.setValue("currency", countryCurrency, { shouldValidate: true });
+      form.setValue("currency", countryCurrency, { shouldValidate: true })
     }
-  }, [form.watch("receiverBankCountry")]);
+  }, [form.watch("receiverBankCountry")])
 
-  const handleDownloadQuote = async (
-    formData: OrderDetailsFormValues,
-    calculatedValues: CalculatedValues
-  ) => {
-    setIsSubmitting(true);
+  useEffect(() => {
+    const validateUSDEquivalent = async () => {
+      const currentAmount = Number.parseFloat(amount || "0")
+      const currentCurrency = currency
+      const currentIbrRate = Number.parseFloat(ibrRate || "0")
+      const currentMargin = margin || "0"
+
+      if (currentAmount > 0 && currentCurrency) {
+        try {
+          const { isValid, message, usdEquivalent } = await validateTransactionLimit(
+            currentAmount, 
+            currentCurrency,
+            currentIbrRate,
+            currentMargin
+          )
+          
+          if (usdEquivalent !== undefined) {
+            setUsdEquivalent(usdEquivalent)
+          }
+
+          if (!isValid) {
+            setUsdEquivalentError(
+              message || `Amount exceeds maximum limit of ${MAX_USD_EQUIVALENT.toLocaleString()} USD equivalent`,
+            )
+          } else {
+            setUsdEquivalentError("")
+          }
+        } catch (error) {
+          console.error("Error validating USD equivalent:", error)
+          setUsdEquivalentError("")
+        }
+      } else {
+        setUsdEquivalentError("")
+      }
+    }
+
+    // Debounce the validation to avoid too many API calls
+    const timeoutId = setTimeout(validateUSDEquivalent, 500)
+    return () => clearTimeout(timeoutId)
+  }, [amount, currency])
+
+  const handleDownloadQuote = async (formData: OrderDetailsFormValues, calculatedValues: CalculatedValues) => {
+    setIsSubmitting(true)
     if (!session?.user?.name) {
-      console.error("User session not available");
-      setIsSubmitting(false);
-      return;
+      console.error("User session not available")
+      setIsSubmitting(false)
+      return
     }
 
     try {
       // First, create the order to get the orderId
       const forexPartnerObj = forexPartnerData.find(
-        (partner) =>
-          partner.accountName.toLowerCase() ===
-          formData.forexPartner.toLowerCase()
-      );
+        (partner) => partner.accountName.toLowerCase() === formData.forexPartner.toLowerCase(),
+      )
       const order = await axios.post("/api/orders", {
         purpose: formData.purpose,
         foreignBankCharges: formData.foreignBankCharges,
@@ -382,106 +398,92 @@ export default function OrderDetailsForm() {
           ...formData,
           currency:
             formData.currency ||
-            COUNTRY_CURRENCY_MAP[
-              formData.receiverBankCountry as keyof typeof COUNTRY_CURRENCY_MAP
-            ] ||
+            COUNTRY_CURRENCY_MAP[formData.receiverBankCountry as keyof typeof COUNTRY_CURRENCY_MAP] ||
             "",
         },
         calculations: calculatedValues,
         generatedPDF: "https://www.buyexchange.in/upload-documents", // Will be updated after PDF generation
-      });
+      })
 
-      const orderId = order.data.id;
+      const orderId = order.data.id
 
       // Now generate the PDF with the actual orderId
-      const pdfUrl = await generateQuotePDF(
-        formData,
-        calculatedValues,
-        forexPartnerObj as ForexPartner,
-        orderId
-      );
+      const pdfUrl = await generateQuotePDF(formData, calculatedValues, forexPartnerObj as ForexPartner, orderId)
 
       // Update the order with the generated PDF URL
       await axios.patch(`/api/orders/${orderId}`, {
         generatedPDF: pdfUrl,
-      });
+      })
 
-      setIsQuoteDownloaded(true);
+      setIsQuoteDownloaded(true)
       if (typeof window !== "undefined") {
-        setOrderId(orderId);
-        localStorage.setItem("selectedPayer", order.data.payer);
-        localStorage.setItem("educationLoan", order.data.educationLoan || "no");
-        localStorage.setItem("fromPlaceOrder", "true");
+        setOrderId(orderId)
+        localStorage.setItem("selectedPayer", order.data.payer)
+        localStorage.setItem("educationLoan", order.data.educationLoan || "no")
+        localStorage.setItem("fromPlaceOrder", "true")
       }
     } catch (error) {
-      console.error("Error generating quote:", error);
+      console.error("Error generating quote:", error)
       if (axios.isAxiosError(error)) {
-        console.error("Response data:", error.response?.data);
-        alert(
-          `Failed to create order: ${error.response?.data || error.message}`
-        );
+        console.error("Response data:", error.response?.data)
+        alert(`Failed to create order: ${error.response?.data || error.message}`)
       } else {
-        alert("Failed to generate quote. Please try again.");
+        alert("Failed to generate quote. Please try again.")
       }
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   // Add useEffect to handle navigation when unauthenticated
   useEffect(() => {
     if (status === "unauthenticated") {
-      router.push("/signin");
+      router.push("/signin")
     }
-  }, [status, router]);
+  }, [status, router])
 
   // Fetch agents on component mount
   useEffect(() => {
     const fetchAgents = async () => {
-      setIsLoadingAgents(true);
+      setIsLoadingAgents(true)
       try {
-        const response = await axios.get("/api/users?role=AGENT");
-        setAgents(response.data);
+        const response = await axios.get("/api/users?role=AGENT")
+        setAgents(response.data)
         // console.log("agents", response.data);
       } catch (error) {
-        console.error("Error fetching agents:", error);
+        console.error("Error fetching agents:", error)
       } finally {
-        setIsLoadingAgents(false);
+        setIsLoadingAgents(false)
       }
-    };
+    }
 
-    fetchAgents();
-  }, []);
+    fetchAgents()
+  }, [])
 
   // Assuming agents array contains agentRate and buyexRate for each agent
   const handleConsultancyChange = (selectedAgentName: string) => {
-    form.setValue("consultancy", selectedAgentName);
+    form.setValue("consultancy", selectedAgentName)
 
     // Find the selected agent's details
-    const selectedAgent = agents.find(
-      (agent) => agent.name === selectedAgentName
-    );
+    const selectedAgent = agents.find((agent) => agent.name === selectedAgentName)
 
     if (selectedAgent) {
       // Calculate margin as agentRate + buyexRate
-      const margin = (
-        Number(selectedAgent.agentRate ?? 0) +
-        Number(selectedAgent.buyexRate ?? 0)
-      ).toString();
-      form.setValue("margin", margin);
+      const margin = (Number(selectedAgent.agentRate ?? 0) + Number(selectedAgent.buyexRate ?? 0)).toString()
+      form.setValue("margin", margin)
     }
-  };
+  }
 
   if (status === "loading") {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
       </div>
-    );
+    )
   }
 
   if (status === "unauthenticated") {
-    return null; // Remove the router.push call from here
+    return null // Remove the router.push call from here
   }
 
   return (
@@ -489,8 +491,8 @@ export default function OrderDetailsForm() {
       <Form {...form}>
         <form
           onSubmit={(e) => {
-            console.log("Form submit triggered");
-            form.handleSubmit(onSubmit)(e);
+            console.log("Form submit triggered")
+            form.handleSubmit(onSubmit)(e)
           }}
           className="space-y-6"
         >
@@ -513,28 +515,22 @@ export default function OrderDetailsForm() {
                 name="purpose"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-gray-700 font-normal">
-                      Purpose
-                    </FormLabel>
+                    <FormLabel className="text-gray-700 font-normal">Purpose</FormLabel>
                     <Select
                       onValueChange={(value) => {
-                        field.onChange(value);
+                        field.onChange(value)
                         if (value === "Blocked account transfer") {
-                          form.setValue("receiverBankCountry", "Germany");
-                          form.setValue("currency", "EUR");
+                          form.setValue("receiverBankCountry", "Germany")
+                          form.setValue("currency", "EUR")
                         } else if (value === "GIC Canada fee deposite") {
-                          form.setValue("receiverBankCountry", "Canada");
-                          form.setValue("currency", "CAD");
+                          form.setValue("receiverBankCountry", "Canada")
+                          form.setValue("currency", "CAD")
                         } else {
-                          form.setValue("receiverBankCountry", "");
-                          const selectedCountry = form.getValues(
-                            "receiverBankCountry"
-                          );
+                          form.setValue("receiverBankCountry", "")
+                          const selectedCountry = form.getValues("receiverBankCountry")
                           const countryCurrency =
-                            COUNTRY_CURRENCY_MAP[
-                              selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP
-                            ] || "";
-                          form.setValue("currency", countryCurrency);
+                            COUNTRY_CURRENCY_MAP[selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP] || ""
+                          form.setValue("currency", countryCurrency)
                         }
                       }}
                       defaultValue={field.value}
@@ -608,9 +604,7 @@ export default function OrderDetailsForm() {
                       </SelectContent>
                     </Select>
                     {form.formState.errors.purpose && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {form.formState.errors.purpose.message}
-                      </p>
+                      <p className="text-red-500 text-xs mt-1">{form.formState.errors.purpose.message}</p>
                     )}
                   </FormItem>
                 )}
@@ -618,39 +612,31 @@ export default function OrderDetailsForm() {
 
               <div className="flex flex-col md:flex-row gap-6">
                 <div className="flex-1">
-                  <p className="text-gray-700 font-normal mb-2">
-                    Education loan
-                  </p>
+                  <p className="text-gray-700 font-normal mb-2">Education loan</p>
                   <FormField
                     control={form.control}
                     name="educationLoan"
                     render={({ field }) => (
                       <RadioGroup
                         onValueChange={(value) => {
-                          field.onChange(value);
+                          field.onChange(value)
                           if (value === "yes") {
                             setCalculatedValues((prev) => ({
                               ...prev,
                               tcsApplicable: "0",
-                            }));
+                            }))
                           } else {
                             setCalculatedValues((prev) => ({
                               ...prev,
-                              tcsApplicable: calculateTcs(
-                                Number.parseFloat(prev.inrAmount)
-                              ).toString(),
-                            }));
+                              tcsApplicable: calculateTcs(Number.parseFloat(prev.inrAmount)).toString(),
+                            }))
                           }
                         }}
                         value={field.value}
                         className="flex items-center gap-6"
                       >
                         <div className="flex items-center space-x-2">
-                          <RadioGroupItem
-                            value="yes"
-                            id="yes"
-                            className="border-blue-600 text-blue-600"
-                          />
+                          <RadioGroupItem value="yes" id="yes" className="border-blue-600 text-blue-600" />
                           <Label htmlFor="yes" className="font-normal">
                             Yes
                           </Label>
@@ -665,20 +651,14 @@ export default function OrderDetailsForm() {
                     )}
                   />
                   {form.watch("educationLoan") === "yes" ? (
-                    <p className="text-xs text-green-600 mt-1">
-                      No TCS applicable
-                    </p>
+                    <p className="text-xs text-green-600 mt-1">No TCS applicable</p>
                   ) : (
-                    <p className="text-xs text-green-600 mt-1">
-                      5% TCS applicable
-                    </p>
+                    <p className="text-xs text-green-600 mt-1">5% TCS applicable</p>
                   )}
                 </div>
 
                 <div className="flex-1">
-                  <p className="text-gray-700 font-normal mb-2">
-                    Foreign bank charges
-                  </p>
+                  <p className="text-gray-700 font-normal mb-2">Foreign bank charges</p>
                   <FormField
                     control={form.control}
                     name="foreignBankCharges"
@@ -689,11 +669,7 @@ export default function OrderDetailsForm() {
                         className="flex items-center gap-6"
                       >
                         <div className="flex items-center space-x-2">
-                          <RadioGroupItem
-                            value="OUR"
-                            id="our"
-                            className="border-blue-600 text-blue-600"
-                          />
+                          <RadioGroupItem value="OUR" id="our" className="border-blue-600 text-blue-600" />
                           <Label htmlFor="our" className="font-normal">
                             OUR
                           </Label>
@@ -708,13 +684,9 @@ export default function OrderDetailsForm() {
                     )}
                   />
                   {form.watch("foreignBankCharges") === "OUR" ? (
-                    <p className="text-xs text-green-600 mt-1">
-                      Zero foreign bank charges{" "}
-                    </p>
+                    <p className="text-xs text-green-600 mt-1">Zero foreign bank charges </p>
                   ) : (
-                    <p className="text-xs text-green-600 mt-1">
-                      Receiver bank charges applicable
-                    </p>
+                    <p className="text-xs text-green-600 mt-1">Receiver bank charges applicable</p>
                   )}
                 </div>
               </div>
@@ -724,13 +696,8 @@ export default function OrderDetailsForm() {
                 name="payer"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-gray-700 font-normal">
-                      Payer
-                    </FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
+                    <FormLabel className="text-gray-700 font-normal">Payer</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger className="bg-blue-50/50 border-blue-200 shadow-lg h-12 w-full">
                           <SelectValue placeholder="Select payer" />
@@ -752,13 +719,8 @@ export default function OrderDetailsForm() {
                 name="forexPartner"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-gray-700 font-normal">
-                      Choose forex partner
-                    </FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
+                    <FormLabel className="text-gray-700 font-normal">Choose forex partner</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger className="bg-blue-50/50 border-blue-200 shadow-lg h-12 w-full">
                           <SelectValue placeholder="Select forex partner" />
@@ -766,10 +728,7 @@ export default function OrderDetailsForm() {
                       </FormControl>
                       <SelectContent>
                         {forexPartnerData.map((partner) => (
-                          <SelectItem
-                            key={partner.accountName}
-                            value={partner.accountName}
-                          >
+                          <SelectItem key={partner.accountName} value={partner.accountName}>
                             {partner.accountName}
                           </SelectItem>
                         ))}
@@ -784,9 +743,7 @@ export default function OrderDetailsForm() {
                   name="margin"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-gray-700 font-normal">
-                        Margin
-                      </FormLabel>
+                      <FormLabel className="text-gray-700 font-normal">Margin</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
@@ -807,19 +764,14 @@ export default function OrderDetailsForm() {
                 name="receiverBankCountry"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-gray-700 font-normal">
-                      Receiver&apos;s bank country
-                    </FormLabel>
+                    <FormLabel className="text-gray-700 font-normal">Receiver&apos;s bank country</FormLabel>
                     <Select
                       onValueChange={(value) => {
-                        field.onChange(value);
-                        const currency =
-                          COUNTRY_CURRENCY_MAP[
-                            value as keyof typeof COUNTRY_CURRENCY_MAP
-                          ] || "USD";
+                        field.onChange(value)
+                        const currency = COUNTRY_CURRENCY_MAP[value as keyof typeof COUNTRY_CURRENCY_MAP] || "USD"
                         form.setValue("currency", currency, {
                           shouldValidate: true,
-                        });
+                        })
                       }}
                       value={field.value}
                       disabled={
@@ -863,20 +815,14 @@ export default function OrderDetailsForm() {
                         <SelectItem value="Sweden">Sweden</SelectItem>
                         <SelectItem value="Switzerland">Switzerland</SelectItem>
                         <SelectItem value="UAE">UAE</SelectItem>
-                        <SelectItem value="United Kingdom">
-                          United Kingdom
-                        </SelectItem>
-                        <SelectItem value="United States of America">
-                          United States of America
-                        </SelectItem>
+                        <SelectItem value="United Kingdom">United Kingdom</SelectItem>
+                        <SelectItem value="United States of America">United States of America</SelectItem>
                         <SelectItem value="Uzbekistan">Uzbekistan</SelectItem>
                       </SelectContent>
                     </Select>
                     {(form.watch("purpose") === "Blocked account transfer" ||
                       form.watch("purpose") === "GIC Canada fee deposite") && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        Country automatically set based on purpose selection
-                      </p>
+                      <p className="text-xs text-gray-500 mt-1">Country automatically set based on purpose selection</p>
                     )}
                   </FormItem>
                 )}
@@ -887,9 +833,7 @@ export default function OrderDetailsForm() {
                 name="studentName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-gray-700 font-normal">
-                      Student name
-                    </FormLabel>
+                    <FormLabel className="text-gray-700 font-normal">Student name</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -906,9 +850,7 @@ export default function OrderDetailsForm() {
                 name="consultancy"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-gray-700 font-normal ">
-                      Choose consultancy
-                    </FormLabel>
+                    <FormLabel className="text-gray-700 font-normal ">Choose consultancy</FormLabel>
                     <Select
                       onValueChange={handleConsultancyChange}
                       defaultValue={field.value}
@@ -916,13 +858,7 @@ export default function OrderDetailsForm() {
                     >
                       <FormControl>
                         <SelectTrigger className="bg-blue-50/50 border-blue-200 shadow-lg h-12 w-full">
-                          <SelectValue
-                            placeholder={
-                              isLoadingAgents
-                                ? "Loading agents..."
-                                : "Select consultancy"
-                            }
-                          />
+                          <SelectValue placeholder={isLoadingAgents ? "Loading agents..." : "Select consultancy"} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -934,9 +870,7 @@ export default function OrderDetailsForm() {
                       </SelectContent>
                     </Select>
                     {form.formState.errors.consultancy && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {form.formState.errors.consultancy.message}
-                      </p>
+                      <p className="text-red-500 text-xs mt-1">{form.formState.errors.consultancy.message}</p>
                     )}
                   </FormItem>
                 )}
@@ -948,16 +882,21 @@ export default function OrderDetailsForm() {
                     name="amount"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-700 font-normal">
-                          FCY Amount
-                        </FormLabel>
+                        <FormLabel className="text-gray-700 font-normal">FCY Amount</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
-                            className="bg-blue-50/50 border-blue-200 shadow-lg h-12"
+                            className={`bg-blue-50/50 border-blue-200 shadow-lg h-12 ${
+                              usdEquivalentError ? "border-red-500 bg-red-50" : ""
+                            }`}
                             placeholder="Enter amount"
                           />
                         </FormControl>
+                        {usdEquivalentError && (
+                          <div className="text-red-500 text-sm mt-1 p-2 bg-red-50 border border-red-200 rounded">
+                            {usdEquivalentError}
+                          </div>
+                        )}
                       </FormItem>
                     )}
                   />
@@ -967,62 +906,42 @@ export default function OrderDetailsForm() {
                     control={form.control}
                     name="currency"
                     render={({ field }) => {
-                      const selectedCountry = form.watch("receiverBankCountry");
+                      const selectedCountry = form.watch("receiverBankCountry")
                       const countryCurrency = selectedCountry
-                        ? COUNTRY_CURRENCY_MAP[
-                            selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP
-                          ]
-                        : "USD";
+                        ? COUNTRY_CURRENCY_MAP[selectedCountry as keyof typeof COUNTRY_CURRENCY_MAP]
+                        : "USD"
 
-                      const usdPrimaryCountries = [
-                        "United States of America",
-                        "Uzbekistan",
-                        "Georgia",
-                        "Malaysia",
-                        
-                      ];
+                      const usdPrimaryCountries = ["United States of America", "Uzbekistan", "Georgia", "Malaysia"]
 
-                      const showUsdOption =
-                        selectedCountry &&
-                        !usdPrimaryCountries.includes(selectedCountry);
+                      const showUsdOption = selectedCountry && !usdPrimaryCountries.includes(selectedCountry)
 
                       return (
                         <FormItem>
                           <FormLabel className="font-normal">&nbsp;</FormLabel>
                           <Select
                             onValueChange={(value) => {
-                              field.onChange(value);
-                              form.trigger("currency");
+                              field.onChange(value)
+                              form.trigger("currency")
                             }}
                             value={field.value || countryCurrency}
                           >
                             <FormControl>
                               <SelectTrigger className="w-full h-12 bg-dark-blue text-white hover:text-white hover:bg-medium-blue border-blue-800">
-                                <SelectValue
-                                  placeholder={field.value || countryCurrency}
-                                />
+                                <SelectValue placeholder={field.value || countryCurrency} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
                               <SelectItem value={countryCurrency}>
-                                {countryCurrency}{" "}
-                                {!showUsdOption && "(Default)"}
+                                {countryCurrency} {!showUsdOption && "(Default)"}
                               </SelectItem>
-                              {showUsdOption && (
-                                <SelectItem value="USD">
-                                  USD (Alternative)
-                                </SelectItem>
-                              )}
+                              {showUsdOption && <SelectItem value="USD">USD (Alternative)</SelectItem>}
                             </SelectContent>
                           </Select>
-                          {field.value === "USD" &&
-                            countryCurrency !== "USD" && (
-                              <p className="text-xs text-gray-500 mt-1">
-                                Using USD instead of {countryCurrency}
-                              </p>
-                            )}
+                          {field.value === "USD" && countryCurrency !== "USD" && (
+                            <p className="text-xs text-gray-500 mt-1">Using USD instead of {countryCurrency}</p>
+                          )}
                         </FormItem>
-                      );
+                      )
                     }}
                   />
                 </div>
@@ -1032,15 +951,9 @@ export default function OrderDetailsForm() {
                 name="ibrRate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-gray-700 font-normal">
-                      IBR Rate
-                    </FormLabel>
+                    <FormLabel className="text-gray-700 font-normal">IBR Rate</FormLabel>
                     <FormControl>
-                      <Input
-                        {...field}
-                        className="bg-blue-50/50 border-blue-200 shadow-lg h-12"
-                        readOnly
-                      />
+                      <Input {...field} className="bg-blue-50/50 border-blue-200 shadow-lg h-12" readOnly />
                     </FormControl>
                   </FormItem>
                 )}
@@ -1053,9 +966,7 @@ export default function OrderDetailsForm() {
             {showCalculation ? (
               <div className="relative border-t pt-6 pb-4">
                 <div className="absolute right-0 top-4 flex items-center">
-                  <span className="text-gray-500 text-sm mr-1">
-                    Hide Calculation
-                  </span>
+                  <span className="text-gray-500 text-sm mr-1">Hide Calculation</span>
                   <button
                     type="button"
                     onClick={() => setShowCalculation(false)}
@@ -1087,35 +998,23 @@ export default function OrderDetailsForm() {
                 <div className="space-y-6 mt-4">
                   <div className="flex justify-between items-center">
                     <div className="text-gray-600">INR Amount</div>
-                    <div className="font-medium text-gray-700 pr-6">
-                      {calculatedValues.inrAmount}
-                    </div>
+                    <div className="font-medium text-gray-700 pr-6">{calculatedValues.inrAmount}</div>
                   </div>
                   <div className="flex justify-between items-center">
                     <div className="text-gray-600">Bank Fee</div>
-                    <div className="font-medium text-gray-700 pr-6">
-                      {calculatedValues.bankFee}
-                    </div>
+                    <div className="font-medium text-gray-700 pr-6">{calculatedValues.bankFee}</div>
                   </div>
                   <div className="flex justify-between items-center">
                     <div className="text-gray-600">GST</div>
-                    <div className="font-medium text-gray-700 pr-6">
-                      {calculatedValues.gst}
-                    </div>
+                    <div className="font-medium text-gray-700 pr-6">{calculatedValues.gst}</div>
                   </div>
                   <div className="flex justify-between items-center">
                     <div className="text-gray-600">TCS Applicable</div>
-                    <div className="font-medium text-gray-700 pr-6">
-                      {calculatedValues.tcsApplicable}
-                    </div>
+                    <div className="font-medium text-gray-700 pr-6">{calculatedValues.tcsApplicable}</div>
                   </div>
                   <div className="border-t pt-4 flex justify-between items-center">
-                    <div className="font-medium text-gray-700">
-                      Total Payable
-                    </div>
-                    <div className="font-medium text-gray-700 pr-6">
-                      {calculatedValues.totalPayable}
-                    </div>
+                    <div className="font-medium text-gray-700">Total Payable</div>
+                    <div className="font-medium text-gray-700 pr-6">{calculatedValues.totalPayable}</div>
                   </div>
                 </div>
               </div>
@@ -1170,9 +1069,7 @@ export default function OrderDetailsForm() {
                 name="customerRate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-gray-700 font-normal">
-                      Customer rate
-                    </FormLabel>
+                    <FormLabel className="text-gray-700 font-normal">Customer rate</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -1191,9 +1088,7 @@ export default function OrderDetailsForm() {
           <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
             <Button
               type="button"
-              onClick={form.handleSubmit((data) =>
-                handleDownloadQuote(data, calculatedValues)
-              )}
+              onClick={form.handleSubmit((data) => handleDownloadQuote(data, calculatedValues))}
               variant="outline"
               className="text-white border-none hover:opacity-90 flex items-center gap-2 h-12 rounded-md px-6"
               style={{
@@ -1236,5 +1131,5 @@ export default function OrderDetailsForm() {
         </form>
       </Form>
     </>
-  );
+  )
 }
