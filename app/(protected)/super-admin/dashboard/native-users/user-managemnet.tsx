@@ -15,9 +15,9 @@ type ApiUser = {
   status: boolean;
   createdAt: string; // ISO string
   role: string;
-  agentRate?: number | null; // agentRate can be null if not an agent
+  agentRates?: Record<string, number> | null; // agentRates as JSON object
   forexPartner?: string | null;
-  buyexRate?: number | null;
+  buyexRates?: Record<string, number> | null; // buyexRates as JSON object
 };
 
 // Helper function to convert UserType to API role
@@ -60,9 +60,9 @@ export default function UserManagement() {
           status: apiUser.status,
           date: apiUser.createdAt, // Already an ISO string from API
           userType: convertRoleToUserType(apiUser.role),
-          agentRate: apiUser.agentRate ?? undefined, // Convert null to undefined for client type
+          agentRates: apiUser.agentRates ?? undefined, // Convert null to undefined for client type
           forexPartner: apiUser.forexPartner ?? undefined,
-          buyexRate: apiUser.buyexRate ?? undefined,
+          buyexRates: apiUser.buyexRates ?? undefined,
         }));
         setUsers(transformedUsers);
       } catch (error) {
@@ -94,15 +94,69 @@ export default function UserManagement() {
 
   const handleAddUser = async (user: UserFormData) => {
     try {
+      // Get rates for the default currency (USD)
+      const defaultCurrency = "USD";
+      let agentRate: number | undefined;
+      let buyexRate: number | undefined;
+      
+      if (user.userType === "Agent") {
+        // Handle agentRate
+        if (!user.agentRates) {
+          throw new Error("Agent rates are required for Agent users");
+        }
+        
+        const agentRateValue = user.agentRates[defaultCurrency as keyof typeof user.agentRates];
+        if (agentRateValue === undefined || agentRateValue === null) {
+          throw new Error("Agent rate is required for the selected currency");
+        }
+        
+        const parsedAgentRate = typeof agentRateValue === 'string' 
+          ? parseFloat(agentRateValue) 
+          : agentRateValue;
+          
+        if (isNaN(parsedAgentRate)) {
+          throw new Error("Invalid agent rate: must be a valid number");
+        }
+        
+        if (parsedAgentRate < 0 || parsedAgentRate > 100) {
+          throw new Error("Agent rate must be between 0 and 100");
+        }
+        
+        agentRate = parsedAgentRate;
+        
+        // Handle buyexRate
+        if (!user.buyexRates) {
+          throw new Error("Buyex rates are required for Agent users");
+        }
+        
+        const buyexRateValue = user.buyexRates[defaultCurrency as keyof typeof user.buyexRates];
+        if (buyexRateValue === undefined || buyexRateValue === null) {
+          throw new Error("Buyex rate is required for the selected currency");
+        }
+        
+        const parsedBuyexRate = typeof buyexRateValue === 'string'
+          ? parseFloat(buyexRateValue)
+          : buyexRateValue;
+          
+        if (isNaN(parsedBuyexRate)) {
+          throw new Error("Invalid buyex rate: must be a valid number");
+        }
+        
+        if (parsedBuyexRate < 0 || parsedBuyexRate > 100) {
+          throw new Error("Buyex rate must be between 0 and 100");
+        }
+        
+        buyexRate = parsedBuyexRate;
+      }
+
       const response = await axios.post("/api/users", {
         userType: user.userType,
         name: user.name,
         email: user.email,
-        organisationId:
-          user.userType === "Agent" ? user.organisationId : undefined,
-        agentRate: user.userType === "Agent" ? user.agentRate : undefined,
+        organisationId: user.organisationId, // Keep organisationId for all user types
+        agentRate: user.userType === "Agent" ? agentRate : undefined, // This will be validated above
+        buyexRate: user.userType === "Agent" ? buyexRate : undefined, // Include buyexRate for all user types
         forexPartner: user.userType === "Agent" ? user.forexPartner : undefined,
-        buyexRate: user.userType === "Agent" ? user.buyexRate : undefined,
         // status is defaulted to true on the server
       });
       if (response.status === 201) {
@@ -114,9 +168,9 @@ export default function UserManagement() {
           status: response.data.user.status,
           date: response.data.user.createdAt, // API returns createdAt as ISO string
           userType: convertRoleToUserType(response.data.user.userRole), // API returns userRole
-          agentRate: response.data.user.agentRate ?? undefined,
+          agentRates: response.data.user.agentRates ?? undefined,
           forexPartner: response.data.user.forexPartner,
-          buyexRate: response.data.user.buyexRate,
+          buyexRates: response.data.user.buyexRates,
         };
         setUsers([newUser, ...users]);
       }
@@ -163,9 +217,9 @@ export default function UserManagement() {
       name: string;
       email: string;
       userType: UserType;
-      agentRate?: number;
+      agentRates?: Record<string, number>;
       forexPartner?: string;
-      buyexRate?: number;
+      buyexRates?: Record<string, number>;
     }
   ) => {
     try {
@@ -173,12 +227,12 @@ export default function UserManagement() {
         name: userData.name,
         email: userData.email,
         role: convertUserTypeToRole(userData.userType), // Convert client userType to DB role
-        agentRate:
-          userData.userType === "Agent" ? userData.agentRate : undefined,
+        agentRates:
+          userData.userType === "Agent" ? userData.agentRates : undefined,
         forexPartner:
           userData.userType === "Agent" ? userData.forexPartner : undefined,
-        buyexRate:
-          userData.userType === "Agent" ? userData.buyexRate : undefined,
+        buyexRates:
+          userData.userType === "Agent" ? userData.buyexRates : undefined,
       });
       if (response.status === 200) {
         setUsers(
@@ -189,10 +243,10 @@ export default function UserManagement() {
                   name: response.data.name,
                   email: response.data.email,
                   userType: convertRoleToUserType(response.data.role), // Convert DB role back to client userType
-                  agentRate: response.data.agentRate ?? undefined,
+                  agentRates: response.data.agentRates ?? undefined,
                   status: response.data.status,
                   forexPartner: response.data.forexPartner,
-                  buyexRate: response.data.buyexRate, // Ensure status is updated from API response
+                  buyexRates: response.data.buyexRates, // Ensure status is updated from API response
                 }
               : u
           )
