@@ -2,12 +2,10 @@ import LoginPage from '@/components/landing-content/signin-section'
 
 import React from 'react'
 
-function page() {
+export default function SignInPage() {
   return (
     <div>
-        <LoginPage/>
+      <LoginPage/>
     </div>
   )
 }
-
-export default page

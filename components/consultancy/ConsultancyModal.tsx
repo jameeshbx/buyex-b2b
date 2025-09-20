@@ -169,7 +169,7 @@ export function ConsultancyModal({ isOpen, onClose }: ConsultancyModalProps) {
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isLoading}>
+              <Button className="bg-dark-rose/90 hover:bg-dark-rose/90 hover:shadow-lg" type="submit" disabled={isLoading}>
                 {isLoading ? "Registering..." : "Register Now"}
               </Button>
             </div>

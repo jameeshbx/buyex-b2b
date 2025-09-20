@@ -1,12 +1,11 @@
 "use client";
 
-import React from "react";
 import ForgotPassword from "@/components/landing-content/forgotten-section";
 
-export default function Page() {
+export default function ForgotPasswordPage() {
   return (
     <div>
-     <ForgotPassword/>
-  </div>
+      <ForgotPassword/>
+    </div>
   );
 }

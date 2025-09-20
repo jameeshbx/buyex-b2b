@@ -19,39 +19,15 @@
     <changefreq>monthly</changefreq>
   </url>
   <url>
-    <loc>https://www.buyexforex.com/benews</loc>
+   <loc>https://www.buyexforex.com/benews</loc>
     <lastmod>2025-09-16T07:01:02+00:00</lastmod>
     <priority>0.80</priority>
     <changefreq>weekly</changefreq>
   </url>
   <url>
-    <loc>https://www.buyexforex.com/signin</loc>
-    <lastmod>2025-09-16T07:01:02+00:00</lastmod>
-    <priority>0.80</priority>
-    <changefreq>monthly</changefreq>
-  </url>
-  <url>
     <loc>https://www.buyexforex.com/blocked-account</loc>
     <lastmod>2025-09-16T07:01:02+00:00</lastmod>
     <priority>0.80</priority>
-    <changefreq>monthly</changefreq>
-  </url>
-  <url>
-    <loc>https://www.buyexforex.com/terms-and-conditions</loc>
-    <lastmod>2025-09-16T07:01:02+00:00</lastmod>
-    <priority>0.80</priority>
-    <changefreq>yearly</changefreq>
-  </url>
-  <url>
-    <loc>https://www.buyexforex.com/privacy-policy</loc>
-    <lastmod>2025-09-16T07:01:02+00:00</lastmod>
-    <priority>0.80</priority>
-    <changefreq>yearly</changefreq>
-  </url>
-  <url>
-    <loc>https://www.buyexforex.com/forgot-password</loc>
-    <lastmod>2025-09-16T07:01:02+00:00</lastmod>
-    <priority>0.64</priority>
     <changefreq>monthly</changefreq>
   </url>
 </urlset>

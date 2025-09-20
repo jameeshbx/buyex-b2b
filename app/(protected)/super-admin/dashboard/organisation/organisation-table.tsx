@@ -21,6 +21,7 @@ import {
 import { MoreHorizontal, Edit, Trash2, Users, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AxiosError } from "axios";
+import Image from "next/image";
 
 export interface Organisation {
   id: string;
@@ -121,10 +122,12 @@ export function OrganisationTable({
                   <TableCell className="font-medium">
                     <div className="flex items-center space-x-2">
                       {organisation.logoUrl && (
-                        <img
+                        <Image
                           src={organisation.logoUrl}
                           alt={organisation.name}
-                          className="w-6 h-6 rounded"
+                          width={24}
+                          height={24}
+                          className="w-6 h-6 rounded object-cover"
                         />
                       )}
                       <span>{organisation.name}</span>

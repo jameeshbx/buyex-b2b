@@ -1,9 +1,8 @@
 "use client";
 
-
-
 import { advantageItems } from "../../data/advantage";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 export default function AdvantageSection() {
   const [, setActiveIndex] = useState(0)
@@ -31,7 +30,13 @@ export default function AdvantageSection() {
           {advantageItems.map((item, index) => (
             <div key={index} className="bg-white shadow-lg p-8 rounded-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
               <div className="mb-4">
-                <img src={item.imageSrc} alt={item.title} className="w-10 h-10 object-contain" />
+                <Image 
+                  src={item.imageSrc} 
+                  alt={item.title} 
+                  width={40} 
+                  height={40} 
+                  className="w-10 h-10 object-contain" 
+                />
               </div>
               <h3 className="text-xl font-semibold mb-4 text-gray-900">
                 {item.title}

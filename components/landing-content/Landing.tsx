@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { ChevronDown, ChevronUp } from "lucide-react"
-
+import Image from "next/image"
 
 
 export default function FeaturesAccordion() {
@@ -65,8 +65,14 @@ export default function FeaturesAccordion() {
             <h2 className="text-3xl lg:text-4xl font-bold text-deep-blue font-serif mb-8">
               What Does Our Portal Offer?
             </h2>
-            <div className="relative">
-              <img src="/portal offer.png" alt="Financial Portal Dashboard" className="w-full h-auto " />
+            <div className="relative w-full h-auto">
+              <Image 
+                src="/portal offer.png" 
+                alt="Financial Portal Dashboard" 
+                width={800}
+                height={600}
+                className="w-full h-auto" 
+              />
             </div>
           </div>
 
