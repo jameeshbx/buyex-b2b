@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { ConsultancyModal } from "@/components/consultancy/ConsultancyModal"
+import Link from "next/link"
 
 export default function Hero() {
   const [showModal, setShowModal] = useState(false)
@@ -54,9 +55,9 @@ export default function Hero() {
               {/* Partner logos */}
               <div className="flex overflow-x-auto gap-4 pb-4 scrollbar-hide">
                 {partners.map((partner, index) => (
-                  <a key={index} href={partner.url} className="flex-shrink-0 h-10 flex items-center transition-transform hover:scale-105">
-                    <img src={partner.image} alt={partner.name} className="h-full w-auto object-contain max-w-[100px]" />
-                  </a>
+                  <Link key={index} href={partner.url} className="flex-shrink-0 h-10 flex items-center transition-transform hover:scale-105">
+                    <Image src={partner.image} alt={partner.name} width={100} height={40} className="h-full w-auto object-contain max-w-[100px]" />
+                  </Link>
                 ))}
               </div>
             </div>
@@ -65,14 +66,20 @@ export default function Hero() {
           {/* Hero Image */}
           <div className="w-full mt-8 lg:mt-0 lg:w-1/2 lg:absolute lg:right-0 lg:top-1/2 lg:-translate-y-1/2">
             <div className="relative h-[400px] lg:h-[600px] w-full">
-              <img src={heroImage.src} alt={heroImage.alt} className="w-full h-full object-contain" />
+              <Image 
+                src={heroImage.src} 
+                alt={heroImage.alt} 
+                width={800} 
+                height={600} 
+                className="w-full h-full object-contain" 
+              />
             </div>
           </div>
         </div>
       </div>
 
       {/* WhatsApp Chat Badge */}
-      <a 
+      <Link 
         href="https://wa.me/9633886611" // Replace with your WhatsApp number
         target="_blank"
         rel="noopener noreferrer"
@@ -87,7 +94,7 @@ export default function Hero() {
           className="w-8 h-8"
         />
         <span className="ml-2 font-medium hidden sm:inline">Chat with us</span>
-      </a>
+      </Link>
     </section>
   )
 }

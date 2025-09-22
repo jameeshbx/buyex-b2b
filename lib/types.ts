@@ -8,9 +8,9 @@ export interface User {
   status: boolean
   date: string
   userType: UserType
-  agentRate?: number;
-   forexPartner?: string;
-  buyexRate?: number;
+  agentRates?: Record<string, number>;
+  forexPartner?: string;
+  buyexRates?: Record<string, number>;
   // For API compatibility
   role?: "ADMIN" | "MANAGER" | "AGENT" // From your API
   createdAt?: string          // From your API
@@ -22,7 +22,7 @@ export interface UserFormData {
   name: string;
   email: string;
   organisationId?: string;
-  agentRate?: number;
-    forexPartner?: string;
-  buyexRate?: number;
+  agentRates?: Record<string, number>;
+  forexPartner?: string;
+  buyexRates?: Record<string, number>;
 }

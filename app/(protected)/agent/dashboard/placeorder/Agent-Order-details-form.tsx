@@ -177,7 +177,13 @@ export default function OrderDetailsForm() {
   const { data: session, status } = useSession();
   const [orderId, setOrderId] = useState<string | null>(null);
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  // Extend the User type to include the rates objects
+  interface UserWithRates extends User {
+    buyexRates?: Record<string, number>;
+    agentRates?: Record<string, number>;
+  }
+
+  const [user, setUser] = useState<UserWithRates | null>(null);
 
   const [calculatedValues, setCalculatedValues] = useState<CalculatedValues>({
     inrAmount: "0",
@@ -280,15 +286,31 @@ export default function OrderDetailsForm() {
   }, []);
 
   useEffect(() => {
-    if (currency) {
+    if (currency && user) {
       getLiveRate(currency, "INR").then((rate: number) => {
-        const ibrRate = rate + (user?.buyexRate ?? 0);
-        console.log("rate", rate);
-
-        form.setValue("ibrRate", ibrRate.toFixed(2).toString());
-        form.setValue("margin", (user?.agentRate ?? 0).toString());
-        console.log("ibrRate", ibrRate);
-        console.log("margin", user?.agentRate);
+        // Access buyexRates with proper typing
+        const buyexRates = user.buyexRates || {};
+        const buyexRate = buyexRates[currency] ?? 0;
+        
+        // Calculate ibrRate as (live rate + buyexRate for the currency)
+        const ibrRate = rate + buyexRate;
+        
+        // Access agentRates with proper typing
+        const agentRates = user.agentRates || {};
+        const agentRate = agentRates[currency] ?? 0;
+        
+        console.log("Live rate:", rate);
+        console.log("Buyex rate for", currency, ":", buyexRate);
+        console.log("Agent rate for", currency, ":", agentRate);
+        
+        // Update form values
+        form.setValue("ibrRate", ibrRate.toFixed(2));
+        form.setValue("margin", agentRate.toString());
+        
+        console.log("Calculated ibrRate:", ibrRate);
+        console.log("Set margin:", agentRate);
+      }).catch(error => {
+        console.error("Error getting live rate:", error);
       });
     }
   }, [currency, form, user]);
