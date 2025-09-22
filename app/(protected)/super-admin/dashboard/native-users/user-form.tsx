@@ -53,28 +53,30 @@ const formSchema = z
     userType: z.enum(["Admin", "Staff", "Agent"]),
     name: z.string().min(2, { message: "Name must be at least 2 characters" }),
     email: z.string().email({ message: "Please enter a valid email address" }),
-    agentRates: ratesSchema.optional(),
-    buyexRates: ratesSchema.optional(),
-    forexPartner: z.string().optional(),
+    agentRates: ratesSchema,
+    buyexRates: ratesSchema,
+    forexPartner: z.string(),
   })
   .superRefine((data, ctx) => {
     if (data.userType === "Agent") {
-      // Validate agent rates
-      if (!data.agentRates || Object.keys(data.agentRates).length === 0) {
+      // Check if all required currencies have rates
+      const missingAgentRates = CURRENCIES.filter(currency => data.agentRates[currency] === undefined);
+      const missingBuyexRates = CURRENCIES.filter(currency => data.buyexRates[currency] === undefined);
+
+      if (missingAgentRates.length > 0) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Agent rates are required for Agent users",
+          message: `Missing agent rates for currencies: ${missingAgentRates.join(', ')}`,
           path: ["agentRates"],
-        })
+        });
       }
 
-      // Validate buyex rates
-      if (!data.buyexRates || Object.keys(data.buyexRates).length === 0) {
+      if (missingBuyexRates.length > 0) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Buyex rates are required for Agent users",
+          message: `Missing buyex rates for currencies: ${missingBuyexRates.join(', ')}`,
           path: ["buyexRates"],
-        })
+        });
       }
 
       if (!data.forexPartner) {
@@ -82,8 +84,13 @@ const formSchema = z
           code: z.ZodIssueCode.custom,
           message: "Forex Partner is required for Agent users",
           path: ["forexPartner"],
-        })
+        });
       }
+    } else {
+      // For non-agent users, these fields are not required
+      data.agentRates = {};
+      data.buyexRates = {};
+      data.forexPartner = "";
     }
   })
 
@@ -108,6 +115,9 @@ export function UserForm({ onAddUser }: UserFormProps) {
 
   const [selectedCurrency, setSelectedCurrency] = useState<(typeof CURRENCIES)[number]>("USD")
 
+  // Create default rates object with all currencies set to 0
+  const defaultRates = CURRENCIES.reduce((acc, curr) => ({ ...acc, [curr]: 0 }), {}) as Record<typeof CURRENCIES[number], number>;
+
   const {
     register,
     handleSubmit,
@@ -121,8 +131,8 @@ export function UserForm({ onAddUser }: UserFormProps) {
       userType: "Admin",
       name: "",
       email: "",
-      agentRates: CURRENCIES.reduce((acc, curr) => ({ ...acc, [curr]: 0 }), {}),
-      buyexRates: CURRENCIES.reduce((acc, curr) => ({ ...acc, [curr]: 0 }), {}),
+      agentRates: defaultRates,
+      buyexRates: defaultRates,
       forexPartner: "",
     },
   })
@@ -200,19 +210,22 @@ export function UserForm({ onAddUser }: UserFormProps) {
 
     if (value === "Agent") {
       // Initialize all rates to 0 for all currencies
-      const defaultRates = CURRENCIES.reduce((acc, curr) => ({ ...acc, [curr]: 0 }), {})
+      const defaultRates = CURRENCIES.reduce((acc, curr) => ({ ...acc, [curr]: 0 }), {}) as Record<typeof CURRENCIES[number], number>
       setValue("agentRates", defaultRates)
       setValue("buyexRates", { ...defaultRates })
+      setValue("forexPartner", "")
     } else {
-      setValue("agentRates", undefined)
-      setValue("buyexRates", undefined)
-      setValue("forexPartner", undefined)
+      // For non-agent users, set empty values
+      const emptyRates = CURRENCIES.reduce((acc, curr) => ({ ...acc, [curr]: 0 }), {}) as Record<typeof CURRENCIES[number], number>
+      setValue("agentRates", emptyRates)
+      setValue("buyexRates", emptyRates)
+      setValue("forexPartner", "")
     }
   }
 
   const handleRateChange = (type: "agent" | "buyex", value: string | number) => {
     const fieldName = type === "agent" ? "agentRates" : "buyexRates"
-    const currentRates = watch(fieldName) || {}
+    const currentRates = watch(fieldName) || defaultRates
     
     // Allow empty string during editing
     if (value === "") {
