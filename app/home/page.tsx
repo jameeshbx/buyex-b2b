@@ -24,11 +24,15 @@ export default function Home() {
     // Set isClient to true once component mounts on the client side
     setIsClient(true);
     
-    // Always show the popup on page load
-    if (typeof window !== 'undefined') {
-      console.log('Showing logo popup on page load');
+    // Check if popup was already shown in this session
+    const hasSeenPopup = sessionStorage.getItem('hasSeenLogoPopup');
+    if (!hasSeenPopup) {
       setShowLogoPopup(true);
+      sessionStorage.setItem('hasSeenLogoPopup', 'true');
     }
+    
+    // Ensure we're in the browser environment
+    if (typeof window === 'undefined') return;
   }, []);
 
   const handleClosePopup = () => {

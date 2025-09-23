@@ -41,6 +41,7 @@ function BeneficiaryDetailsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const editId = searchParams.get("edit")
+  const [, setShowForm] = useState(false)
   const beneficiaryId = searchParams.get("beneficiaryId")
   const [orderId, setOrderId] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
@@ -87,17 +88,53 @@ function BeneficiaryDetailsContent() {
   const receiverCountry = watch("receiverCountry")
   const receiverBankCountry = watch("receiverBankCountry")
   const anyIntermediaryBank = watch("anyIntermediaryBank")
-  const [lastSelectedBeneficiary, setLastSelectedBeneficiary] = useState<Beneficiary | null>(null)
+  
+
+  // Function to filter out duplicate beneficiaries (same details except totalRemittance and field70)
+  const filterUniqueBeneficiaries = (beneficiaries: Beneficiary[]) => {
+    const uniqueBeneficiaries = new Map<string, Beneficiary>();
+
+    // Sort by createdAt in descending order to keep the latest version
+    const sortedBeneficiaries = [...beneficiaries].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+
+    sortedBeneficiaries.forEach(beneficiary => {
+      // Create a key from all fields except specific ones we want to exclude
+      // Omit the fields we don't need in the key
+      const { 
+        totalRemittance: _totalRemittance,
+        field70: _field70,
+        createdAt: _createdAt,
+        updatedAt: _updatedAt,
+        status: _status,
+        id: _id,
+        ...rest 
+      } = beneficiary;
+      
+      // Explicitly mark variables as unused to satisfy linter
+      void [_totalRemittance, _field70, _createdAt, _updatedAt, _status, _id];
+      const key = JSON.stringify(rest);
+
+      // Only add if we haven't seen this combination of fields before
+      if (!uniqueBeneficiaries.has(key)) {
+        uniqueBeneficiaries.set(key, beneficiary);
+      }
+    });
+
+    return Array.from(uniqueBeneficiaries.values());
+  };
 
   // Fetch beneficiaries from API
   useEffect(() => {
     const fetchBeneficiaries = async () => {
       try {
-        setLoading(true)
-        const response = await axios.get("/api/beneficiaries")
-        setBeneficiaries(response.data)
+        setLoading(true);
+        const response = await axios.get("/api/beneficiaries");
+        const filteredBeneficiaries = filterUniqueBeneficiaries(response.data);
+        setBeneficiaries(filteredBeneficiaries);
       } catch (error) {
-        console.error("Failed to fetch beneficiaries:", error)
+        console.error("Failed to fetch beneficiaries:", error);
       } finally {
         setLoading(false)
       }
@@ -111,11 +148,11 @@ function BeneficiaryDetailsContent() {
       if (orderId) {
         try {
           setLoading(true)
-          
+
 
           // Fetch order data
           const orderResponse = await axios.get(`/api/orders/${orderId}`)
-          
+
 
           // Pre-populate receiver country and receiver bank country from order data
           if (orderResponse.data.receiverBankCountry) {
@@ -124,11 +161,11 @@ function BeneficiaryDetailsContent() {
           }
 
           if (orderResponse.data.beneficiaryId) {
-          
+
 
             // Fetch existing beneficiary data
             const beneficiaryResponse = await axios.get(`/api/beneficiaries/${orderResponse.data.beneficiaryId}`)
-           
+
 
             if (beneficiaryResponse.data) {
               setExistingBeneficiaryData(beneficiaryResponse.data)
@@ -137,11 +174,13 @@ function BeneficiaryDetailsContent() {
               reset({
                 existingReceiver: "NO", // Set to NO to show the form
                 receiverFullName: beneficiaryResponse.data.receiverFullName || "",
-                receiverCountry: beneficiaryResponse.data.receiverCountry || orderResponse.data.receiverBankCountry || "",
+                receiverCountry:
+                  beneficiaryResponse.data.receiverCountry || orderResponse.data.receiverBankCountry || "",
                 address: beneficiaryResponse.data.address || "",
                 receiverBank: beneficiaryResponse.data.receiverBank || "",
                 receiverBankAddress: beneficiaryResponse.data.receiverBankAddress || "",
-                receiverBankCountry: beneficiaryResponse.data.receiverBankCountry || orderResponse.data.receiverBankCountry || "",
+                receiverBankCountry:
+                  beneficiaryResponse.data.receiverBankCountry || orderResponse.data.receiverBankCountry || "",
                 receiverAccount: beneficiaryResponse.data.receiverAccount || "",
                 receiverBankSwiftCode: beneficiaryResponse.data.receiverBankSwiftCode || "",
                 iban: beneficiaryResponse.data.iban || "",
@@ -160,7 +199,6 @@ function BeneficiaryDetailsContent() {
               })
             }
           } else {
-           
             // Reset to default if no beneficiary exists, but pre-populate with order data
             const defaultValues = {
               ...defaultFormValues,
@@ -195,29 +233,12 @@ function BeneficiaryDetailsContent() {
           const beneficiary = response.data
           if (beneficiary && Object.keys(beneficiary).length > 0) {
             setExistingBeneficiaryData(beneficiary)
-            // Set form to "NO" mode (new beneficiary form) and pre-fill with existing data
-            setValue("existingReceiver", "NO")
-            setValue("receiverFullName", beneficiary.receiverFullName || "")
-            setValue("receiverCountry", beneficiary.receiverCountry || "")
-            setValue("address", beneficiary.address || "")
-            setValue("receiverBank", beneficiary.receiverBank || "")
-            setValue("receiverBankAddress", beneficiary.receiverBankAddress || "")
-            setValue("receiverBankCountry", beneficiary.receiverBankCountry || "")
-            setValue("receiverAccount", beneficiary.receiverAccount || "")
-            setValue("receiverBankSwiftCode", beneficiary.receiverBankSwiftCode || "")
-            setValue("iban", beneficiary.iban || "")
-            setValue("sortCode", beneficiary.sortCode || "")
-            setValue("transitNumber", beneficiary.transitNumber || "")
-            setValue("bsbCode", beneficiary.bsbCode || "")
-            setValue("routingNumber", beneficiary.routingNumber || "")
-            setValue("anyIntermediaryBank", (beneficiary.anyIntermediaryBank as "YES" | "NO") || "NO")
-            setValue("intermediaryBankName", beneficiary.intermediaryBankName || "")
-            setValue("intermediaryBankAccountNo", beneficiary.intermediaryBankAccountNo || "")
-            setValue("intermediaryBankIBAN", beneficiary.intermediaryBankIBAN || "")
-            setValue("intermediaryBankSwiftCode", beneficiary.intermediaryBankSwiftCode || "")
-            setValue("totalRemittance", beneficiary.totalRemittance || "")
-            setValue("field70", beneficiary.field70 || "")
-            setValue("selectedReceiverId", beneficiary.id || "")
+            const selectReceiver = (beneficiary: Beneficiary) => {
+              setSelectedBeneficiary(beneficiary)
+              // Just select the receiver, don't switch to form view yet
+              setValue("selectedReceiverId", beneficiary.id || "")
+            }
+            selectReceiver(beneficiary)
           }
         } catch (error) {
           console.error("Failed to fetch beneficiary for pre-fill:", error)
@@ -279,12 +300,6 @@ function BeneficiaryDetailsContent() {
   const onSubmit = async (data: BeneficiaryFormValues) => {
     setSubmitError(null)
     try {
-      if (existingReceiver === "YES" && selectedBeneficiary) {
-        // Redirect to beneficiary details page with the selected ID
-        router.push(`/staff/dashboard/beneficiary-details/${selectedBeneficiary.id}`)
-        return
-      }
-
       console.log("orderId", orderId)
       // For new beneficiaries or editing existing ones
       const submissionData = {
@@ -335,41 +350,42 @@ function BeneficiaryDetailsContent() {
     setExistingBeneficiaryData(null)
   }
 
+
   const selectReceiver = (beneficiary: Beneficiary) => {
     setSelectedBeneficiary(beneficiary)
-    setLastSelectedBeneficiary(beneficiary)
-    setValue("selectedReceiverId", beneficiary.id)
-  }
-
-  // When "existingReceiver" changes to "NO", pre-fill the form if a receiver was selected
-  useEffect(() => {
-    if (existingReceiver === "NO" && lastSelectedBeneficiary) {
-      reset({
-        receiverFullName: lastSelectedBeneficiary.receiverFullName || "",
-        receiverCountry: lastSelectedBeneficiary.receiverCountry || "",
-        address: lastSelectedBeneficiary.address || "",
-        receiverBank: lastSelectedBeneficiary.receiverBank || "",
-        receiverBankAddress: lastSelectedBeneficiary.receiverBankAddress || "",
-        receiverBankCountry: lastSelectedBeneficiary.receiverBankCountry || "",
-        receiverAccount: lastSelectedBeneficiary.receiverAccount || "",
-        receiverBankSwiftCode: lastSelectedBeneficiary.receiverBankSwiftCode || "",
-        iban: lastSelectedBeneficiary.iban || "",
-        sortCode: lastSelectedBeneficiary.sortCode || "",
-        transitNumber: lastSelectedBeneficiary.transitNumber || "",
-        bsbCode: lastSelectedBeneficiary.bsbCode || "",
-        routingNumber: lastSelectedBeneficiary.routingNumber || "",
-        anyIntermediaryBank: (lastSelectedBeneficiary.anyIntermediaryBank as "YES" | "NO") || "NO",
-        intermediaryBankName: lastSelectedBeneficiary.intermediaryBankName || "",
-        intermediaryBankAccountNo: lastSelectedBeneficiary.intermediaryBankAccountNo || "",
-        intermediaryBankIBAN: lastSelectedBeneficiary.intermediaryBankIBAN || "",
-        intermediaryBankSwiftCode: lastSelectedBeneficiary.intermediaryBankSwiftCode || "",
-        totalRemittance: "",
-        field70: "",
-        existingReceiver: "NO",
-        selectedReceiverId: lastSelectedBeneficiary.id || "",
-      })
+    setValue("selectedReceiverId", beneficiary.id || "")
+    
+    // Create a new object with only the fields we want to include
+    const formData: Partial<BeneficiaryFormValues> = {
+      receiverFullName: beneficiary.receiverFullName || "",
+      receiverCountry: beneficiary.receiverCountry || "",
+      address: beneficiary.address || "",
+      receiverBank: beneficiary.receiverBank || "",
+      receiverBankAddress: beneficiary.receiverBankAddress || "",
+      receiverBankCountry: beneficiary.receiverBankCountry || "",
+      receiverAccount: beneficiary.receiverAccount || "",
+      receiverBankSwiftCode: beneficiary.receiverBankSwiftCode || "",
+      iban: beneficiary.iban || "",
+      sortCode: beneficiary.sortCode || "",
+      transitNumber: beneficiary.transitNumber || "",
+      bsbCode: beneficiary.bsbCode || "",
+      routingNumber: beneficiary.routingNumber || "",
+      anyIntermediaryBank: (beneficiary.anyIntermediaryBank as "YES" | "NO") || "NO",
+      intermediaryBankName: beneficiary.intermediaryBankName || "",
+      intermediaryBankAccountNo: beneficiary.intermediaryBankAccountNo || "",
+      intermediaryBankIBAN: beneficiary.intermediaryBankIBAN || "",
+      intermediaryBankSwiftCode: beneficiary.intermediaryBankSwiftCode || "",
+      // Don't pre-fill these fields
+      totalRemittance: "",
+      field70: "",
+      existingReceiver: "NO" as const,
+      selectedReceiverId: beneficiary.id || "",
     }
-  }, [existingReceiver, lastSelectedBeneficiary, reset])
+    
+    // Reset the form with the prepared data
+    reset(formData as BeneficiaryFormValues)
+    setShowForm(true)
+  }
 
   const toggleStatus = async (beneficiaryId: string) => {
     try {
@@ -495,12 +511,12 @@ function BeneficiaryDetailsContent() {
             {/* Show pre-fill indicator when coming back from document upload */}
             {(beneficiaryId || existingBeneficiaryData) && !editId && (
               <div >
-               
+
               </div>
             )}
 
-            {/* Existing receiver selection - hide in edit mode and when pre-filling */}
-            {!editId && !beneficiaryId && !existingBeneficiaryData && (
+            {/* Existing receiver selection - only hide in edit mode */}
+            {!editId && (
               <div className="mb-6">
                 <p className="text-gray-600 mb-2 font-jakarta">Existing receiver?</p>
                 <div className="flex items-center space-x-4 sm:space-x-6">
@@ -531,9 +547,8 @@ function BeneficiaryDetailsContent() {
                       )}
                     </span>
                     <span
-                      className={`ml-3 font-Inter text-base font-medium ${
-                        watch("existingReceiver") === "YES" ? "text-black" : "text-light-gray"
-                      }`}
+                      className={`ml-3 font-Inter text-base font-medium ${watch("existingReceiver") === "YES" ? "text-black" : "text-light-gray"
+                        }`}
                     >
                       YES
                     </span>
@@ -565,9 +580,8 @@ function BeneficiaryDetailsContent() {
                       )}
                     </span>
                     <span
-                      className={`ml-3 font-Inter text-base font-medium ${
-                        watch("existingReceiver") === "NO" ? "text-black" : "text-light-gray"
-                      }`}
+                      className={`ml-3 font-Inter text-base font-medium ${watch("existingReceiver") === "NO" ? "text-black" : "text-light-gray"
+                        }`}
                     >
                       NO
                     </span>
@@ -576,7 +590,7 @@ function BeneficiaryDetailsContent() {
               </div>
             )}
 
-            {existingReceiver === "YES" && !editId && !beneficiaryId && !existingBeneficiaryData && (
+            {existingReceiver === "YES" && !editId && (
               <>
                 {/* Existing receivers table/list */}
                 <div className="mb-6">
@@ -658,11 +672,10 @@ function BeneficiaryDetailsContent() {
                         {getSortedReceivers().map((beneficiary) => (
                           <div
                             key={beneficiary.id}
-                            className={`bg-light-blue rounded-lg p-4 border ${
-                              beneficiary.id === selectedBeneficiary?.id
+                            className={`bg-light-blue rounded-lg p-4 border ${beneficiary.id === selectedBeneficiary?.id
                                 ? "border-blue-500 bg-blue-50"
                                 : "border-gray-200"
-                            }`}
+                              }`}
                           >
                             <div className="flex items-start justify-between mb-3">
                               <label className="flex items-center">
@@ -705,14 +718,12 @@ function BeneficiaryDetailsContent() {
                                       toggleStatus(beneficiary.id)
                                     }
                                   }}
-                                  className={`h-5 w-10 rounded-full flex items-center transition-colors ${
-                                    beneficiary.status ? "bg-blue-100 justify-end" : "bg-gray-200 justify-start"
-                                  }`}
+                                  className={`h-5 w-10 rounded-full flex items-center transition-colors ${beneficiary.status ? "bg-blue-100 justify-end" : "bg-gray-200 justify-start"
+                                    }`}
                                 >
                                   <div
-                                    className={`h-4 w-4 rounded-full transition-all ${
-                                      beneficiary.status ? "bg-blue-600 mr-0.5" : "bg-gray-400 ml-0.5"
-                                    }`}
+                                    className={`h-4 w-4 rounded-full transition-all ${beneficiary.status ? "bg-blue-600 mr-0.5" : "bg-gray-400 ml-0.5"
+                                      }`}
                                   ></div>
                                 </button>
                                 <button
@@ -898,14 +909,12 @@ function BeneficiaryDetailsContent() {
                                         toggleStatus(beneficiary.id)
                                       }
                                     }}
-                                    className={`h-6 w-12 rounded-full flex items-center transition-colors ${
-                                      beneficiary.status ? "bg-blue-100 justify-end" : "bg-gray-200 justify-start"
-                                    }`}
+                                    className={`h-6 w-12 rounded-full flex items-center transition-colors ${beneficiary.status ? "bg-blue-100 justify-end" : "bg-gray-200 justify-start"
+                                      }`}
                                   >
                                     <div
-                                      className={`h-5 w-5 rounded-full transition-all ${
-                                        beneficiary.status ? "bg-blue-600 mr-0.5" : "bg-gray-400 ml-0.5"
-                                      }`}
+                                      className={`h-5 w-5 rounded-full transition-all ${beneficiary.status ? "bg-blue-600 mr-0.5" : "bg-gray-400 ml-0.5"
+                                        }`}
                                     ></div>
                                   </button>
                                 </td>
@@ -1001,9 +1010,8 @@ function BeneficiaryDetailsContent() {
                     type="text"
                     placeholder="Beneficiary's name"
                     {...register("receiverFullName")}
-                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${
-                      errors.receiverFullName ? "border border-red-500" : ""
-                    }`}
+                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${errors.receiverFullName ? "border border-red-500" : ""
+                      }`}
                   />
                   {errors.receiverFullName && (
                     <p className="text-red-500 text-sm mt-1">{errors.receiverFullName.message}</p>
@@ -1018,9 +1026,8 @@ function BeneficiaryDetailsContent() {
                   <div className="relative">
                     <select
                       {...register("receiverCountry")}
-                      className={`w-full p-3 bg-blue-50 rounded-md appearance-none pr-10 text-sm sm:text-base ${
-                        errors.receiverCountry ? "border border-red-500" : ""
-                      }`}
+                      className={`w-full p-3 bg-blue-50 rounded-md appearance-none pr-10 text-sm sm:text-base ${errors.receiverCountry ? "border border-red-500" : ""
+                        }`}
                       onChange={(e) => {
                         setValue("receiverCountry", e.target.value)
                         // Auto-sync receiver bank country with receiver country if they're the same
@@ -1054,9 +1061,8 @@ function BeneficiaryDetailsContent() {
                     type="text"
                     placeholder="Address"
                     {...register("address")}
-                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${
-                      errors.address ? "border border-red-500" : ""
-                    }`}
+                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${errors.address ? "border border-red-500" : ""
+                      }`}
                   />
                   {errors.address && <p className="text-red-500 text-sm mt-1">{errors.address.message}</p>}
                 </div>
@@ -1070,9 +1076,8 @@ function BeneficiaryDetailsContent() {
                     type="text"
                     placeholder="Beneficiary's bank"
                     {...register("receiverBank")}
-                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${
-                      errors.receiverBank ? "border border-red-500" : ""
-                    }`}
+                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${errors.receiverBank ? "border border-red-500" : ""
+                      }`}
                   />
                   {errors.receiverBank && <p className="text-red-500 text-sm mt-1">{errors.receiverBank.message}</p>}
                 </div>
@@ -1086,9 +1091,8 @@ function BeneficiaryDetailsContent() {
                     type="text"
                     placeholder="Beneficiary's bank address"
                     {...register("receiverBankAddress")}
-                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${
-                      errors.receiverBankAddress ? "border border-red-500" : ""
-                    }`}
+                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${errors.receiverBankAddress ? "border border-red-500" : ""
+                      }`}
                   />
                   {errors.receiverBankAddress && (
                     <p className="text-red-500 text-sm mt-1">{errors.receiverBankAddress.message}</p>
@@ -1103,9 +1107,8 @@ function BeneficiaryDetailsContent() {
                   <div className="relative">
                     <select
                       {...register("receiverBankCountry")}
-                      className={`w-full p-3 bg-blue-50 rounded-md appearance-none pr-10 text-sm sm:text-base ${
-                        errors.receiverBankCountry ? "border border-red-500" : ""
-                      }`}
+                      className={`w-full p-3 bg-blue-50 rounded-md appearance-none pr-10 text-sm sm:text-base ${errors.receiverBankCountry ? "border border-red-500" : ""
+                        }`}
                     >
                       {countries.map((country) => (
                         <option key={country.value} value={country.value}>
@@ -1133,9 +1136,8 @@ function BeneficiaryDetailsContent() {
                     type="text"
                     placeholder="Beneficiary's account"
                     {...register("receiverAccount")}
-                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${
-                      errors.receiverAccount ? "border border-red-500" : ""
-                    }`}
+                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${errors.receiverAccount ? "border border-red-500" : ""
+                      }`}
                   />
                   {errors.receiverAccount && (
                     <p className="text-red-500 text-sm mt-1">{errors.receiverAccount.message}</p>
@@ -1151,9 +1153,8 @@ function BeneficiaryDetailsContent() {
                     type="text"
                     placeholder="Beneficiary's bank Swift/BIC code"
                     {...register("receiverBankSwiftCode")}
-                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${
-                      errors.receiverBankSwiftCode ? "border border-red-500" : ""
-                    }`}
+                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${errors.receiverBankSwiftCode ? "border border-red-500" : ""
+                      }`}
                   />
                   {errors.receiverBankSwiftCode && (
                     <p className="text-red-500 text-sm mt-1">{errors.receiverBankSwiftCode.message}</p>
@@ -1168,9 +1169,8 @@ function BeneficiaryDetailsContent() {
                       type="text"
                       placeholder="IBAN"
                       {...register("iban")}
-                      className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${
-                        errors.iban ? "border border-red-500" : ""
-                      }`}
+                      className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${errors.iban ? "border border-red-500" : ""
+                        }`}
                     />
                     {errors.iban && <p className="text-red-500 text-sm mt-1">{errors.iban.message}</p>}
                   </div>
@@ -1184,9 +1184,8 @@ function BeneficiaryDetailsContent() {
                       type="text"
                       placeholder="Sort code"
                       {...register("sortCode")}
-                      className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${
-                        errors.sortCode ? "border border-red-500" : ""
-                      }`}
+                      className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${errors.sortCode ? "border border-red-500" : ""
+                        }`}
                     />
                     {errors.sortCode && <p className="text-red-500 text-sm mt-1">{errors.sortCode.message}</p>}
                   </div>
@@ -1200,9 +1199,8 @@ function BeneficiaryDetailsContent() {
                       type="text"
                       placeholder="Transit number"
                       {...register("transitNumber")}
-                      className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${
-                        errors.transitNumber ? "border border-red-500" : ""
-                      }`}
+                      className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${errors.transitNumber ? "border border-red-500" : ""
+                        }`}
                     />
                     {errors.transitNumber && (
                       <p className="text-red-500 text-sm mt-1">{errors.transitNumber.message}</p>
@@ -1218,9 +1216,8 @@ function BeneficiaryDetailsContent() {
                       type="text"
                       placeholder="BSB code"
                       {...register("bsbCode")}
-                      className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${
-                        errors.bsbCode ? "border border-red-500" : ""
-                      }`}
+                      className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${errors.bsbCode ? "border border-red-500" : ""
+                        }`}
                     />
                     {errors.bsbCode && <p className="text-red-500 text-sm mt-1">{errors.bsbCode.message}</p>}
                   </div>
@@ -1234,9 +1231,8 @@ function BeneficiaryDetailsContent() {
                       type="text"
                       placeholder="Routing number"
                       {...register("routingNumber")}
-                      className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${
-                        errors.routingNumber ? "border border-red-500" : ""
-                      }`}
+                      className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${errors.routingNumber ? "border border-red-500" : ""
+                        }`}
                     />
                     {errors.routingNumber && (
                       <p className="text-red-500 text-sm mt-1">{errors.routingNumber.message}</p>
@@ -1275,9 +1271,8 @@ function BeneficiaryDetailsContent() {
                         )}
                       </span>
                       <span
-                        className={`ml-3 font-Inter text-base font-medium ${
-                          watch("anyIntermediaryBank") === "YES" ? "text-black" : "text-light-gray"
-                        }`}
+                        className={`ml-3 font-Inter text-base font-medium ${watch("anyIntermediaryBank") === "YES" ? "text-black" : "text-light-gray"
+                          }`}
                       >
                         YES
                       </span>
@@ -1309,9 +1304,8 @@ function BeneficiaryDetailsContent() {
                         )}
                       </span>
                       <span
-                        className={`ml-3 font-Inter text-base font-medium ${
-                          watch("anyIntermediaryBank") === "NO" ? "text-black" : "text-light-gray"
-                        }`}
+                        className={`ml-3 font-Inter text-base font-medium ${watch("anyIntermediaryBank") === "NO" ? "text-black" : "text-light-gray"
+                          }`}
                       >
                         NO
                       </span>
@@ -1386,9 +1380,8 @@ function BeneficiaryDetailsContent() {
                     type="text"
                     placeholder="Current Financial year"
                     {...register("totalRemittance")}
-                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${
-                      errors.totalRemittance ? "border border-red-500" : ""
-                    } ${editId ? "border-blue-300 bg-blue-50" : ""}`}
+                    className={`w-full p-3 bg-blue-50 rounded-md text-sm sm:text-base ${errors.totalRemittance ? "border border-red-500" : ""
+                      } ${editId ? "border-blue-300 bg-blue-50" : ""}`}
                   />
                   {errors.totalRemittance && (
                     <p className="text-red-500 text-sm mt-1">{errors.totalRemittance.message}</p>
@@ -1404,9 +1397,8 @@ function BeneficiaryDetailsContent() {
                   <textarea
                     placeholder="Type here"
                     {...register("field70")}
-                    className={`w-full p-3 bg-blue-50 rounded-md h-24 text-sm sm:text-base ${
-                      editId ? "border-blue-300 bg-blue-50" : ""
-                    }`}
+                    className={`w-full p-3 bg-blue-50 rounded-md h-24 text-sm sm:text-base ${editId ? "border-blue-300 bg-blue-50" : ""
+                      }`}
                   ></textarea>
                 </div>
               </div>
@@ -1414,70 +1406,57 @@ function BeneficiaryDetailsContent() {
 
             {/* Form buttons */}
             {submitError && <div className="text-red-500 mb-4 p-2 bg-red-50 rounded-md text-center">{submitError}</div>}
-            <div className="flex flex-col sm:flex-row justify-center mt-8 space-y-4 sm:space-y-0 sm:space-x-4">
-              <button
-                type="submit"
-                disabled={
-                  isSubmitting ||
-                  (existingReceiver === "YES" &&
-                    !selectedBeneficiary &&
-                    !editId &&
-                    !beneficiaryId &&
-                    !existingBeneficiaryData)
-                }
-                className={`bg-dark-blue text-white font-jakarta px-6 sm:px-8 py-3 rounded-md flex items-center justify-center text-sm sm:text-base ${
-                  isSubmitting ||
-                  (
-                    existingReceiver === "YES" &&
-                      !selectedBeneficiary &&
-                      !editId &&
-                      !beneficiaryId &&
-                      !existingBeneficiaryData
-                  )
-                    ? "opacity-70 cursor-not-allowed"
-                    : ""
-                }`}
-              >
-                {isSubmitting ? (
-                  <span className="flex items-center">
-                    <svg
-                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    Processing...
-                  </span>
-                ) : (
-                  <>
-                    <Image src="/continue.png" alt="Continue" className="mr-2 h-3 w-3" width={20} height={20} />
-                    {editId ? "UPDATE" : beneficiaryId || existingBeneficiaryData ? "UPDATE" : "CONTINUE"}
-                  </>
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={handleReset}
-                className="border border-gray-300 text-gray-700 font-jakarta px-6 sm:px-8 py-3 rounded-md flex items-center justify-center text-sm sm:text-base"
-              >
-                <Image src="/reset.png" alt="Reset" className="mr-2 h-3 w-3" width={20} height={20} />
-                RESET
-              </button>
-            </div>
+            {/* Only show buttons if not in "Existing receiver: YES" mode or if in edit mode */}
+            {(existingReceiver !== "YES" || editId) && (
+              <div className="flex flex-col sm:flex-row justify-center mt-8 space-y-4 sm:space-y-0 sm:space-x-4">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className={`bg-dark-blue text-white font-jakarta px-6 sm:px-8 py-3 rounded-md flex items-center justify-center text-sm sm:text-base ${
+                    isSubmitting ? "opacity-70 cursor-not-allowed" : ""
+                  }`}
+                >
+                  {isSubmitting ? (
+                    <span className="flex items-center">
+                      <svg
+                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Processing...
+                    </span>
+                  ) : (
+                    <>
+                      <Image src="/continue.png" alt="Continue" className="mr-2 h-3 w-3" width={20} height={20} />
+                      {editId ? "UPDATE" : "CONTINUE"}
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="border border-gray-300 text-gray-700 font-jakarta px-6 sm:px-8 py-3 rounded-md flex items-center justify-center text-sm sm:text-base"
+                >
+                  <Image src="/reset.png" alt="Reset" className="mr-2 h-3 w-3" width={20} height={20} />
+                  RESET
+                </button>
+              </div>
+            )}
           </form>
         </div>
       </div>

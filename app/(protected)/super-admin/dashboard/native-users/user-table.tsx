@@ -67,9 +67,9 @@ type SortField =
   | "userType"
   | "name"
   | "email"
-  | "agentRate"
+  | "agentRates"
   | "forexPartner"
-  | "buyexRate";
+  | "buyexRates";
 type SortDirection = "asc" | "desc";
 
 // Define the schema properly
@@ -77,31 +77,34 @@ const editUserSchema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Invalid email"),
   userType: z.enum(["Admin", "Staff", "Agent"]),
-  agentRate:  z
-  .number()
-  .optional()
-  .refine((val) => val === undefined || (val >= 0.2 && val <= 3), {
-    message: "Agent rate must be between 0.2 and 3.0",
-  }),
+  agentRates: z.record(z.number())
+    .optional()
+    .refine((val) => {
+      if (!val) return true;
+      const rate = Object.values(val)[0];
+      return rate === undefined || (rate >= 0.2 && rate <= 3);
+    }, {
+      message: "Agent rate must be between 0.2 and 3.0",
+    }),
   forexPartner: z.string().optional(),
-  buyexRate:  z
-  .number()
-  .optional()
-  .refine((val) => val === undefined || (val >= 0.2 && val <= 3), {
+  buyexRates: z.record(z.number())
+    .optional()
+    .refine((val) => {
+      if (val === undefined) return true;
+      const rate = Object.values(val)[0];
+      return rate >= 0.2 && rate <= 3;
+    }, {
     message: "Buyex rate must be between 0.2 and 3.0",
   }),
 })
   .superRefine((data, ctx) => {
     if (data.userType === "Agent") {
-      if (
-        data.agentRate === undefined ||
-        data.agentRate < 0.2 ||
-        data.agentRate > 3
-      ) {
+      const rate = data.agentRates ? Object.values(data.agentRates)[0] : undefined;
+      if (rate === undefined || rate < 0.2 || rate > 3) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: "Agent rate is required and must be between 0.2 and 3.0 for Agent users",
-          path: ["agentRate"],
+          path: ["agentRates"],
         });
       }
       if (!data.forexPartner) {
@@ -111,15 +114,12 @@ const editUserSchema = z.object({
           path: ["forexPartner"],
         });
       }
-      if (
-        data.buyexRate === undefined ||
-        data.buyexRate < 0.2 ||
-        data.buyexRate > 3
-      ) {
+      const buyexRate = data.buyexRates ? Object.values(data.buyexRates)[0] : undefined;
+      if (buyexRate === undefined || buyexRate < 0.2 || buyexRate > 3) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: "Buyex rate is required and must be between 0.2 and 3.0 for Agent users",
-          path: ["buyexRate"],
+          path: ["buyexRates"],
         });
       }
     }
@@ -135,9 +135,9 @@ interface UserTableProps {
       name: string;
       email: string;
       userType: UserType;
-      agentRate?: number;
+      agentRates?: Record<string, number>;
       forexPartner?: string;
-      buyexRate?: number;
+      buyexRates?: Record<string, number>;
     }
   ) => Promise<boolean>;
   filteredUserType: UserType | "all";
@@ -239,17 +239,17 @@ export function UserTable({
         aValue = a.email.toLowerCase();
         bValue = b.email.toLowerCase();
         break;
-      case "agentRate":
-        aValue = a.agentRate ?? 0;
-        bValue = b.agentRate ?? 0;
+      case "agentRates":
+        aValue = a.agentRates ? Object.values(a.agentRates)[0] ?? 0 : 0;
+        bValue = b.agentRates ? Object.values(b.agentRates)[0] ?? 0 : 0;
         break;
       case "forexPartner":
         aValue = a.forexPartner?.toLowerCase() ?? "";
         bValue = b.forexPartner?.toLowerCase() ?? "";
         break;
-      case "buyexRate":
-        aValue = a.buyexRate ?? 0;
-        bValue = b.buyexRate ?? 0;
+      case "buyexRates":
+        aValue = a.buyexRates ? Object.values(a.buyexRates)[0] ?? 0 : 0;
+        bValue = b.buyexRates ? Object.values(b.buyexRates)[0] ?? 0 : 0;
         break;
       default:
         return 0;
@@ -323,9 +323,9 @@ export function UserTable({
         name: user.name,
         email: user.email,
         userType: user.userType,
-        agentRate: user.agentRate,
+        agentRates: user.agentRates || {},
         forexPartner: user.forexPartner,
-        buyexRate: user.buyexRate,
+        buyexRates: user.buyexRates,
       });
     }, 0);
   };
@@ -336,9 +336,9 @@ export function UserTable({
       name: data.name,
       email: data.email,
       userType: data.userType,
-      agentRate: data.userType === "Agent" ? data.agentRate : undefined,
+agentRates: data.userType === "Agent" && data.agentRates ? data.agentRates : undefined,
       forexPartner: data.userType === "Agent" ? data.forexPartner : undefined,
-      buyexRate: data.userType === "Agent" ? data.buyexRate : undefined,
+      buyexRates: data.userType === "Agent" && data.buyexRates ? data.buyexRates : undefined,
     });
     if (success) {
       setEditDialog({ open: false, user: null });
@@ -505,9 +505,9 @@ export function UserTable({
                 <TableHead className="whitespace-nowrap">
                   <button
                     className="flex items-center gap-1 hover:bg-gray-50 p-1 rounded transition-colors"
-                    onClick={() => handleSort("agentRate")}
+                    onClick={() => handleSort("agentRates")}
                   >
-                    Agent Rate {getSortIcon("agentRate")}
+                    Agent Rate {getSortIcon("agentRates")}
                   </button>
                 </TableHead>
                 <TableHead className="whitespace-nowrap">
@@ -521,9 +521,9 @@ export function UserTable({
                 <TableHead className="whitespace-nowrap">
                   <button
                     className="flex items-center gap-1 hover:bg-gray-50 p-1 rounded transition-colors"
-                    onClick={() => handleSort("buyexRate")}
+                    onClick={() => handleSort("buyexRates")}
                   >
-                    Buyex Rate {getSortIcon("buyexRate")}
+                    Buyex Rate {getSortIcon("buyexRates")}
                   </button>
                 </TableHead>
                 <TableHead>Status</TableHead>
@@ -566,13 +566,13 @@ export function UserTable({
                     </TableCell>
                     <TableCell>
                       {user.userType === "Agent"
-                        ? `${user.agentRate ?? "-"}`
+                        ? user.agentRates ? `${Object.values(user.agentRates)[0] ?? "-"}` : "-"
                         : "-"}
                     </TableCell>
                     <TableCell>{user.forexPartner || "-"}</TableCell>
                     <TableCell>
-                      {user.userType ===   "Agent"
-                        ? `${user.buyexRate ?? "-"}`
+                      {user.userType === "Agent" && user.buyexRates
+                        ? `${Object.values(user.buyexRates)[0] ?? "-"}`
                         : "-"}
                     </TableCell>
                     <TableCell>
@@ -705,7 +705,7 @@ export function UserTable({
       <Dialog
         open={editDialog.open}
         onOpenChange={(open) => {
-          setEditDialog({ open, user: null });
+          setEditDialog({ open, user: editDialog.user });
           if (!open) {
             reset();
             setSelectedUserType("Admin");
@@ -773,24 +773,24 @@ export function UserTable({
             {selectedUserType === "Agent" && (
               <>
                 <div className="space-y-2">
-  <Label htmlFor="edit-agentRate">Agent Rate</Label>
-  <Input
-    id="edit-agentRate"
-    type="number"
-    step="0.01" // <-- allow two decimal places
-    min="0.2"
-    max="3"
-    placeholder="Enter agent rate (0.2 - 3.0)"
-    {...register("agentRate", {
-      valueAsNumber: true,
-    })}
-  />
-  {errors.agentRate && (
-    <p className="text-red-500 text-xs">
-      {errors.agentRate.message}
-    </p>
-  )}
-</div>
+                  <Label htmlFor="edit-agentRates">Agent Rate</Label>
+                  <Input
+                    id="edit-agentRates"
+                    type="number"
+                    step="0.01"
+                    min="0.2"
+                    max="3"
+                    placeholder="Enter agent rate (0.2 - 3.0)"
+                    {...register("agentRates.default", {
+                      valueAsNumber: true,
+                    })}
+                  />
+                  {errors.agentRates && (
+                    <p className="text-red-500 text-xs">
+                      {String(errors.agentRates.message)}
+                    </p>
+                  )}
+                </div>
                 <div className="space-y-2">
                   <Label htmlFor="edit-forexPartner">Forex Partner</Label>
                   <Select
@@ -814,53 +814,29 @@ export function UserTable({
                   </Select>
                   {errors.forexPartner && (
                     <p className="text-red-500 text-xs">
-                      {errors.forexPartner.message}
+                      {String(errors.forexPartner.message)}
                     </p>
                   )}
                 </div>
-                <div className="space-y-2">
-  <Label htmlFor="edit-buyexRate">Buyex Rate</Label>
-  <Input
-    id="edit-buyexRate"
-    type="number"
-    step="0.01" // <-- allow two decimal places
-    min="0.2"
-    max="3"
-    placeholder="Enter buyex rate (0.2 - 3.0)"
-    {...register("buyexRate", {
-      valueAsNumber: true,
-    })}
-  />
-  {errors.buyexRate && (
-    <p className="text-red-500 text-xs">
-      {errors.buyexRate.message}
-    </p>
-  )}
-</div>
-              </>
-            )}
-            <DialogFooter className="flex-col sm:flex-row gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setEditDialog({ open: false, user: null });
-                  reset();
-                }}
-                className="w-full sm:w-auto"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="bg-[#004976] hover:bg-[#003a5e] w-full sm:w-auto"
-              >
-                {isSubmitting ? "Updating..." : "Update User"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
+                </>
+              )}
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setEditDialog({ open: false, user: null });
+                    reset();
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
       </Dialog>
       {/* Success Dialog */}
       <Dialog

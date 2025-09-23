@@ -1,9 +1,14 @@
 "use client";
 
-
 import { HERO_CONTENT } from "@/data/hero";
+import Image from 'next/image';
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { ConsultancyModal } from "@/components/consultancy/ConsultancyModal"
+import Link from "next/link"
 
 export default function Hero() {
+  const [showModal, setShowModal] = useState(false)
   const { description, partners, heroImage } = HERO_CONTENT
 
   return (
@@ -19,8 +24,8 @@ export default function Hero() {
             </div>
 
             {/* Main heading */}
-            <h1 className="mb-6 text-4xl sm:text-5xl lg:text-6xl font-bold font-playfair leading-tight tracking-tight text-deep-blue">
-              Powering <span className="whitespace-nowrap">Study Abroad Forex</span><br /> for Your Students.
+            <h1 className="mb-6 text-4xl sm:text-5xl lg:text-5xl font-bold font-playfair leading-tight tracking-tight text-deep-blue">
+              Powering <span className="whitespace-nowrap">Study Abroad Dreams with </span><br />International Money Transfer from India
             </h1>
 
             {/* Description */}
@@ -30,9 +35,13 @@ export default function Hero() {
 
             {/* CTA Button */}
             <div className="mb-8">
-              <a href="#" className="inline-block rounded-md bg-dark-rose px-8 py-3 text-base font-medium text-white transition hover:bg-dark-rose hover:shadow-lg">
+              <Button 
+                onClick={() => setShowModal(true)}
+                className="inline-flex items-center justify-center rounded-md bg-dark-rose px-8 py-3 text-base font-medium text-white transition hover:bg-dark-rose/90 hover:shadow-lg"
+              >
                 Register as consultant
-              </a>
+              </Button>
+              <ConsultancyModal isOpen={showModal} onClose={() => setShowModal(false)} />
             </div>
 
             {/* Stats */}
@@ -46,9 +55,9 @@ export default function Hero() {
               {/* Partner logos */}
               <div className="flex overflow-x-auto gap-4 pb-4 scrollbar-hide">
                 {partners.map((partner, index) => (
-                  <a key={index} href={partner.url} className="flex-shrink-0 h-10 flex items-center transition-transform hover:scale-105">
-                    <img src={partner.image} alt={partner.name} className="h-full w-auto object-contain max-w-[100px]" />
-                  </a>
+                  <Link key={index} href={partner.url} className="flex-shrink-0 h-10 flex items-center transition-transform hover:scale-105">
+                    <Image src={partner.image} alt={partner.name} width={100} height={40} className="h-full w-auto object-contain max-w-[100px]" />
+                  </Link>
                 ))}
               </div>
             </div>
@@ -57,11 +66,35 @@ export default function Hero() {
           {/* Hero Image */}
           <div className="w-full mt-8 lg:mt-0 lg:w-1/2 lg:absolute lg:right-0 lg:top-1/2 lg:-translate-y-1/2">
             <div className="relative h-[400px] lg:h-[600px] w-full">
-              <img src={heroImage.src} alt={heroImage.alt} className="w-full h-full object-contain" />
+              <Image 
+                src={heroImage.src} 
+                alt={heroImage.alt} 
+                width={800} 
+                height={600} 
+                className="w-full h-full object-contain" 
+              />
             </div>
           </div>
         </div>
       </div>
+
+      {/* WhatsApp Chat Badge */}
+      <Link 
+        href="https://wa.me/9633886611" // Replace with your WhatsApp number
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-8 right-8 bg-[#25D366] hover:bg-[#128C7E] text-white p-4 rounded-full shadow-lg z-50 flex items-center justify-center transition-all hover:scale-110"
+        aria-label="Chat with us on WhatsApp"
+      >
+        <Image 
+          src="/WhatsApp.svg.webp" 
+          alt="WhatsApp"
+          width={32} 
+          height={32}
+          className="w-8 h-8"
+        />
+        <span className="ml-2 font-medium hidden sm:inline">Chat with us</span>
+      </Link>
     </section>
   )
 }
