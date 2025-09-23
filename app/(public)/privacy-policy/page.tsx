@@ -1,17 +1,15 @@
 "use client"
-import React from 'react'
+
 import PrivacyPolicy from './privacy'
 import Topbar from '@/components/landing-content/Topbar'
 import Footer from '@/components/landing-content/Footer'
 
-function page() {
+export default function PrivacyPolicyPage() {
   return (
     <div>
-        <Topbar/>
-        <PrivacyPolicy/>
-        <Footer/>
+      <Topbar/>
+      <PrivacyPolicy/>
+      <Footer/>
     </div>
   )
 }
-
-export default page

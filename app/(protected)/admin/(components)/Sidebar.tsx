@@ -130,20 +130,6 @@ export function Sidebar({
       active: pathname === "/admin/dashboard",
     },
     {
-      href: "/admin/dashboard/manage-orders",
-      icon: (
-        <Image
-          src="/placeee.svg"
-          alt="Place Order"
-          width={24}
-          height={24}
-          className="w-6 h-6"
-        />
-      ),
-      label: "Manage orders",
-      active: pathname === "/admin/dashboard/manage-orders",
-    },
-    {
       href: "/admin/dashboard/manage-users",
       icon: (
         <Image

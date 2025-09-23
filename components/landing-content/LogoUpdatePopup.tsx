@@ -1,5 +1,6 @@
 "use client"
 import { X } from "lucide-react"
+import Image from "next/image"
 
 interface LogoUpdatePopupProps {
   isOpen: boolean
@@ -24,13 +25,23 @@ export default function LogoUpdatePopup({ isOpen, onClose }: LogoUpdatePopupProp
           <h3 className="text-lg font-medium mb-8">Same Vision, Different Look!</h3>
           <div className="flex items-center justify-center gap-4 text-gray-700">
             <div className="flex flex-col items-center">
-              <img src="/BE.svg" alt="Previous Logo" className="h-28 w-28 object-contain" />
-              
+              <Image 
+                src="/BE.svg" 
+                alt="Previous Logo" 
+                width={112} 
+                height={112}
+                className="h-28 w-28 object-contain" 
+              />
             </div>
             <span className="text-sm font-medium">is now</span>
             <div className="flex flex-col items-center">
-              <img src="/buyex-main-logo.png" alt="New Logo" className="h-28 w-28 object-contain" />
-              
+              <Image 
+                src="/buyex-main-logo.png" 
+                alt="New Logo" 
+                width={112} 
+                height={112}
+                className="h-28 w-28 object-contain" 
+              />
             </div>
           </div>
           <button

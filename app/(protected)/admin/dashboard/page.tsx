@@ -892,7 +892,7 @@ export default function Dashboard() {
                                       className="w-8 h-8 sm:w-6 sm:h-6"
                                     />
                                     <span className="text-sm sm:text-base">
-                                      Authorized
+                                      Authorize
                                     </span>
                                     <div className="flex ml-1">
                                       <span className="text-white font-bold">

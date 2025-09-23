@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { X, Plus } from "lucide-react"
-import { faqData } from "@/data/faq"
+import { faqData } from "@/data/faq_new"
 
 export default function FaqSection() {
   const [openQuestion, setOpenQuestion] = useState<number | null>(1)
@@ -19,9 +19,9 @@ export default function FaqSection() {
    <section id="whoall" className="w-full bg-white py-8 sm:py-10 md:py-12 lg:py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8 sm:mb-10 md:mb-12">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-dark-blue mb-3 sm:mb-4 font-playfair">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-dark-blue mb-3 sm:mb-4 font-playfair">
             All You Need To Know
-          </h1>
+          </h2>
           <p className="text-base sm:text-lg text-gray-600">We&apos;ve got you covered</p>
         </div>
 

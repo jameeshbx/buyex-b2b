@@ -36,6 +36,7 @@ export default function SettingsContent() {
   // Initialize form data when session is available
   useEffect(() => {
     if (status === "authenticated" && session?.user) {
+      console.log("session.user",session.user)
       setFormData({
         fullName: session.user.name || "",
         username: session.user.email?.split("@")[0] || "",

@@ -20,8 +20,8 @@ model User {
   updatedAt      DateTime             @updatedAt
   organisationId String?
   status         Boolean              @default(true)
-  agentRate      Float?               @default(0)
-  buyexRate      Float?               @default(0)
+  agentRates     Json?                @default("{}")
+  buyexRates     Json?                @default("{}")
   forexPartner   String?
   accounts       Account[]
   resetTokens    PasswordResetToken[]
