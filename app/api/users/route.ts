@@ -11,9 +11,9 @@ const createUserSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
   email: z.string().email({ message: "Please enter a valid email address" }),
   organisationId: z.string().optional(),
-  agentRate: z.number().min(0).max(100).optional(),
+  agentRates: z.record(z.number()).optional().default({}),
   forexPartner: z.string().optional(),
-  buyexRate: z.number().min(0).max(100).optional(),
+  buyexRates: z.record(z.number()).optional().default({}),
 }).superRefine((data, ctx) => {
   if (data.userType === "Agent") {
     if (!data.organisationId) {
@@ -23,11 +23,11 @@ const createUserSchema = z.object({
         path: ["organisationId"],
       });
     }
-    if (data.agentRate === undefined || data.agentRate < 0 || data.agentRate > 100) {
+    if (!data.agentRates || Object.keys(data.agentRates).length === 0) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Agent rate is required and must be between 0 and 100 for Agent users",
-        path: ["agentRate"],
+        message: "Agent rates are required for Agent users",
+        path: ["agentRates"],
       });
     }
   }
@@ -39,9 +39,9 @@ const updateUserSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }).optional(),
   role: z.enum(["ADMIN", "MANAGER", "AGENT"]).optional(),
   organisationId: z.string().optional(),
-  agentRate: z.number().min(0).max(100).optional(),
+  agentRates: z.record(z.number()).optional(),
   forexPartner: z.string().optional(),
-  buyexRate: z.number().min(0).max(100).optional(),
+  buyexRates: z.record(z.number()).optional(),
 });
 
 // Create invitation email template
@@ -129,9 +129,9 @@ export async function POST(req: Request) {
         email: validatedData.email,
         password: hashedPassword,
         organisationId: validatedData.organisationId || null,
-        agentRate: validatedData.agentRate || null,
+        agentRates: validatedData.agentRates || {},
         forexPartner: validatedData.forexPartner || null,
-        buyexRate: validatedData.buyexRate || null,
+        buyexRates: validatedData.buyexRates || {},
       },
     });
 
@@ -161,9 +161,9 @@ export async function POST(req: Request) {
           name: user.name,
           email: user.email,
           organisationId: user.organisationId,
-          agentRate: user.agentRate,
+          agentRates: user.agentRates,
           forexPartner: user.forexPartner,
-          buyexRate: user.buyexRate,
+          buyexRates: user.buyexRates,
         }
       },
       { status: 201 }
@@ -205,9 +205,9 @@ export async function GET(req: Request) {
           email: true,
           createdAt: true,
           organisationId: true,
-          agentRate: true,
+          agentRates: true,
           forexPartner: true,
-          buyexRate: true,
+          buyexRates: true,
         },
       });
 
@@ -231,9 +231,9 @@ export async function GET(req: Request) {
           email: true,
           createdAt: true,
           organisationId: true,
-          agentRate: true,
+          agentRates: true,
           forexPartner: true,
-          buyexRate: true,
+          buyexRates: true,
         },
       });
       return NextResponse.json(users);
@@ -251,9 +251,9 @@ export async function GET(req: Request) {
           email: true,
           createdAt: true,
           organisationId: true,
-          agentRate: true,
+          agentRates: true,
           forexPartner: true,
-          buyexRate: true,
+          buyexRates: true,
         },
         orderBy: {
           name: 'asc', // Sort by name alphabetically
@@ -272,9 +272,9 @@ export async function GET(req: Request) {
           email: true,
           createdAt: true,
           organisationId: true,
-          agentRate: true,
+          agentRates: true,
           forexPartner: true,
-          buyexRate: true,
+          buyexRates: true,
         },
       });
       return NextResponse.json(users);
@@ -341,9 +341,9 @@ export async function PUT(req: Request) {
         email: true,
         createdAt: true,
         organisationId: true,
-        agentRate: true,
+        agentRates: true,
         forexPartner: true,
-        buyexRate: true,
+        buyexRates: true,
       },
     });
 

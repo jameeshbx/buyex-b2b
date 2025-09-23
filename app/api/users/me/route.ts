@@ -25,9 +25,9 @@ export async function GET() {
         emailVerified: true,
         createdAt: true,
         updatedAt: true,
-        agentRate: true,
+        agentRates: true,
         forexPartner: true,
-        buyexRate: true,
+        buyexRates: true,
         organisation: {
           select: {
             commission: true,
