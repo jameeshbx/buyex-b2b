@@ -43,6 +43,12 @@ import { forexPartnerData } from "@/data/forex-partner";
 import { User } from "@prisma/client";
 import { toast } from "sonner";
 
+// Extend the User type to include the rates objects
+interface UserWithRates extends Omit<User, 'agentRates' | 'buyexRates'> {
+  buyexRates?: Record<string, number> | null;
+  agentRates?: Record<string, number> | null;
+}
+
 interface CalculatedValues {
   inrAmount: string;
   bankFee: string;
@@ -61,7 +67,7 @@ interface JsPDFWithAutoTable extends jsPDF {
 async function generateQuotePDF(
   formData: OrderDetailsFormValues,
   calculatedValues: CalculatedValues,
-  user: User,
+  user: UserWithRates,
   orderId?: string
 ) {
   const doc = new jsPDF() as JsPDFWithAutoTable;
@@ -177,11 +183,7 @@ export default function OrderDetailsForm() {
   const { data: session, status } = useSession();
   const [orderId, setOrderId] = useState<string | null>(null);
   const router = useRouter();
-  // Extend the User type to include the rates objects
-  interface UserWithRates extends User {
-    buyexRates?: Record<string, number>;
-    agentRates?: Record<string, number>;
-  }
+  // UserWithRates interface is now defined at the top of the file
 
   const [user, setUser] = useState<UserWithRates | null>(null);
 
