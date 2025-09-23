@@ -47,7 +47,7 @@ export default function Home() {
       {/* Top section with heading and search */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <div>
-          <h1 className="text-4xl font-bold font-jakarta mb-1">Insights from our team</h1>
+          <h1 className="text-4xl font-bold font-jakarta mb-1">Insights from Our Team on Forex for Education</h1>
           <p className="font-jakarta text-light-gray">Buyex Forex Forex News</p>
         </div>
         <div className="relative mt-4 md:mt-0">

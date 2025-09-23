@@ -67,10 +67,10 @@ export default function Component() {
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
             <div className="space-y-8">
               <div className="space-y-4">
-                <h1 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900 leading-tight">
-                  Open <span className="text-purple-700">Blocked Account</span>
+                <h1 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-purple-700 leading-tight">
+                Open Your Blocked Account Germany
                   <br />
-                  Online From India
+                  Online with Buyexforex
                 </h1>
                 <p className="text-gray-600 text-lg leading-relaxed">
                 Open your German student blocked account online from India with ease. Compare leading providers like Coracle, Expatrio, and Fintiba to choose the right fit for you.
@@ -107,10 +107,10 @@ export default function Component() {
           <div className="space-y-8">
             {/* Header */}
             <div className="space-y-4">
-              <h1 className="text-3xl lg:text-4xl xl:text-5xl font-bold font-playfair text-deep-blue leading-tight">
-                Open <span className="text-deep-blue font-playfair">Blocked Account</span>
+              <h1 className="text-3xl lg:text-4xl xl:text-4xl font-bold font-playfair text-deep-blue leading-tight">
+              Open Your Blocked Account Germany 
                 <br />
-                Online From India
+                Online with Buyexforex
               </h1>
               <p className="text-gray-600 text-lg leading-relaxed">
               Open your German student blocked account online from India with ease. Compare leading providers like Coracle, Expatrio, and Fintiba to choose the right fit for you.

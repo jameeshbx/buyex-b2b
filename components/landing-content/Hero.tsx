@@ -24,8 +24,8 @@ export default function Hero() {
             </div>
 
             {/* Main heading */}
-            <h1 className="mb-6 text-4xl sm:text-5xl lg:text-6xl font-bold font-playfair leading-tight tracking-tight text-deep-blue">
-              Powering <span className="whitespace-nowrap">Study Abroad Forex</span><br /> for Your Students.
+            <h1 className="mb-6 text-4xl sm:text-5xl lg:text-5xl font-bold font-playfair leading-tight tracking-tight text-deep-blue">
+              Powering <span className="whitespace-nowrap">Study Abroad Dreams with </span><br />International Money Transfer from India
             </h1>
 
             {/* Description */}
