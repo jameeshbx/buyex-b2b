@@ -36,7 +36,7 @@ import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import { fileUploadSchema } from "@/schema/uploadfiles";
 import { Topbar } from "../../../(components)/Topbar";
-import { pagesData } from "@/data/navigation";
+import { agentPagesData } from "@/data/agentNavigation";
 
 type UploadedFile = {
   id: string;
@@ -661,7 +661,7 @@ export default function UploadsPage({
     return (
       <div className="min-h-screen bg-gray-50 p-2 sm:p-4 md:p-6">
         <div className="sticky top-0 z-40">
-          <Topbar pageData={pagesData.fileUpload} />
+          <Topbar pageData={agentPagesData.fileUpload} />
         </div>
         <div className="max-w-7xl mx-auto flex justify-center items-center h-[calc(100vh-100px)]">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -673,7 +673,7 @@ export default function UploadsPage({
   return (
     <div className="min-h-screen bg-gray-50 p-2 sm:p-4 md:p-6">
       <div className="sticky top-0 z-40">
-        <Topbar pageData={pagesData.fileUpload} />
+        <Topbar pageData={agentPagesData.fileUpload} />
       </div>
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6">
