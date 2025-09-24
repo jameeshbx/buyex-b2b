@@ -1,8 +1,8 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Blocked Account Germany Online for Indian Students – Buyexforex',
-  description: 'Open your Blocked account Germany online in just 1 hour with Buyexforex. 100% compliant, paperless, and secure solution for Indian students moving to Germany',
+  title: 'Blocked Account Germany Online for Indian Students',
+  description: 'Open your German Blocked Account online in 1 hour with Buyexforex. 100% compliant, paperless, and secure for Indian students.',
 };
 
 export default function BlockedAccountLayout({
