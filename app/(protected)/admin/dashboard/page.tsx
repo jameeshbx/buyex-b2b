@@ -988,8 +988,7 @@ export default function Dashboard() {
                                         formValidation[order.id]?.currency !==
                                           order.currency && (
                                           <p className="text-red-500 text-xs mt-1">
-                                            Currency must match order currency:{" "}
-                                            {order.currency}
+                                            Invalid currency
                                           </p>
                                         )}
                                     </div>
@@ -1043,8 +1042,7 @@ export default function Dashboard() {
                                             "0"
                                         ) !== order.amount && (
                                           <p className="text-red-500 text-xs mt-1">
-                                            Amount must match order amount:{" "}
-                                            {order.amount}
+                                            Invalid amount
                                           </p>
                                         )}
                                     </div>
@@ -1121,8 +1119,7 @@ export default function Dashboard() {
                                         formValidation[order.id]?.purpose !==
                                           order.purpose && (
                                           <p className="text-red-500 text-xs mt-1">
-                                            Purpose must match order purpose:{" "}
-                                            {order.purpose}
+                                            Invalid purpose
                                           </p>
                                         )}
                                     </div>
@@ -1178,8 +1175,7 @@ export default function Dashboard() {
                                           ?.receiverFullName !==
                                           beneficiary?.receiverFullName && (
                                           <p className="text-red-500 text-xs mt-1">
-                                            Name must match beneficiary name:{" "}
-                                            {beneficiary?.receiverFullName}
+                                            Invalid name
                                           </p>
                                         )}
                                     </div>
@@ -1234,9 +1230,7 @@ export default function Dashboard() {
                                           ?.receiverAccount !==
                                           beneficiary?.receiverAccount && (
                                           <p className="text-red-500 text-xs mt-1">
-                                            Account number must match
-                                            beneficiary account:{" "}
-                                            {beneficiary?.receiverAccount}
+                                            Invalid account number
                                           </p>
                                         )}
                                     </div>
