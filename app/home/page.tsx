@@ -14,8 +14,8 @@ import Footer from "../../components/landing-content/Footer";
 import { useEffect, useState } from "react";
 import TestComponent from "./test-component";
 
+// This is now the main landing page
 export default function Home() {
-  console.log('Rendering Home component');
   const [showLogoPopup, setShowLogoPopup] = useState(false);
   const [, setIsClient] = useState(false);
 
