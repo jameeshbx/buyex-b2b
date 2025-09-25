@@ -111,12 +111,7 @@ export default function Topbar() {
 
             {/* Auth Buttons */}
             <div className="flex space-x-4 ml-8">
-              {/* <Link
-                href="/signup"
-                className="bg-[#0a4d70] text-white px-6 py-2 rounded-full text-sm font-medium hover:bg-[#083d5a] transition-colors duration-200 whitespace-nowrap"
-              >
-                Register
-              </Link> */}
+              
               <Link
                 href="/signin"
                 className="bg-white text-gray-800 px-6 py-2 rounded-full text-sm font-medium border border-gray-200 hover:bg-gray-50 transition-colors duration-200 whitespace-nowrap"
@@ -186,13 +181,7 @@ export default function Topbar() {
               </Link>
             </nav>
             <div className="flex flex-col space-y-2 px-4 pt-2">
-              <Link
-                href="/signup"
-                className="bg-[#0a4d70] text-white px-6 py-3 rounded-full text-sm font-medium hover:bg-[#083d5a] transition-colors text-center"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Register
-              </Link>
+              
               <Link
                 href="/signin"
                 className="bg-white text-gray-800 px-6 py-3 rounded-full text-sm font-medium border border-gray-200 hover:bg-gray-50 transition-colors text-center"
