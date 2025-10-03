@@ -11,22 +11,33 @@ export const countryBankFields = {
 
 // Countries data
 export const countries = [
+  { value: "Albania", label: "Albania" },
   { value: "Australia", label: "Australia" },
+  { value: "Austria", label: "Austria" },
+  { value: "Belgium", label: "Belgium" },
   { value: "Bulgaria", label: "Bulgaria" },
   { value: "Canada", label: "Canada" },
   { value: "France", label: "France" },
   { value: "Georgia", label: "Georgia" },
   { value: "Germany", label: "Germany" },
+  { value: "Greece", label: "Greece" },
   { value: "Ireland", label: "Ireland" },
+  { value: "Italy", label: "Italy" },
   { value: "Latvia", label: "Latvia" },
   { value: "Lithuania", label: "Lithuania" },
+  { value: "Malaysia", label: "Malaysia" },
+  { value: "Malta", label: "Malta" },
+  { value: "Netherlands", label: "Netherlands" },
   { value: "New Zealand", label: "New Zealand" },
+  { value: "Poland", label: "Poland" },
+  { value: "Portugal", label: "Portugal" },
+  { value: "Spain", label: "Spain" },
   { value: "Sweden", label: "Sweden" },
   { value: "Switzerland", label: "Switzerland" },
   { value: "UAE", label: "UAE" },
-  { value: "UK", label: "UK" },
-  { value: "USA", label: "USA" },
-  { value: "Uzbekistan", label: "Uzbekistan" },
+  { value: "UK", label: "United Kingdom" },
+  { value: "USA", label: "United States of America" },
+  { value: "Uzbekistan", label: "Uzbekistan" }
 ]
 
 // Sample existing receivers data
