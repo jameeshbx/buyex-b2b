@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Buyex Forex",
-  description: "Forex platform for banks and customers",
+  title: "International Money Transfer from India for Study Abroad",
+  description: "India’s trusted platform for education consultants, offering fast international money transfers. 100% paperless, real-time tracking, and 10-min remittance.",
   icons: {
     icon: [
       {
