@@ -152,7 +152,7 @@ export async function generateA2Form(order: Order) {
   
   const data = {
     date: new Date(order.createdAt).toLocaleDateString(),
-    name: order.payer === 'Self' ? order.sender?.studentName || '' : order.sender?.senderName || '',
+    name: order.sender?.studentName || '',
     dob: order.sender?.dob || '',
     address: addressLines[0] || '',
     address2: order.payer === 'Self' 
@@ -190,7 +190,7 @@ export async function generateA2Form(order: Order) {
   // Add text to first page (coordinates are approximate; adjust as per actual form layout)
   drawText(data.date, 60, height - 75);
   drawText(data.forexPurpose, 350, height - 190);
-  drawText(data.name, 120, height - 275);
+  drawText(data.senderName, 120, height - 275);
   drawText(data.dob, 430, height - 275);  
   drawText(data.address, 100, height - 305, 8);
   
@@ -199,15 +199,15 @@ export async function generateA2Form(order: Order) {
   //   drawText(addressLines[1], 100, height - 325);
   // }
   
-  drawText(data.address2, 50, height - 330, 8);
-  drawText(data.state, 50, height - 350);
+  drawText(data.address2, 60, height - 330, 8);
+  drawText(data.state, 70, height - 350);
   drawText(data.postalCode, 470, height - 330);
   drawText(data.mobile, 470, height - 360);  
   drawText(data.email, 100, height - 380);
   drawText(data.nationality, 410, height - 380);
   drawText(data.pan, 100, height - 410);
   drawText(data.resStatus, 470, height - 410);
-  drawText(data.senderName, 140, height - 500);
+  drawText(data.name, 140, height - 500);
   drawText(data.senderPassportNo, 430, height - 500);
   drawText(data.senderPAN, 100, height - 535);
   drawText(data.relation, 280, height - 590);

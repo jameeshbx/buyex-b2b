@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect, useCallback, use } from "react";
 import Image from "next/image";
 import {
   Upload,
-  Download,
+  Eye,
   Edit,
   Trash2,
   Paperclip,
@@ -963,7 +963,7 @@ export default function UploadsPage({
                               handleDownload(file);
                             }}
                           >
-                            <Download className="h-4 w-4" />
+                            <Eye className="h-4 w-4" />
                           </Button>
                           <Button
                             variant="ghost"
