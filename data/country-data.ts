@@ -3,10 +3,10 @@ import { z } from "zod"
 // Country specific bank fields
 export const countryBankFields = {
   UK: ["sortCode", "iban"],
-  "USA, Georgia, Latvia, Uzbekistan": ["routingNumber"],
+  "USA, Georgia, Uzbekistan,Malaysia": ["routingNumber"],
   Canada: ["transitNumber"],
   Australia: ["bsbCode"],
-  "Ireland, Lithuania, Bulgaria, Germany, France, UAE": ["iban"],
+  "Ireland, Lithuania, Bulgaria, Germany, France, UAE, Latvia,Albania,Austria,Belgium,Greece,Italy,Malta,Netherlands,New Zealand,Poland,Portugal,Spain,Sweden,Switzerland": ["iban"],
 }
 
 // Countries data
