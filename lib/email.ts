@@ -51,7 +51,7 @@ const createResetPasswordEmail = (resetUrl: string, userName: string) => `
         <div class="header">
             <img src="${
               process.env.NEXT_PUBLIC_APP_URL
-            }/buyex-main-logo.png" alt="Buyex Forex Logo" class="logo">
+            }/simplify-study-abroad-payments.webp" alt="Buyex Forex Logo – Trusted Student Payment Platform" class="logo">
         </div>
         <h2>Password Reset Request</h2>
         <p>Hello ${userName},</p>

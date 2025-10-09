@@ -137,6 +137,7 @@ export default function TransactionDetails({
     Germany: "EUR",
     UAE: "AED",
     Australia: "AUD",
+    Moldova: "EUR",
     Portugal: "EUR",
     Italy: "EUR",
     Greece: "EUR",

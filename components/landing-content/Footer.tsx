@@ -17,7 +17,7 @@ export default function Footer() {
         {/* Logo */}
         <Link href="/" passHref>
           <div className="mb-10 flex justify-center md:justify-start cursor-pointer">
-            <Image src="/buyex-main-logo.png" alt="Buyex Forex Logo" width={200} height={50} className="h-auto" />
+            <Image src="/simplify-study-abroad-payments.webp" alt="Buyex Forex Logo – Trusted Student Payment Platform" width={200} height={50} className="h-auto" />
           </div>
         </Link>
 
@@ -105,12 +105,12 @@ export default function Footer() {
         <div className="border-t border-gray-300 mt-12 pt-6 text-center">
           <div className="flex justify-center space-x-6 mt-12">
             {[
-              { href: "https://www.instagram.com/buyexchange_forex/?igsh=dWRndXh0cGZuamdr", src: "/instagram.svg", alt: "Instagram" },
-              { href: "https://www.linkedin.com/company/buyexchange/posts/?feedView=all", src: "/linkedin-in-brands.svg", alt: "LinkedIn" },
+              { href: "https://www.instagram.com/buyexchange_forex/?igsh=dWRndXh0cGZuamdr", src: "/instagram.svg", alt: "Instagram icon" },
+              { href: "https://www.linkedin.com/company/buyexchange/posts/?feedView=all", src: "/connect-with-buyex-forex-on-linkedin.svg", alt: "LinkedIn icon" },
               {
                 href: "https://www.facebook.com/share/16sF8XjkKA/",
-                src: "/facebook-brands.svg",
-                alt: "Facebook",
+                src: "/follow-buyex-forex-on-facebook.svg",
+                alt: "Facebook icon",
                 className: "p-1"
               },
             ].map(({ href, src, alt, className }) => (

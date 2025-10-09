@@ -79,7 +79,7 @@ const createInvitationEmail = (name: string, email: string, password: string) =>
 <body>
     <div class="container">
         <div class="header">
-            <img src="${process.env.NEXT_PUBLIC_APP_URL}/buyex-main-logo.png" alt="Buyex Forex Logo" class="logo">
+            <img src="${process.env.NEXT_PUBLIC_APP_URL}/simplify-study-abroad-payments.webp" alt="Buyex Forex Logo – Trusted Student Payment Platform" class="logo">
         </div>
         <h2>Welcome to Buyex Forex!</h2>
         <p>Hello ${name},</p>

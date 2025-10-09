@@ -3,39 +3,39 @@ import { url } from "inspector"
 const partnerLogos = [
    
     {
-      name: "Fintiba",
-      src: "/images/partners/fintiba 1.png",
+      name: "Fintiba partner logo",
+      src: "/images/partners/fintiba-german-blocked-account-partner.webp",
       url:"https://fintiba.com/india/"
 
     },
     {
-      name: "Orient Exchange",
-      src: "/images/partners/orient 1.png",
+      name: "Orient Exchange partner logo",
+      src: "/images/partners/orient-exchange-international-payment-partner.webp",
       url:"https://www.orientexchange.in/"
     },
     {
-      name: "Ebix",
-      src: "/images/partners/ebix.png",
+      name: "Ebix partner logo",
+      src: "/images/partners/ebix-payment-partner.webp",
       url:"https://ebixcash.com/"
     },
      {
-      name: "Xotic",
-      src: "/images/partners/xotic.png", 
+      name: "Xotic partner logo",
+      src: "/images/partners/xotic-global-forex-exchange-partner.webp", 
       url:"https://xotik.in/"
     },
     {
-      name: "Wxfs",
-      src: "/images/partners/wsfxglobal.png",
+      name: "Wxfs partner logo",
+      src: "/images/partners/wsfx-global-payment-gateway-partner.webp",
       url:"https://www.wsfx.in/"
     },
     {
-      name: "Coracle",
-      src: "/images/partners/coracle 1.png",
+      name: "Coracle partner logo",
+      src: "/images/partners/coracle-education-finance-platform-partner.webp",
       url:"https://www.coracle.de/en/blocked-account"
     },
     {
-      name: "Nium",
-      src: "/images/partners/nium 1.png", 
+      name: "Nium partner logo",
+      src: "/images/partners/nium-global-payment-partner.webp", 
       url:"https://www.nium.com/"
     },
     

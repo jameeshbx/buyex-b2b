@@ -52,25 +52,25 @@ describe('Home Page Hero Section', () => {
     });
   
     it('should display the hero image', () => {
-      cy.get('img[alt="Study Abroad Illustration"]').should('exist');
-      cy.get('img[alt="Study Abroad Illustration"]').should('be.visible');
+      cy.get('img[alt="Illustration of student making international payments"]').should('exist');
+      cy.get('img[alt="Illustration of student making international payments"]').should('be.visible');
     });
   
     it('should have responsive layout on different screen sizes', () => {
       // Test mobile layout
       cy.viewport('iphone-6');
       cy.get('h1').should('be.visible');
-      cy.get('img[alt="Study Abroad Illustration"]').should('be.visible');
+      cy.get('img[alt="Illustration of student making international payments"]').should('be.visible');
       
       // Test tablet layout
       cy.viewport('ipad-2');
       cy.get('h1').should('be.visible');
-      cy.get('img[alt="Study Abroad Illustration"]').should('be.visible');
+      cy.get('img[alt="Illustration of student making international payments"]').should('be.visible');
       
       // Test desktop layout
       cy.viewport('macbook-15');
       cy.get('h1').should('be.visible');
-      cy.get('img[alt="Study Abroad Illustration"]').should('be.visible');
+      cy.get('img[alt="Illustration of student making international payments"]').should('be.visible');
     });
   
     it('should have working links', () => {
