@@ -6,7 +6,7 @@ export const countryBankFields = {
   "USA, Georgia, Uzbekistan,Malaysia": ["routingNumber"],
   Canada: ["transitNumber"],
   Australia: ["bsbCode"],
-  "Ireland, Lithuania, Bulgaria, Germany, France, UAE, Latvia,Albania,Austria,Belgium,Greece,Italy,Malta,Netherlands,New Zealand,Poland,Portugal,Spain,Sweden,Switzerland": ["iban"],
+  "Ireland, Lithuania, Bulgaria, Germany, France, UAE, Latvia,Albania,Austria,Belgium,Greece,Italy,Malta,Netherlands,New Zealand,Poland,Portugal,Spain,Sweden,Switzerland,Moldova": ["iban"],
 }
 
 // Countries data
@@ -37,7 +37,8 @@ export const countries = [
   { value: "UAE", label: "UAE" },
   { value: "UK", label: "United Kingdom" },
   { value: "USA", label: "United States of America" },
-  { value: "Uzbekistan", label: "Uzbekistan" }
+  { value: "Uzbekistan", label: "Uzbekistan" },
+  { value: "Moldova", label: "Moldova" }
 ]
 
 // Sample existing receivers data

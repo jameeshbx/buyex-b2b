@@ -4,7 +4,7 @@ describe('Footer Component', () => {
     })
   
     it('should display the logo', () => {
-      cy.get('img[alt="Buyex Forex Logo"]').should('be.visible')
+      cy.get('img[alt="Buyex Forex Logo – Trusted Student Payment Platform"]').should('be.visible')
     })
   
     it('should display Quick Links section', () => {
@@ -52,8 +52,8 @@ describe('Footer Component', () => {
   
     it('should display the social media icons', () => {
       cy.get('img[alt="Twitter"]').should('be.visible')
-      cy.get('img[alt="LinkedIn"]').should('be.visible')
-      cy.get('img[alt="Facebook"]').should('be.visible')
+      cy.get('img[alt="LinkedIn icon"]').should('be.visible')
+      cy.get('img[alt="Facebook icon"]').should('be.visible')
     })
   
     it('should display the copyright notice', () => {

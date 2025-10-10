@@ -41,7 +41,7 @@ const aboutUsData = {
       // Test the dashboard image exists and is visible
       cy.get('div.relative.h-h1')
         .should('be.visible')
-        .find('img[alt="Dashboard Preview"]')
+        .find('img[alt="Buyex Forex interface showing fee management tools"]')
         .should('exist')
         .and('be.visible')
         .and('have.class', 'object-contain');
@@ -64,7 +64,7 @@ const aboutUsData = {
         .and('contain', aboutUsData.recognitions.subtitle);
   
       // Test recognition image exists and is visible
-      cy.get('div.bg-dark-blue div.relative img[alt="Company Recognitions"]')
+      cy.get('div.bg-dark-blue div.relative img[alt="Buyex Forex Recognitions and Awards"]')
         .should('exist')
         .and('be.visible')
         .and('have.class', 'object-contain');

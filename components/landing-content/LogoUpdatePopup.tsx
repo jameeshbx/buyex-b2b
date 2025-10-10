@@ -36,7 +36,7 @@ export default function LogoUpdatePopup({ isOpen, onClose }: LogoUpdatePopupProp
             <span className="text-sm font-medium">is now</span>
             <div className="flex flex-col items-center">
               <Image 
-                src="/buyex-main-logo.png" 
+                src="/simplify-study-abroad-payments.webp" 
                 alt="New Logo" 
                 width={112} 
                 height={112}

@@ -63,8 +63,8 @@ export default function WhyUs() {
           {/* Dots image for lg - Keep Desktop Design */}
           <div className="relative hidden lg:block mt-[122px]">
             <Image
-              src="/dots.svg"
-              alt="Line Curve"
+              src="/study-abroad-payment-page-design.svg"
+              alt="Line curve illustration"
               width={1200}
               height={300}
               className="w-full object-contain mt-[-411px]"
@@ -90,8 +90,8 @@ export default function WhyUs() {
                     <div className="mt-6 sm:mt-8">
                       <div className="relative h-24 sm:h-32 w-full">
                         <Image
-                          src="/orderactivity.png"
-                          alt="International payments visualization"
+                          src="/student-payment-visual-buyex.webp"
+                          alt="Global Money Transfer Illustration"
                           fill
                           className="object-contain"
                         />
@@ -126,7 +126,7 @@ export default function WhyUs() {
                   {index === 2 && (
                     <div className="mt-26">
                       <Image
-                        src="/orderactivity.png"
+                        src="/student-payment-visual-buyex.webp"
                         alt="International payments visualization"
                         width={200}
                         height={150}

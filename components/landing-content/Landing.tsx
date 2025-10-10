@@ -67,8 +67,8 @@ export default function FeaturesAccordion() {
             </h2>
             <div className="relative w-full h-auto">
               <Image 
-                src="/portal offer.png" 
-                alt="Financial Portal Dashboard" 
+                src="/real-time-dashboard-student-payments.webp" 
+                alt="Financial portal dashboard illustration" 
                 width={800}
                 height={600}
                 className="w-full h-auto" 

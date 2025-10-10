@@ -78,8 +78,8 @@ export function Sidebar() {
               <div className="hidden md:flex items-center">
                 <div className="relative h-[60px] w-[116px]">
                   <Image
-                    src="/buyex-main-logo.png"
-                    alt="Buyex Forex logo"
+                    src="/simplify-study-abroad-payments.webp"
+                    alt="Buyex Forex Logo – Trusted Student Payment Platform"
                     width={116}
                     height={60}
                     className="h-full w-full object-contain"
@@ -93,7 +93,7 @@ export function Sidebar() {
               <div className="relative h-10 w-10">
                 <Image
                   src="/Top.png"
-                  alt="Buyex Forex logo"
+                  alt="Buyex Forex Logo – Trusted Student Payment Platform"
                   width={40}
                   height={40}
                   className="h-full w-auto object-contain"

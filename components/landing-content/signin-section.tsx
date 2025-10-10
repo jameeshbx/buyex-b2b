@@ -183,8 +183,8 @@ export default function LoginPage() {
             <Link href="/" passHref>
   <div className="cursor-pointer">
     <Image 
-      src="/buyex-main-logo.png" 
-      alt="Buyex Forex Logo" 
+      src="/simplify-study-abroad-payments.webp" 
+      alt="Buyex Forex Logo – Trusted Student Payment Platform" 
       width={185} 
       height={60} 
       className="mb-6"

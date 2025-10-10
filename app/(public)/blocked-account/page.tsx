@@ -90,8 +90,8 @@ export default function Component() {
           <Link href="/" passHref>
             <div className="flex items-center w-40">
               <Image
-                src="/buyex-main-logo.png"
-                alt="Buyex Forex Logo"
+                src="/simplify-study-abroad-payments.webp"
+                alt="Buyex Forex Logo – Trusted Student Payment Platform"
                 width={170}
                 height={100}
                 priority

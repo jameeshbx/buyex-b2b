@@ -87,8 +87,8 @@ export default function Hero() {
         aria-label="Chat with us on WhatsApp"
       >
         <Image 
-          src="/WhatsApp.svg.webp" 
-          alt="WhatsApp"
+          src="/whatsapp-chat-study-abroad-support.webp" 
+          alt="WhatsApp chat icon"
           width={32} 
           height={32}
           className="w-8 h-8"
