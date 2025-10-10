@@ -1,24 +1,13 @@
-
 "use client"
 
 import Image from "next/image"
 import { Search } from "lucide-react"
 import { useState } from "react"
 import { newsArticles } from "@/data/newsArticles"
+import Link from "next/link"
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("")
-  const [expandedStates, setExpandedStates] = useState<Record<number, boolean>>(
-    newsArticles.reduce((acc, article) => ({ ...acc, [article.id]: false }), {})
-  );
-
-  // Toggle expanded state for an article
-  const toggleExpand = (articleId: number) => {
-    setExpandedStates(prev => ({
-      ...prev,
-      [articleId]: !prev[articleId]
-    }))
-  }
 
   // Filter articles based on search query
   const filteredArticles = newsArticles.filter((article) => {
@@ -112,60 +101,37 @@ export default function Home() {
                   <p className="text-gray-500">No articles match your search criteria</p>
                 </div>
               ) : (
-                filteredArticles.map((article, index) => (
-                  <article key={article.id} className={index > 0 ? "border-t pt-6" : ""}>
+                filteredArticles.map((article) => (
+                  <article key={article.id} className="border-t pt-6 first:border-t-0 first:pt-0">
                     <div className="flex flex-col md:flex-row gap-6">
                       <div className="w-full md:w-2/3">
                         <p className="text-dark-blue font-jakarta mb-2">{article.date}</p>
-                        <h1 className="text-2xl font-bold font-jakarta mb-3">{article.title}</h1>
+                        <h2 className="text-2xl font-bold font-jakarta mb-3">{article.title}</h2>
                         <div className="text-dark-gray font-jakarta space-y-3">
-                          {expandedStates[article.id] ? (
-                            // Show all content when expanded
-                            <div>
-                              {article.sections.map((section, i) => (
-                                <div key={i} className="mb-4">
-                                  <h2 className="text-xl font-semibold mb-2">{section.heading}</h2>
-                                  {section.content && section.content.map((paragraph, j) => (
-                                    <p key={j} className="mb-3">{paragraph}</p>
-                                  ))}
-                                  {section.subsections && section.subsections.map((subsection, k) => (
-                                    <div key={k} className="ml-4 mb-3">
-                                      <h3 className="text-lg font-medium mb-1">{subsection.heading}</h3>
-                                      {subsection.content && subsection.content.map((paragraph, l) => (
-                                        <p key={l} className="mb-2">{paragraph}</p>
-                                      ))}
-                                    </div>
-                                  ))}
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            // Show only first section when collapsed
-                            <div>
-                              <h2 className="text-xl font-semibold mb-2">{article.sections[0].heading}</h2>
-                              {article.sections[0].content && article.sections[0].content.slice(0, 2).map((paragraph, i) => (
-                                <p key={i} className="mb-3">{paragraph}</p>
-                              ))}
-                            </div>
-                          )}
+                          <div>
+                            <h2 className="text-xl font-semibold mb-2">{article.sections[0].heading}</h2>
+                            {article.sections[0].content && article.sections[0].content.slice(0, 2).map((paragraph, i) => (
+                              <p key={i} className="mb-3">{paragraph}</p>
+                            ))}
+                          </div>
                         </div>
                         <div className="flex items-center mt-4 text-sm">
                           <span className="text-gray-600 font-jakarta">By {article.author}</span>
                           <span className="mx-2">•</span>
                           <span className="text-dark-blue font-jakarta">{article.readTime}</span>
-                          <button
-                            onClick={() => toggleExpand(article.id)}
+                          <Link 
+                            href={`/benews/articles/${article.id}`}
                             className="ml-2 text-pink-500 hover:underline focus:outline-none"
                           >
-                            {expandedStates[article.id] ? "Read less ←" : "Read more →"}
-                          </button>
+                            Read more →
+                          </Link>
                         </div>
                       </div>
                       <div className="w-full md:w-1/3">
                         <div className="bg-blue-600 rounded-lg overflow-hidden">
                           <Image
                             src={article.image || "/placeholder.svg"}
-                            alt={article.imageAlt}
+                            alt={article.imageAlt || article.title}
                             width={300}
                             height={200}
                             className="w-full h-auto object-cover"
