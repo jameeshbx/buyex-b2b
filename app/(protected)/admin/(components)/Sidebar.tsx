@@ -258,7 +258,7 @@ export function Sidebar({
             <Link href="/" className="flex items-center">
               <div className="relative h-[60px] w-[116px] ml-8 cursor-pointer">
                 <Image
-                  src="/buyex-main-logo.png"
+                  src="/simplify-study-abroad-payments.webp"
                   alt="Logo"
                   width={196}
                   height={70}

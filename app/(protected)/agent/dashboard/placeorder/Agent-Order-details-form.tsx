@@ -73,7 +73,7 @@ async function generateQuotePDF(
   const doc = new jsPDF() as JsPDFWithAutoTable;
   let lastY = 30;
 
-  // const logo = "/buyex-main-logo.png";
+  // const logo = "/simplify-study-abroad-payments.webp";
   // doc.addImage(logo, "PNG", 14, 10, 50, 20);
 
   doc.setFontSize(18);
@@ -221,6 +221,7 @@ export default function OrderDetailsForm() {
     Germany: "EUR",
     UAE: "AED",
     Australia: "AUD",
+    Moldova: "EUR",
     Portugal: "EUR",
     Italy: "EUR",
     Greece: "EUR",

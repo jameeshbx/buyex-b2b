@@ -66,15 +66,15 @@ const filteredTestimonials = activeCountry
           </p>
           <div className="flex justify-center items-center mt-6 gap-4 -ml-[95px]">
             <Image 
-              src="/fivestar.png" 
-              alt="Five star rating" 
+              src="/rated-5-stars-student-payments.webp" 
+              alt="Five-star rating illustration" 
               width={180} 
               height={30} 
               className=""
             />
             <Image 
-              src="/logogoogle.png" 
-              alt="Google reviews" 
+              src="/real-student-transfer-reviews.webp" 
+              alt="Google review icon" 
               width={40} 
               height={40}
               className="-ml-[124px] mt-[25px]"
@@ -214,8 +214,8 @@ const filteredTestimonials = activeCountry
                 </div>
                 <div className="flex justify-center">
                   <Image 
-                    src="/fivestar.png" 
-                    alt="Five star rating" 
+                    src="/rated-5-stars-student-payments.webp" 
+                    alt="Five-star rating illustration" 
                     width={150} 
                     height={30} 
                   />

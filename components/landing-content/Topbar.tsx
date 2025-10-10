@@ -53,8 +53,8 @@ export default function Topbar() {
           <Link href="/" passHref>
             <div className="flex items-center w-40">
               <Image
-                src="/buyex-main-logo.png"
-                alt="Buyex Forex Logo"
+                src="/simplify-study-abroad-payments.webp"
+                alt="Buyex Forex Logo – Trusted Student Payment Platform"
                 width={200}
                 height={100}
                 priority

@@ -186,11 +186,11 @@ export const swiftCopyTemplate = ({
         <a href="https://buyexchange.in" style="color:#b2b2b2;text-decoration:none;">buyexchange.in</a>
       </div>
       <div style="margin-top:12px;">
-        <a href="https://facebook.com/buyexchange" style="margin:0 6px;display:inline-block;"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/facebook.svg" alt="Facebook" style="height:20px;width:20px;filter:invert(1);" /></a>
-        <a href="https://instagram.com/buyexchange" style="margin:0 6px;display:inline-block;"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg" alt="Instagram" style="height:20px;width:20px;filter:invert(1);" /></a>
+        <a href="https://facebook.com/buyexchange" style="margin:0 6px;display:inline-block;"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/facebook.svg" alt="Facebook icon" style="height:20px;width:20px;filter:invert(1);" /></a>
+        <a href="https://instagram.com/buyexchange" style="margin:0 6px;display:inline-block;"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg" alt="Instagram icon" style="height:20px;width:20px;filter:invert(1);" /></a>
         <a href="https://youtube.com/@buyexchange" style="margin:0 6px;display:inline-block;"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/youtube.svg" alt="YouTube" style="height:20px;width:20px;filter:invert(1);" /></a>
         <a href="https://tiktok.com/@buyexchange" style="margin:0 6px;display:inline-block;"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tiktok.svg" alt="TikTok" style="height:20px;width:20px;filter:invert(1);" /></a>
-        <a href="https://linkedin.com/company/buyexchange" style="margin:0 6px;display:inline-block;"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg" alt="LinkedIn" style="height:20px;width:20px;filter:invert(1);" /></a>
+        <a href="https://linkedin.com/company/buyexchange" style="margin:0 6px;display:inline-block;"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg" alt="LinkedIn icon" style="height:20px;width:20px;filter:invert(1);" /></a>
       </div>
     </div>
   </div>

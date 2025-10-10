@@ -213,7 +213,7 @@ export function Sidebar({
             ) : (
               <div className="relative h-[60px] w-[116px] ml-8">
                 <Image
-                  src="/buyex-main-logo.png"
+                  src="/simplify-study-abroad-payments.webp"
                   alt="Logo"
                   width={196}
                   height={70}

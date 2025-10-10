@@ -29,7 +29,7 @@ export default function AboutUsSection() {
                                 <div className="relative h-[280px] sm:h-[350px] md:h-[450px] w-full">
                                     <Image
                                         src={aboutUsData.dashboardImage}
-                                        alt="Dashboard Preview"
+                                        alt="Buyex Forex interface showing fee management tools"
                                         fill
                                         className="object-contain"
                                         priority
@@ -42,7 +42,7 @@ export default function AboutUsSection() {
                                 <div className="relative h-[700px] md:h-[800px] w-[100%] md:w-[120%] mb-[-150px] md:mb-[-200px] -mr-[10%] md:-mr-[15%]">
                                     <Image
                                         src={aboutUsData.dashboardImage}
-                                        alt="Dashboard Preview"
+                                        alt="Dashboard preview for student payments"
                                         fill
                                         className="object-contain"
                                         priority
@@ -70,7 +70,7 @@ export default function AboutUsSection() {
                             <div className="sm:hidden relative h-28">
                                 <Image
                                     src={aboutUsData.recognitions.groupedImage}
-                                    alt="Company Recognitions"
+                                    alt="Buyex Forex Recognitions and Awards"
                                     fill
                                     className="object-contain"
                                 />
@@ -80,7 +80,7 @@ export default function AboutUsSection() {
                             <div className="hidden sm:block md:hidden relative h-32">
                                 <Image
                                     src={aboutUsData.recognitions.groupedImage}
-                                    alt="Company Recognitions"
+                                    alt="Awards and recognitions in the financial services industry"
                                     fill
                                     className="object-contain"
                                 />
@@ -100,7 +100,7 @@ export default function AboutUsSection() {
                             <div className="hidden lg:block relative h-h3 md:h-h4">
                                 <Image
                                     src={aboutUsData.recognitions.groupedImage}
-                                    alt="Company Recognitions"
+                                    alt="Company awards and recognitions"
                                     fill
                                     className="object-contain"
                                 />
