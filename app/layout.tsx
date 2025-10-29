@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "International Money Transfer from India for Study Abroad",
-  description: "India’s trusted platform for education consultants, offering fast international money transfers. 100% paperless, real-time tracking, and 10-min remittance.",
+  title: "Forex for Students – Safe & Seamless Transfers",
+  description: "Fast, secure, and compliant forex for students studying abroad, covering tuition, living expenses, and international fee transfers.",
   icons: {
     icon: [
       {

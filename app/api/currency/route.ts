@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     }
      /* old values=/*3470db91b029770df12da2a66baa038b*/ 
 
-    const liveRateUrl = `http://apilayer.net/api/live?access_key=c9004e1911575e473bce4dd8d383493b&currencies=${base}&source=${target}&format=1`;
+    const liveRateUrl = `https://api.currencylayer.com/live?access_key=3470db91b029770df12da2a66baa038b&currencies=${base}&source=${target}&format=1`;
     
     
 
