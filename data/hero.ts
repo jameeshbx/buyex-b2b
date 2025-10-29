@@ -1,6 +1,6 @@
 // src/constants/hero.constants.ts
 export const HERO_CONTENT = {
-    description: "Buyex Forex empowers study abroad consultants with fast, compliant student forex transfers—smarter and seamless every time.",
+    description: "Forex for students made simple — Buyex Forex empowers study abroad consultants with fast, compliant transfers. ",
     partners: [
        {
         name: "Students joining campus illustration",
