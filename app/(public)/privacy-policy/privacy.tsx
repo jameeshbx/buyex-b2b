@@ -12,7 +12,7 @@ export default function PrivacyPolicy() {
           <div className="prose max-w-none text-gray-500 font-jakarta">
             <p>
               Buyex Forex has developed this Privacy Statement to explain how we may collect, retain, process, share
-              and transfer your Personal Data when you visit or make a purchase from www.buyexforex.com/site. This
+              and transfer your Personal Data when you visit or make a purchase from www.buyexforex.com. This
               Privacy Statement applies to your Personal Data when you visit or use our services, applications, or
               websites, or shop in our stores, or otherwise interact with us over the internet or through other Buy
               Exchange stores.

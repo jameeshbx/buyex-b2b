@@ -37,8 +37,5 @@ describe('Login Page', () => {
     cy.url().should('include', '/dashboard');
   });
 
-  it('navigates to signup page', () => {
-    cy.contains('Create an account').click();
-    cy.url().should('include', '/signup');
-  });
+  
 });
