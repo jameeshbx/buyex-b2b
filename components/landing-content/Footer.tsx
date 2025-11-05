@@ -105,7 +105,7 @@ export default function Footer() {
         <div className="border-t border-gray-300 mt-12 pt-6 text-center">
           <div className="flex justify-center space-x-6 mt-12">
             {[
-              { href: "https://www.instagram.com/buyexchange_forex/?igsh=dWRndXh0cGZuamdr", src: "/instagram.svg", alt: "Instagram icon" },
+              { href: "https://www.instagram.com/buyexchange_forex/?igsh=dWRndXh0cGZuamdr", src: "/Instagram.jpeg", alt: "Instagram icon" },
               { href: "https://www.linkedin.com/company/buyexchange/posts/?feedView=all", src: "/connect-with-buyex-forex-on-linkedin.svg", alt: "LinkedIn icon" },
               {
                 href: "https://www.facebook.com/share/16sF8XjkKA/",
