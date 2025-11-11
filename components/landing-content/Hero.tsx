@@ -25,7 +25,7 @@ export default function Hero() {
 
             {/* Main heading */}
             <h1 className="mb-6 text-4xl sm:text-5xl lg:text-5xl font-bold font-playfair leading-tight tracking-tight text-deep-blue">
-              Empowering <span className="whitespace-nowrap">Study Abroad Dreams with </span><br />Smart Forex Solutions for Students
+              Empowering <span className="inline-block">Study Abroad Dreams</span> with <br className="hidden sm:block" />Smart Forex Solutions for Students
             </h1>
 
             {/* Description */}
@@ -49,7 +49,7 @@ export default function Hero() {
               <p className="text-base text-gray-600 leading-relaxed mb-6">
                 Successfully empowering <span className="font-semibold">100+ oversease education consultants</span>
                 {' '}across <span className="font-semibold">5 states</span>,
-                <br/>Buyex Forex delivers seamless student forex—now expanding nationwide.
+                <br/>Buyex Forex delivers seamless forex for students — now expanding nationwide.
               </p>
 
               {/* Partner logos */}
