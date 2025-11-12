@@ -2,6 +2,104 @@
 export const newsArticles = [
   {
     id: 1,
+    date: "Nov 11", // Today's date
+    title: "Blocked Account for Germany: Complete Guide for Indian Students with 2025 Updates",
+    sections: [
+      {
+        heading: "What Is a Blocked Account for Germany?",
+        content: [
+          "Moving to Germany for higher education is a dream for many Indian students. One of the key requirements for securing a German student visa is opening a Blocked Account (Sperrkonto). This account serves as proof that you have sufficient funds to cover your living expenses during your stay.",
+          "A blocked account is a special type of bank account designed for international students moving to Germany. It holds your living expense funds for the first year of study and is 'blocked,' meaning you cannot withdraw the full amount at once. Instead, a fixed monthly allowance is released.",
+          "Monthly disbursement (2025): €992",
+          "Annual blocked account amount (2025): €11,904",
+          "This ensures you have enough funds to cover rent, food, transport, and other living costs while studying in Germany."
+        ]
+      },
+      {
+        heading: "Why Is It Mandatory?",
+        content: [
+          "The German Embassy/Consulates in India require proof of financial stability to issue a student visa.",
+          "A blocked account confirmation is the most widely accepted proof. Without it, your student visa application may be delayed or rejected."
+        ]
+      },
+      {
+        heading: "Germany Blocked Account Requirements",
+        content: [
+          "To open a blocked account for Germany, you'll need the following documents:",
+          "● Valid passport",
+          "● Admission letter from a recognized German university",
+          "● Proof of Indian residential address",
+          "● Passport-size photograph",
+          "● Completed blocked account application form (online via provider)",
+          "Once the account is opened, transfer the required amount (€11,904 for 2025) before your visa interview."
+        ]
+      },
+      {
+        heading: "How to Open a Blocked Account for Germany",
+        content: [
+          "Opening a blocked account from India is now 100% digital through authorized providers."
+        ],
+        subsections: [
+          {
+            heading: "Step-by-Step Process:",
+            content: [
+              "1. Choose a provider -- Select an approved partner offering German blocked accounts (Fintiba, Expatrio, Coracle, etc.).",
+              "2. Register online -- Submit your passport, admission letter, and personal details.",
+              "3. Get account details -- Receive your IBAN and SWIFT code.",
+              "4. Fund the account -- Make an international money transfer from India.",
+              "5. Receive confirmation -- The provider sends a Blocked Account Confirmation (BAC) for your visa submission."
+            ]
+          }
+        ]
+      },
+      {
+        heading: "Approved Blocked Account Providers in Germany",
+        content: [
+          "Indian students can choose from several officially accepted blocked account providers. The most popular ones are:",
+          "Provider | Account Setup | Monthly Disbursement | Processing Time",
+          "---------|---------------|---------------------|------------------",
+          "Fintiba | Fully Online | €992 | 1-3 days",
+          "Expatrio | Fully Online | €992 | 1-2 days",
+          "Coracle | Online | €992 | 2-3 days",
+          "All providers issue a Blocked Account Confirmation (BAC) accepted by German Embassies and Consulates in India."
+        ]
+      },
+      {
+        heading: "Costs Involved",
+        content: [
+          "When transferring funds to your German blocked account, plan for these costs:",
+          "● Account opening fee: €49-€150 (varies by provider)",
+          "● Exchange rate markup: 0.5-1.5%",
+          "● SWIFT transfer fee: ₹500-₹2,000",
+          "● Intermediary bank fees: May apply (deducted from the amount)",
+          "● TCS (Tax Collected at Source): 5% on remittances above ₹10 lakh (can be claimed later)"
+        ]
+      },
+      {
+        heading: "Common Mistakes to Avoid",
+        content: [
+          "● Delaying transfer: Complete funding before your visa interview.",
+          "● Wrong account details: Always verify IBAN and SWIFT code.",
+          "● Ignoring intermediary fees: Can cause a shortfall in balance.",
+          "● Not keeping proof: Always download and keep receipts for visa submission."
+        ]
+      },
+      {
+        heading: "Conclusion",
+        content: [
+          "Opening and funding a blocked account is a crucial step for Indian students planning to study in Germany.",
+          "By selecting the right provider and a trusted transfer service, you can ensure a smooth visa process without last-minute stress.",
+          "For study abroad consultants, Buyex Forex offers fast and transparent solutions for international education payments from tuition fees to blocked account funding, making your students' Germany study journey seamless."
+        ]
+      }
+    ],
+    author: "Research Desk",
+    readTime: "7 min read",
+    image: "/images/blocked-account-opening-2025.png",
+    imageAlt: "Germany blocked account guide for Indian students 2025",
+  },
+  {
+    id: 2,
     date: "Sep 8",
     title: "Why Buyex Forex is the Best Partner for Study Abroad Consultancies",
     sections: [
@@ -126,11 +224,11 @@ export const newsArticles = [
     ],
     author: "Research Desk",
     readTime: "10 min read",
-    image: "/blog-image.jpeg?height=200&width=300",
+    image: "/blog-image.jpeg",
     imageAlt: "Study abroad money transfer consultation",
   },
   {
-    id: 2,
+    id: 3,
     date: "Sep 10",
     title: "How to Pay University Fees Abroad from India: A Complete Guide",
     sections: [
