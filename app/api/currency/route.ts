@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 
-
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -17,10 +16,16 @@ export async function GET(request: NextRequest) {
     if (base === target) {
       return NextResponse.json({ rate: 1 });
     }
-     /* old values=/*3470db91b029770df12da2a66baa038b*/ 
+    /* old values=/*3470db91b029770df12da2a66baa038b*/ 
 
-    const liveRateUrl = `https://api.currencylayer.com/live?access_key=3470db91b029770df12da2a66baa038b&currencies=${base}&source=${target}&format=1`;
-    
+    const accessKey = process.env.CURRENCYLAYER_ACCESS_KEY;
+    if (!accessKey) {
+      return NextResponse.json(
+        { error: "Currency API key not configured" },
+        { status: 500 }
+      );
+    }
+    const liveRateUrl = `https://api.currencylayer.com/live?access_key=${accessKey}&currencies=${base}&source=${target}&format=1`;
     
 
     const response = await fetch(liveRateUrl, {
